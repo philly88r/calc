@@ -92,17 +92,6 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [gatePipeDiameter, setGatePipeDiameter] = useState("1 3/8");
   const [outsideLaborTotal, setOutsideLaborTotal] = useState(0);
 
-  // Customer information
-  const [customerName, setCustomerName] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('');
-  const [customerCity, setCustomerCity] = useState('');
-  const [customerState, setCustomerState] = useState('');
-  const [customerZip, setCustomerZip] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [customerJobSiteAddress, setCustomerJobSiteAddress] = useState('');
-  const [salesRep, setSalesRep] = useState('');
-
   // Mesh costs
   const meshTypeOptions = meshCosts;
 
@@ -1397,6 +1386,29 @@ const FenceCalculator = ({ customerData = {} }) => {
     calculateCosts();
   }, [calculateCosts]);
 
+  // Calculate the total price
+  const calculateTotalPrice = () => {
+    const materialCost = Object.values(costs || {}).reduce((total, item) => total + (item?.subtotal || 0), 0);
+    const laborCost = outsideLaborTotal || 0;
+    
+    // Calculate different price points
+    const baseCost = materialCost + laborCost;
+    const markup = commercialOrResidential === "Commercial" ? 0.3 : 0.25; // 30% markup for commercial, 25% for residential
+    
+    // Calculate different price points
+    const minPrice = baseCost * (1 + markup);
+    const targetPrice = baseCost * (1 + markup + 0.1); // Additional 10% for target
+    const maxPrice = baseCost * (1 + markup + 0.2); // Additional 20% for max
+    
+    return {
+      minPrice,
+      targetPrice,
+      maxPrice
+    };
+  };
+
+  const pricePoints = calculateTotalPrice();
+
   const renderHeightOfFenceSection = () => {
     return (
       <div style={{ marginBottom: '1rem' }}>
@@ -2604,6 +2616,7 @@ const FenceCalculator = ({ customerData = {} }) => {
               topRailThickness={postThickness}
               numberOfFlangedPostsCentered={numberOfFlangedPosts}
               numberOfFlangedPostsOffCentered={numberOfFlangedPostsOffCentered}
+              maxPrice={pricePoints.maxPrice}
             />
           </DialogContent>
           <DialogActions>

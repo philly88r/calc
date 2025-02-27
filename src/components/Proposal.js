@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Button, Typography, Box, Paper, Grid, Divider, Container, TextField } from '@mui/material';
+import { Button, Typography, Box, Paper, Grid, Divider, Container, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import SignatureCanvas from 'react-signature-canvas';
@@ -46,11 +46,17 @@ const Proposal = ({
   topRailThickness,
   numberOfFlangedPostsCentered,
   numberOfFlangedPostsOffCentered,
+  maxPrice
 }) => {
   const signatureRef = useRef();
   const [signatureDataURL, setSignatureDataURL] = useState(null);
   const [showSignature, setShowSignature] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  
+  // Calculate total cost (materials + labor)
+  const totalMaterialCost = materialsCost || 0;
+  const totalLaborCost = outsideLaborCost || 0;
+  const totalCost = totalMaterialCost + totalLaborCost;
   
   // Editable state for proposal fields
   const [editableFields, setEditableFields] = useState({
@@ -69,7 +75,9 @@ const Proposal = ({
     companyPhone: '361-935-2137',
     companyEmail: 'sunny@southtexasfad.com',
     projectDescription: 'Installation of a new fence system as specified in the materials list below. All work will be completed in a workmanlike manner according to standard practices.',
-    paymentTerms: 'A 50% deposit is required to begin work, with the remaining balance due upon completion.'
+    paymentTerms: 'A 50% deposit is required to begin work, with the remaining balance due upon completion.',
+    price: maxPrice ? maxPrice.toFixed(2) : totalCost.toFixed(2),
+    concreteType: 'truck' // Default to 'truck'
   });
   
   const handleFieldChange = (field) => (event) => {
@@ -415,6 +423,49 @@ const Proposal = ({
               <Typography>• All posts, rails, and hardware needed for installation</Typography>
             )}
           </Paper>
+        </Box>
+        
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" sx={{ color: '#6d2f2c', mb: 2 }}>Concrete Type:</Typography>
+          {isEditing ? (
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Concrete Type</InputLabel>
+              <Select
+                value={editableFields.concreteType}
+                label="Concrete Type"
+                onChange={handleFieldChange('concreteType')}
+              >
+                <MenuItem value="red">Red</MenuItem>
+                <MenuItem value="yellow">Yellow</MenuItem>
+                <MenuItem value="truck">Truck</MenuItem>
+              </Select>
+            </FormControl>
+          ) : (
+            <Typography paragraph>
+              Concrete Type: {editableFields.concreteType.charAt(0).toUpperCase() + editableFields.concreteType.slice(1)}
+            </Typography>
+          )}
+        </Box>
+        
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" sx={{ color: '#6d2f2c', mb: 2 }}>Pricing:</Typography>
+          {isEditing ? (
+            <TextField
+              fullWidth
+              label="Total Price ($)"
+              type="number"
+              value={editableFields.price}
+              onChange={handleFieldChange('price')}
+              InputProps={{
+                startAdornment: '$',
+              }}
+              margin="dense"
+            />
+          ) : (
+            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+              Total Price: ${parseFloat(editableFields.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </Typography>
+          )}
         </Box>
         
         <Box sx={{ mb: 4 }}>
