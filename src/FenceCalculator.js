@@ -91,12 +91,18 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [topRailThickness, setTopRailThickness] = useState("SCH 40");
   const [gatePipeDiameter, setGatePipeDiameter] = useState("1 3/8");
   const [outsideLaborTotal, setOutsideLaborTotal] = useState(0);
+  const [maxPriceFromBreakdown, setMaxPriceFromBreakdown] = useState(0);
 
   // Mesh costs
   const meshTypeOptions = meshCosts;
 
   // Dome cap costs
   const domeCapOptions = domeCapCosts;
+  
+  // Handle max price calculation from TotalCostBreakdown
+  const handleMaxPriceCalculated = useCallback((price) => {
+    setMaxPriceFromBreakdown(price);
+  }, []);
 
   // Wedge anchor costs
   const wedgeAnchorOptions = wedgeAnchorCosts;
@@ -1398,7 +1404,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Calculate different price points
     const minPrice = baseCost * (1 + markup);
     const targetPrice = baseCost * (1 + markup + 0.1); // Additional 10% for target
-    const maxPrice = baseCost * (1 + markup + 0.2); // Additional 20% for max
+    const maxPrice = maxPriceFromBreakdown; // Use max price from TotalCostBreakdown
     
     return {
       minPrice,
@@ -2254,8 +2260,9 @@ const FenceCalculator = ({ customerData = {} }) => {
                   }}
                 >
                   <option value="">Select...</option>
-                  <option value="Regular">Regular</option>
-                  <option value="Fast Setting">Fast Setting</option>
+                  <option value="Red">Red</option>
+                  <option value="Yellow">Yellow</option>
+                  <option value="Truck">Truck</option>
                 </select>
               </div>
 
@@ -2543,6 +2550,7 @@ const FenceCalculator = ({ customerData = {} }) => {
               materialsCost={Object.values(costs || {}).reduce((total, item) => total + (item?.subtotal || 0), 0)} 
               outsideLaborCost={outsideLaborTotal || 0}
               isCommercial={commercialOrResidential === "Commercial"}
+              onMaxPriceCalculated={handleMaxPriceCalculated}
             />
           </AccordionDetails>
         </Accordion>
@@ -2617,6 +2625,7 @@ const FenceCalculator = ({ customerData = {} }) => {
               numberOfFlangedPostsCentered={numberOfFlangedPosts}
               numberOfFlangedPostsOffCentered={numberOfFlangedPostsOffCentered}
               maxPrice={pricePoints.maxPrice}
+              typeOfConcrete={typeOfConcrete}
             />
           </DialogContent>
           <DialogActions>

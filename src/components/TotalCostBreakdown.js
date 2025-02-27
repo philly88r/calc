@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-const TotalCostBreakdown = ({ materialsCost, outsideLaborCost, isCommercial }) => {
+const TotalCostBreakdown = ({ materialsCost, outsideLaborCost, isCommercial, onMaxPriceCalculated }) => {
   // Fixed percentages
   const INSIDE_LABOR_PERCENTAGE = 0.09; // 9%
   const OVERHEAD_PERCENTAGE = 0.07; // 7%
@@ -35,6 +35,13 @@ const TotalCostBreakdown = ({ materialsCost, outsideLaborCost, isCommercial }) =
 
   const minPricing = calculateTotalPrice(MIN_PROFIT_PERCENTAGE);
   const maxPricing = calculateTotalPrice(MAX_PROFIT_PERCENTAGE);
+
+  // Send the max price back to the parent component
+  useEffect(() => {
+    if (onMaxPriceCalculated && maxPricing) {
+      onMaxPriceCalculated(maxPricing.estimatedSellingPrice);
+    }
+  }, [maxPricing, onMaxPriceCalculated]);
 
   const formatPercentage = (value, total) => ((value / total) * 100).toFixed(2) + '%';
 

@@ -46,7 +46,8 @@ const Proposal = ({
   topRailThickness,
   numberOfFlangedPostsCentered,
   numberOfFlangedPostsOffCentered,
-  maxPrice
+  maxPrice,
+  typeOfConcrete
 }) => {
   const signatureRef = useRef();
   const [signatureDataURL, setSignatureDataURL] = useState(null);
@@ -76,8 +77,7 @@ const Proposal = ({
     companyEmail: 'sunny@southtexasfad.com',
     projectDescription: 'Installation of a new fence system as specified in the materials list below. All work will be completed in a workmanlike manner according to standard practices.',
     paymentTerms: 'A 50% deposit is required to begin work, with the remaining balance due upon completion.',
-    price: maxPrice ? maxPrice.toFixed(2) : totalCost.toFixed(2),
-    concreteType: 'truck' // Default to 'truck'
+    price: maxPrice ? maxPrice.toFixed(2) : totalCost.toFixed(2)
   });
   
   const handleFieldChange = (field) => (event) => {
@@ -404,6 +404,9 @@ const Proposal = ({
               <Typography paragraph>
                 No. of flanged posts off centered: {numberOfFlangedPostsOffCentered}
               </Typography>
+              <Typography paragraph>
+                Type of concrete: {typeOfConcrete}
+              </Typography>
             </>
           ) : (
             <Typography paragraph>
@@ -423,28 +426,6 @@ const Proposal = ({
               <Typography>• All posts, rails, and hardware needed for installation</Typography>
             )}
           </Paper>
-        </Box>
-        
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" sx={{ color: '#6d2f2c', mb: 2 }}>Concrete Type:</Typography>
-          {isEditing ? (
-            <FormControl fullWidth margin="dense">
-              <InputLabel>Concrete Type</InputLabel>
-              <Select
-                value={editableFields.concreteType}
-                label="Concrete Type"
-                onChange={handleFieldChange('concreteType')}
-              >
-                <MenuItem value="red">Red</MenuItem>
-                <MenuItem value="yellow">Yellow</MenuItem>
-                <MenuItem value="truck">Truck</MenuItem>
-              </Select>
-            </FormControl>
-          ) : (
-            <Typography paragraph>
-              Concrete Type: {editableFields.concreteType.charAt(0).toUpperCase() + editableFields.concreteType.slice(1)}
-            </Typography>
-          )}
         </Box>
         
         <Box sx={{ mb: 4 }}>
