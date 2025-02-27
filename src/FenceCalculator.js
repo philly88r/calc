@@ -10,7 +10,6 @@ import {
 } from './data/costs';
 import OutsideLabor from './components/OutsideLabor';
 import TotalCostBreakdown from './components/TotalCostBreakdown';
-import CustomerInfo from './components/CustomerInfo';
 import Proposal from './components/Proposal';
 import { 
   Typography, 
@@ -33,7 +32,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
-const FenceCalculator = () => {
+const FenceCalculator = ({ customerData = {} }) => {
   const [heightOfFence, setHeightOfFence] = useState('');
   const [heightOfFenceInFeet, setHeightOfFenceInFeet] = useState('8');
   const [totalLinearLength, setTotalLinearLength] = useState('');
@@ -2379,45 +2378,6 @@ const FenceCalculator = () => {
           </AccordionDetails>
         </Accordion>
 
-        {/* Customer Information Section */}
-        <Accordion TransitionProps={{ unmountOnExit: true }}>
-          <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="customer-info-content"
-            id="customer-info-header"
-            sx={{
-              backgroundColor: '#f8f8f8',
-              '&.Mui-expanded': {
-                backgroundColor: '#f0f0f0',
-              }
-            }}
-          >
-            <Typography variant="h6" sx={{ color: '#6d2f2c' }}>Customer Information</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <CustomerInfo 
-              customerName={customerName}
-              setCustomerName={setCustomerName}
-              customerAddress={customerAddress}
-              setCustomerAddress={setCustomerAddress}
-              customerCity={customerCity}
-              setCustomerCity={setCustomerCity}
-              customerState={customerState}
-              setCustomerState={setCustomerState}
-              customerZip={customerZip}
-              setCustomerZip={setCustomerZip}
-              customerPhone={customerPhone}
-              setCustomerPhone={setCustomerPhone}
-              customerEmail={customerEmail}
-              setCustomerEmail={setCustomerEmail}
-              customerJobSiteAddress={customerJobSiteAddress}
-              setCustomerJobSiteAddress={setCustomerJobSiteAddress}
-              salesRep={salesRep}
-              setSalesRep={setSalesRep}
-            />
-          </AccordionDetails>
-        </Accordion>
-
         {/* Material Cost Section */}
         <Accordion TransitionProps={{ unmountOnExit: true }}>
           <AccordionSummary
@@ -2603,15 +2563,15 @@ const FenceCalculator = () => {
           <DialogTitle>Proposal</DialogTitle>
           <DialogContent>
             <Proposal 
-              customerName={customerName}
-              customerAddress={customerAddress}
-              customerCity={customerCity}
-              customerState={customerState}
-              customerZip={customerZip}
-              customerPhone={customerPhone}
-              customerEmail={customerEmail}
-              customerJobSiteAddress={customerJobSiteAddress}
-              salesRep={salesRep}
+              customerName={customerData?.customerName || ''}
+              customerAddress={customerData?.billingAddress || ''}
+              customerCity={''}
+              customerState={''}
+              customerZip={customerData?.zipCode || ''}
+              customerPhone={customerData?.phoneNumber || ''}
+              customerEmail={customerData?.email || ''}
+              customerJobSiteAddress={customerData?.siteAddress || ''}
+              salesRep={`${customerData?.salesRep || ''} ${customerData?.salesRepTel ? `(${customerData.salesRepTel})` : ''}`}
               materialsCost={Object.values(costs || {}).reduce((total, item) => total + (item?.subtotal || 0), 0)}
               outsideLaborCost={outsideLaborTotal || 0}
               isCommercial={commercialOrResidential === "Commercial"}

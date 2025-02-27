@@ -7,6 +7,22 @@ import logo from './assets/Logo (6).png';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('customer-info');
+  const [customerData, setCustomerData] = useState({
+    customerName: '',
+    siteAddress: '',
+    zipCode: '',
+    billingAddress: '',
+    phoneNumber: '',
+    email: '',
+    salesRep: '',
+    salesRepTel: '',
+    salesRepEmail: ''
+  });
+
+  const handleCustomerInfoSubmit = (formData) => {
+    setCustomerData(formData);
+    setCurrentPage('calculator');
+  };
 
   const theme = createTheme({
     palette: {
@@ -105,7 +121,9 @@ function App() {
           </Toolbar>
         </AppBar>
         <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-          {currentPage === 'customer-info' ? <CustomerInfo /> : <FenceCalculator />}
+          {currentPage === 'customer-info' 
+            ? <CustomerInfo onSubmit={handleCustomerInfoSubmit} initialData={customerData} /> 
+            : <FenceCalculator customerData={customerData} />}
         </Container>
       </Box>
     </ThemeProvider>

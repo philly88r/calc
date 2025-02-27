@@ -1,11 +1,17 @@
 import React from 'react';
-import { Container, Box, Paper } from '@mui/material';
+import { Container, Box, Paper, Button } from '@mui/material';
 import CustomerInfoForm from '../components/CustomerInfoForm';
 
-const CustomerInfo = () => {
+const CustomerInfo = ({ initialData, onSubmit }) => {
   const handleCustomerInfoChange = (formData) => {
+    // We can still log the data for debugging
     console.log('Customer Info:', formData);
-    // Here we can handle the form data, like saving to state or sending to a server
+  };
+
+  const handleSubmit = (formData) => {
+    if (onSubmit) {
+      onSubmit(formData);
+    }
   };
 
   return (
@@ -23,7 +29,31 @@ const CustomerInfo = () => {
             backgroundColor: '#ffffff'
           }}
         >
-          <CustomerInfoForm onFormChange={handleCustomerInfoChange} />
+          <CustomerInfoForm 
+            initialData={initialData} 
+            onFormChange={handleCustomerInfoChange} 
+            onSubmit={handleSubmit}
+          />
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              size="large"
+              onClick={() => {
+                if (onSubmit) {
+                  // Get the current form data from the form component
+                  const formElement = document.querySelector('form');
+                  if (formElement) {
+                    const formData = new FormData(formElement);
+                    const data = Object.fromEntries(formData.entries());
+                    onSubmit(data);
+                  }
+                }
+              }}
+            >
+              Continue to Calculator
+            </Button>
+          </Box>
         </Paper>
       </Box>
     </Container>

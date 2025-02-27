@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useEffect } from 'react';
+import React, { forwardRef, useEffect } from 'react';
 
 const OutsideLabor = forwardRef(({ 
   totalLinearLength, 
