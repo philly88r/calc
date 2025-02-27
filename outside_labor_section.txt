@@ -1,0 +1,56 @@
+        {/* Outside Labor Section */}
+        <Accordion TransitionProps={{ unmountOnExit: true }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="outside-labor-content"
+            id="outside-labor-header"
+            sx={{
+              backgroundColor: '#f8f8f8',
+              '&.Mui-expanded': {
+                backgroundColor: '#f0f0f0',
+              }
+            }}
+          >
+            <Typography variant="h6" sx={{ color: '#6d2f2c' }}>Outside Labor</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #E5E7EB' }}>Item</th>
+                    <th style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '2px solid #E5E7EB' }}>Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>Line Clearing</td>
+                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
+                      ${(lineClearingCost || 0).toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>Tear Out</td>
+                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
+                      ${(tearOutCost || 0).toFixed(2)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>Estimated Days</td>
+                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
+                      ${(estimatedDaysCost || 0).toFixed(2)}
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td style={{ textAlign: 'right', padding: '0.5rem', fontWeight: 'bold' }}>Total Outside Labor Cost:</td>
+                    <td style={{ textAlign: 'right', padding: '0.5rem', fontWeight: 'bold' }}>
+                      ${(outsideLaborTotal || 0).toFixed(2)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </AccordionDetails>
+        </Accordion>
