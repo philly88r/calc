@@ -41,12 +41,12 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [numberOfCorners, setNumberOfCorners] = useState('');
   const [numberOfSingleGates, setNumberOfSingleGates] = useState('');
   const [numberOfDoubleGates, setNumberOfDoubleGates] = useState('');
-  const [numberOfSlidingGates, setNumberOfSlidingGates] = useState(0);
+  const [numberOfSlidingGates, setNumberOfSlidingGates] = useState('');
   const [numberOfFlangedPosts, setNumberOfFlangedPosts] = useState('');
   const [numberOfFlangedPostsOffCentered, setNumberOfFlangedPostsOffCentered] = useState('');
   const [extraRail, setExtraRail] = useState('none');
   const [hasHBrace, setHasHBrace] = useState(false);
-  const [topRailDiameter, setTopRailDiameter] = useState('1 3/8');
+  const [topRailDiameter, setTopRailDiameter] = useState("1 5/8");
   const [material, setMaterial] = useState("Galvanized");
   const [postThickness, setPostThickness] = useState("SCH 40");
   const [duckbillPostThickness, setDuckbillPostThickness] = useState("SCH 40");
@@ -59,11 +59,11 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [barbedWire, setBarbedWire] = useState('No');
   const [threeStrandBarbedWire, setThreeStrandBarbedWire] = useState('No');
   const [doubleGateHoleDepth, setDoubleGateHoleDepth] = useState('');
-  const [slidingGatePostDiameter, setSlidingGatePostDiameter] = useState('2 3/8');
+  const [slidingGatePostDiameter, setSlidingGatePostDiameter] = useState('4');
   const [slidingGateHoleDepth, setSlidingGateHoleDepth] = useState('');
 
   // Number of pulls for tension calculations
-  const [numberOfPulls, setNumberOfPulls] = useState(0);
+  const [numberOfPulls, setNumberOfPulls] = useState('');
 
   const [pullLengths, setPullLengths] = useState([]);
   const [postSpacing, setPostSpacing] = useState(10);
@@ -71,7 +71,7 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [terminalPostDiameter, setTerminalPostDiameter] = useState("2 7/8");
   const [cornerPostDiameter, setCornerPostDiameter] = useState("2 7/8");
   const [costs, setCosts] = useState({});
-  const [meshType, setMeshType] = useState('9G Galv');
+  const [meshType, setMeshType] = useState('9G');
   const [meshFold, setMeshFold] = useState('kk');
   const [hasFenceSlats, setHasFenceSlats] = useState('No');
   const [hasTrussRods, setHasTrussRods] = useState("No");
@@ -79,12 +79,12 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [tearOutFootage, setTearOutFootage] = useState(0);
   const [needsLineClearing, setNeedsLineClearing] = useState(false);
   const [lineClearingFootage, setLineClearingFootage] = useState(0);
-  const [estimatedDays, setEstimatedDays] = useState(0);
+  const [estimatedDays, setEstimatedDays] = useState('');
   const [terminalCornerPostDiameter, setTerminalCornerPostDiameter] = useState("2 3/8");
   const [terminalCornerPostThickness, setTerminalCornerPostThickness] = useState("SCH 40");
-  const [singleGatePostDiameter, setSingleGatePostDiameter] = useState("2 3/8");
+  const [singleGatePostDiameter, setSingleGatePostDiameter] = useState("2 7/8");
   const [singleGatePostThickness, setSingleGatePostThickness] = useState("SCH 40");
-  const [doubleGatePostDiameter, setDoubleGatePostDiameter] = useState("2 3/8");
+  const [doubleGatePostDiameter, setDoubleGatePostDiameter] = useState("4");
   const [doubleGatePostThickness, setDoubleGatePostThickness] = useState("SCH 40");
   const [slidingGatePostThickness, setSlidingGatePostThickness] = useState("SCH 40");
   const [linePostThickness, setLinePostThickness] = useState("SCH 40");
@@ -1548,14 +1548,10 @@ const FenceCalculator = ({ customerData = {} }) => {
                     width: '100%'
                   }}
                 >
-                  <option value="9G Galv">9 Gauge</option>
-                  <option value="11G Galv">11 Gauge</option>
-                  <option value="11.5G Galv">11.5 Gauge</option>
-                  <option value="6G Galv">6 Gauge</option>
-                  <option value="9G Black">9 Gauge Black</option>
-                  <option value="11G Black">11 Gauge Black</option>
-                  <option value="11.5G Black">11.5 Gauge Black</option>
-                  <option value="6G Black">6 Gauge Black</option>
+                  <option value="8F">8F</option>
+                  <option value="9F">9F</option>
+                  <option value="9G">9G</option>
+                  <option value="11G">11G</option>
                 </select>
               </div>
 
