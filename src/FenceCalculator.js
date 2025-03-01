@@ -52,16 +52,17 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [duckbillPostThickness, setDuckbillPostThickness] = useState("SCH 40");
   const [hasDuckbillGateStop, setHasDuckbillGateStop] = useState(false);
   const [depthOfHoles, setDepthOfHoles] = useState(36);
+  const [widthOfHoles, setWidthOfHoles] = useState(8);
   const [linePostHoleDepth, setLinePostHoleDepth] = useState(36);
-  const [widthOfHoles, setWidthOfHoles] = useState(0);
+  const [linePostHoleWidth, setLinePostHoleWidth] = useState(8);
+  const [doubleGateHoleDepth, setDoubleGateHoleDepth] = useState('');
+  const [doubleGateHoleWidth, setDoubleGateHoleWidth] = useState(12);
+  const [slidingGateHoleDepth, setSlidingGateHoleDepth] = useState('');
+  const [slidingGateHoleWidth, setSlidingGateHoleWidth] = useState(12);
   const [typeOfConcrete, setTypeOfConcrete] = useState("");
   const [commercialOrResidential, setCommercialOrResidential] = useState("Commercial");
   const [threeStrandBarbedWire, setThreeStrandBarbedWire] = useState(false);
-  const [doubleGateHoleDepth, setDoubleGateHoleDepth] = useState('');
   const [slidingGatePostDiameter, setSlidingGatePostDiameter] = useState('4');
-  const [slidingGateHoleDepth, setSlidingGateHoleDepth] = useState('');
-
-  // Number of pulls for tension calculations
   const [numberOfPulls, setNumberOfPulls] = useState('');
 
   const [pullLengths, setPullLengths] = useState([]);
@@ -218,6 +219,13 @@ const FenceCalculator = ({ customerData = {} }) => {
   const nutsAndBoltsCosts = {
     "Black": 12.74,
     "Galvanized": 7.84
+  };
+
+  // Concrete costs
+  const CONCRETE_COSTS = {
+    "Red": 7.41,    // per bag
+    "Yellow": 4.88, // per bag
+    "Truck": 170    // per cubic yard
   };
 
   // Initialize or update pull lengths when number of pulls changes
@@ -1339,6 +1347,26 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Update outside labor total
     setOutsideLaborTotal(outsideLabor);
 
+    // Calculate concrete costs
+    const concreteCalculation = calculateConcreteNeeded();
+    if (concreteCalculation && typeOfConcrete) {
+      if (typeOfConcrete === "Truck") {
+        newCosts["Concrete (Truck)"] = {
+          quantity: concreteCalculation.cubicYardsNeeded,
+          unitCost: CONCRETE_COSTS.Truck,
+          standardLength: null,
+          subtotal: concreteCalculation.totalCost
+        };
+      } else {
+        newCosts[`Concrete (${typeOfConcrete})`] = {
+          quantity: concreteCalculation.bagsNeeded,
+          unitCost: CONCRETE_COSTS[typeOfConcrete],
+          standardLength: null,
+          subtotal: concreteCalculation.totalCost
+        };
+      }
+    }
+
     // Calculate total
     let totalCost = 0;
     for (const key in newCosts) {
@@ -1356,7 +1384,66 @@ const FenceCalculator = ({ customerData = {} }) => {
       commercialOrResidential, threeStrandBarbedWire, doubleGateHoleDepth, slidingGatePostDiameter, slidingGateHoleDepth,
       hasDuckbillGateStop, duckbillPostThickness, numberOfPulls, pullLengths, postSpacing, 
       linePostDiameter, terminalPostDiameter, cornerPostDiameter, meshType, hasFenceSlats, hasTrussRods,
-      needsLineClearing, lineClearingFootage, needsTearOut, tearOutFootage, estimatedDays]);
+      needsLineClearing, lineClearingFootage, needsTearOut, tearOutFootage, estimatedDays, typeOfConcrete]);
+
+  // Calculate concrete needed for holes
+  const calculateConcreteNeeded = () => {
+    if (!heightOfFence) return null;
+
+    let totalBagsNeeded = 0;
+    let totalVolume = 0;
+
+    // Helper to calculate single hole volume in cubic inches
+    const calculateHoleVolume = (width, depth) => {
+      if (!width || !depth) return 0;
+      const radius = width / 2;
+      return Math.PI * radius * radius * depth;
+    };
+
+    // Terminal/Corner posts holes
+    const terminalCornerHoleVolume = calculateHoleVolume(widthOfHoles, depthOfHoles);
+    const terminalCornerPosts = (parseInt(numberOfEndTerminals) || 0) + (parseInt(numberOfCorners) || 0);
+    totalVolume += terminalCornerHoleVolume * terminalCornerPosts;
+
+    // Line post holes
+    const linePostHoleVolume = calculateHoleVolume(linePostHoleWidth, linePostHoleDepth);
+    const linePostsNeeded = calculateLinePostsNeeded();
+    totalVolume += linePostHoleVolume * linePostsNeeded;
+
+    // Single gate post holes (uses terminal post hole size)
+    const singleGatePostsQuantity = (parseInt(numberOfSingleGates) || 0) * 2;
+    totalVolume += terminalCornerHoleVolume * singleGatePostsQuantity;
+
+    // Double gate post holes
+    const doubleGateHoleVolume = calculateHoleVolume(doubleGateHoleWidth, doubleGateHoleDepth || depthOfHoles);
+    const doubleGatePostsQuantity = (parseInt(numberOfDoubleGates) || 0) * 2;
+    totalVolume += doubleGateHoleVolume * doubleGatePostsQuantity;
+
+    // Sliding gate post holes
+    const slidingGateHoleVolume = calculateHoleVolume(slidingGateHoleWidth, slidingGateHoleDepth || depthOfHoles);
+    const slidingGatePostsQuantity = (parseInt(numberOfSlidingGates) || 0) * 3; // 3 posts per sliding gate
+    totalVolume += slidingGateHoleVolume * slidingGatePostsQuantity;
+
+    // Convert cubic inches to bags (multiply by 2.22 and divide by 1728 to convert from cubic inches)
+    const bagsNeeded = Math.ceil((totalVolume / 1728) * 2.22);
+
+    // Calculate costs based on concrete type
+    let concreteCost = 0;
+    if (typeOfConcrete === "Red") {
+      concreteCost = bagsNeeded * CONCRETE_COSTS.Red;
+    } else if (typeOfConcrete === "Yellow") {
+      concreteCost = bagsNeeded * CONCRETE_COSTS.Yellow;
+    } else if (typeOfConcrete === "Truck") {
+      const cubicYardsNeeded = Math.ceil(bagsNeeded / 59);
+      concreteCost = cubicYardsNeeded * CONCRETE_COSTS.Truck;
+    }
+
+    return {
+      bagsNeeded,
+      cubicYardsNeeded: typeOfConcrete === "Truck" ? Math.ceil(bagsNeeded / 59) : null,
+      totalCost: concreteCost
+    };
+  };
 
   // Calculate costs when inputs change
   useEffect(() => {
@@ -2257,20 +2344,173 @@ const FenceCalculator = ({ customerData = {} }) => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Width of holes
+                  Depth of Terminal/Corner Post Holes (inches)
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={widthOfHoles || ''}
-                  onChange={(e) => setWidthOfHoles(parseInt(e.target.value) || 0)}
+                <select
+                  value={depthOfHoles}
+                  onChange={(e) => setDepthOfHoles(e.target.value)}
                   style={{
                     border: '1px solid #d1d5db',
                     borderRadius: '0.375rem',
                     padding: '0.5rem',
                     width: '100%'
                   }}
-                />
+                >
+                  <option value={24}>24"</option>
+                  <option value={30}>30"</option>
+                  <option value={36}>36"</option>
+                  <option value={42}>42"</option>
+                  <option value={48}>48"</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Width of Terminal/Corner Post Holes (inches)
+                </label>
+                <select
+                  value={widthOfHoles}
+                  onChange={(e) => setWidthOfHoles(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value={8}>8"</option>
+                  <option value={10}>10"</option>
+                  <option value={12}>12"</option>
+                  <option value={14}>14"</option>
+                  <option value={16}>16"</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Depth of Line Post Holes (inches)
+                </label>
+                <select
+                  value={linePostHoleDepth}
+                  onChange={(e) => setLinePostHoleDepth(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value={24}>24"</option>
+                  <option value={30}>30"</option>
+                  <option value={36}>36"</option>
+                  <option value={42}>42"</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Width of Line Post Holes (inches)
+                </label>
+                <select
+                  value={linePostHoleWidth}
+                  onChange={(e) => setLinePostHoleWidth(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value={8}>8"</option>
+                  <option value={10}>10"</option>
+                  <option value={12}>12"</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Depth of Double Gate Post Holes (inches)
+                </label>
+                <select
+                  value={doubleGateHoleDepth}
+                  onChange={(e) => setDoubleGateHoleDepth(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value={24}>24"</option>
+                  <option value={30}>30"</option>
+                  <option value={36}>36"</option>
+                  <option value={42}>42"</option>
+                  <option value={48}>48"</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Width of Double Gate Post Holes (inches)
+                </label>
+                <select
+                  value={doubleGateHoleWidth}
+                  onChange={(e) => setDoubleGateHoleWidth(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value={10}>10"</option>
+                  <option value={12}>12"</option>
+                  <option value={14}>14"</option>
+                  <option value={16}>16"</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Depth of Sliding Gate Post Holes (inches)
+                </label>
+                <select
+                  value={slidingGateHoleDepth}
+                  onChange={(e) => setSlidingGateHoleDepth(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value={24}>24"</option>
+                  <option value={30}>30"</option>
+                  <option value={36}>36"</option>
+                  <option value={42}>42"</option>
+                  <option value={48}>48"</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Width of Sliding Gate Post Holes (inches)
+                </label>
+                <select
+                  value={slidingGateHoleWidth}
+                  onChange={(e) => setSlidingGateHoleWidth(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value={10}>10"</option>
+                  <option value={12}>12"</option>
+                  <option value={14}>14"</option>
+                  <option value={16}>16"</option>
+                </select>
               </div>
 
               <div>
@@ -2278,7 +2518,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                   Type of concrete
                 </label>
                 <select
-                  value={typeOfConcrete || ''}
+                  value={typeOfConcrete}
                   onChange={(e) => setTypeOfConcrete(e.target.value)}
                   style={{
                     border: '1px solid #d1d5db',
