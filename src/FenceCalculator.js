@@ -56,7 +56,8 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [widthOfHoles, setWidthOfHoles] = useState(0);
   const [typeOfConcrete, setTypeOfConcrete] = useState("");
   const [commercialOrResidential, setCommercialOrResidential] = useState("Commercial");
-  const [threeStrandBarbedWire, setThreeStrandBarbedWire] = useState(false);
+  const [barbedWire, setBarbedWire] = useState('No');
+  const [threeStrandBarbedWire, setThreeStrandBarbedWire] = useState('No');
   const [doubleGateHoleDepth, setDoubleGateHoleDepth] = useState('');
   const [slidingGatePostDiameter, setSlidingGatePostDiameter] = useState('4');
   const [slidingGateHoleDepth, setSlidingGateHoleDepth] = useState('');
@@ -72,8 +73,8 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [costs, setCosts] = useState({});
   const [meshType, setMeshType] = useState('9G');
   const [meshFold, setMeshFold] = useState('kk');
-  const [hasFenceSlats, setHasFenceSlats] = useState(false);
-  const [hasTrussRods, setHasTrussRods] = useState(false);
+  const [hasFenceSlats, setHasFenceSlats] = useState('No');
+  const [hasTrussRods, setHasTrussRods] = useState("No");
   const [needsTearOut, setNeedsTearOut] = useState(false);
   const [tearOutFootage, setTearOutFootage] = useState(0);
   const [needsLineClearing, setNeedsLineClearing] = useState(false);
@@ -201,6 +202,9 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
   };
 
+  // Barbed wire unit cost
+  const BARBED_WIRE_UNIT_COST = 60.06;
+
   // Fence slats costs per 10 linear feet
   const slatCosts = {
     "4": 59.83,
@@ -263,8 +267,8 @@ const FenceCalculator = ({ customerData = {} }) => {
       : (depthOfHoles === 24 || depthOfHoles === 30 ? 2 : 
         depthOfHoles === 36 || depthOfHoles === 42 ? 3 : 0);
 
-    // Add 1 for 3 strand barbed wire
-    const threeStrandBarbedWireAdjustment = threeStrandBarbedWire ? 1 : 0;
+    // Add 1 for barbed wire
+    const barbedWireAdjustment = barbedWire === "Yes" ? 1 : 0;
 
     // Calculate total number of terminal posts
     const totalTerminalPosts = parseInt(numberOfEndTerminals || 0) + parseInt(numberOfSolitaryPosts || 0);
@@ -285,7 +289,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Terminal posts
     if (totalTerminalPosts > 0) {
       const unitCost = getUnitCost(terminalPostDiameter);
-      const postHeight = parseInt(heightOfFence) + terminalDepthAdjustment + threeStrandBarbedWireAdjustment;
+      const postHeight = parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment;
       const subtotal = totalTerminalPosts * unitCost * postHeight;
       
       newCosts["Terminal posts"] = {
@@ -299,7 +303,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Corner posts
     if (numberOfCorners > 0) {
       const unitCost = getUnitCost(cornerPostDiameter);
-      const postHeight = parseInt(heightOfFence) + terminalDepthAdjustment + threeStrandBarbedWireAdjustment;
+      const postHeight = parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment;
       const subtotal = numberOfCorners * unitCost * postHeight;
       
       newCosts["Corner posts"] = {
@@ -321,9 +325,9 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Apply depth adjustment
       singleGatePostHeight += terminalDepthAdjustment;
       
-      // Add 3 strand barbed wire adjustment if applicable
-      if (threeStrandBarbedWire) {
-        singleGatePostHeight += threeStrandBarbedWireAdjustment;
+      // Add barbed wire adjustment if applicable
+      if (barbedWire === "Yes") {
+        singleGatePostHeight += barbedWireAdjustment;
       }
       
       const subtotal = singleGatePostsQty * unitCost * singleGatePostHeight;
@@ -359,9 +363,9 @@ const FenceCalculator = ({ customerData = {} }) => {
         doubleGatePostHeight += terminalDepthAdjustment;
       }
       
-      // Add 3 strand barbed wire adjustment if applicable
-      if (threeStrandBarbedWire) {
-        doubleGatePostHeight += threeStrandBarbedWireAdjustment;
+      // Add barbed wire adjustment if applicable
+      if (barbedWire === "Yes") {
+        doubleGatePostHeight += barbedWireAdjustment;
       }
       
       const subtotal = doubleGatePostsQty * unitCost * doubleGatePostHeight;
@@ -397,9 +401,9 @@ const FenceCalculator = ({ customerData = {} }) => {
         slidingGatePostHeight += terminalDepthAdjustment;
       }
       
-      // Add 3 strand barbed wire adjustment if applicable
-      if (threeStrandBarbedWire) {
-        slidingGatePostHeight += threeStrandBarbedWireAdjustment;
+      // Add barbed wire adjustment if applicable
+      if (barbedWire === "Yes") {
+        slidingGatePostHeight += barbedWireAdjustment;
       }
       
       const subtotal = slidingGatePostsQty * unitCost * slidingGatePostHeight;
@@ -570,7 +574,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Eye Tops / Loop Caps calculation
-    if (threeStrandBarbedWire) {
+    if (threeStrandBarbedWire === "Yes") {
       const linePostsNeeded = calculateLinePostsNeeded();
       
       // Get unit cost based on material, line post diameter, and top rail diameter
@@ -629,7 +633,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Barb Arms calculation
-    if (threeStrandBarbedWire && linePostsNeeded > 0) {
+    if (threeStrandBarbedWire === "Yes" && linePostsNeeded > 0) {
       // Get unit cost based on material, line post diameter, and top rail diameter
       let barbArmUnitCost = 0;
       if (barbArmsCosts[material]?.[linePostDiameter]?.[topRailDiameter]) {
@@ -644,6 +648,20 @@ const FenceCalculator = ({ customerData = {} }) => {
         unitCost: barbArmUnitCost,
         standardLength: null,
         subtotal: barbArmSubtotal
+      };
+    }
+
+    // Barbed Wire calculation
+    if (threeStrandBarbedWire === "Yes" && totalLinearLength > 0) {
+      // Calculate quantity: total linear length * 3 strands / 1320 feet per roll
+      const barbedWireQuantity = Math.ceil((parseFloat(totalLinearLength) * 3) / 1320);
+      const barbedWireSubtotal = barbedWireQuantity * BARBED_WIRE_UNIT_COST;
+
+      newCosts["Barbed Wire"] = {
+        quantity: barbedWireQuantity,
+        unitCost: BARBED_WIRE_UNIT_COST,
+        standardLength: 1320,
+        subtotal: barbedWireSubtotal
       };
     }
 
@@ -905,8 +923,254 @@ const FenceCalculator = ({ customerData = {} }) => {
       };
     }
 
+    // Hog Rings calculation
+    if (totalLinearLength) {
+      const hogRingsQuantity = Math.ceil(parseFloat(totalLinearLength) * 0.8 / 125);
+      const hogRingsUnitCost = material === "Black" 
+        ? (commercialOrResidential === "Commercial" ? 5.53 : 11.72)
+        : (commercialOrResidential === "Commercial" ? 3.76 : 3.53);
+      
+      newCosts["Hog Rings (1lb)"] = {
+        quantity: hogRingsQuantity,
+        unitCost: hogRingsUnitCost,
+        standardLength: null,
+        subtotal: hogRingsQuantity * hogRingsUnitCost
+      };
+    }
+
+    // Brace Bands calculation
+    if (numberOfEndTerminals > 0) {
+      // Calculate base quantity from extra rail selection
+      let baseQuantity = numberOfEndTerminals * 
+        (extraRail === "None" || extraRail === "Middle" ? 2 : 1);
+
+      // Add quantity for 3 strand barbed wire
+      if (threeStrandBarbedWire === "Yes") {
+        baseQuantity += numberOfEndTerminals * 3;
+      }
+
+      // Add quantity for H braces if enabled
+      if (hasHBrace) {
+        baseQuantity += numberOfEndTerminals;  // C53 in the formula appears to be terminal post quantity
+      }
+
+      // Get unit cost based on material and terminal post diameter
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.[terminalPostDiameter]) {
+        braceBandUnitCost = braceBandsCosts[material][terminalPostDiameter];
+      }
+
+      const braceBandSubtotal = baseQuantity * braceBandUnitCost;
+
+      newCosts["Brace Bands"] = {
+        quantity: baseQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+    }
+
+    // Brace Bands (Single Gate Post) calculation
+    if (numberOfSingleGates > 0) {
+      // Calculate base quantity from extra rail selection
+      let baseQuantity = numberOfSingleGates * 
+        (extraRail === "None" || extraRail === "Middle" ? 2 : 1);
+
+      // Add quantity for 3 strand barbed wire
+      if (threeStrandBarbedWire === "Yes") {
+        baseQuantity += numberOfSingleGates * 3;
+      }
+
+      // Add quantity for H braces if enabled
+      if (hasHBrace) {
+        baseQuantity += numberOfSingleGates;
+      }
+
+      // Get unit cost based on material and single gate post diameter
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.["2 7/8"]) {  // Single gates use 2 7/8" diameter
+        braceBandUnitCost = braceBandsCosts[material]["2 7/8"];
+      }
+
+      const braceBandSubtotal = baseQuantity * braceBandUnitCost;
+
+      newCosts["Brace Bands (Single Gate Post)"] = {
+        quantity: baseQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+    }
+
+    // Brace Bands (Double Gate Post) calculation
+    if (numberOfDoubleGates > 0) {
+      // Calculate base quantity from extra rail selection
+      let baseQuantity = numberOfDoubleGates * 
+        (extraRail === "None" || extraRail === "Middle" ? 2 : 1);
+
+      // Add quantity for 3 strand barbed wire
+      if (threeStrandBarbedWire === "Yes") {
+        baseQuantity += numberOfDoubleGates * 3;
+      }
+
+      // Add quantity for H braces if enabled
+      if (hasHBrace) {
+        baseQuantity += numberOfDoubleGates;
+      }
+
+      // Get unit cost based on material and double gate post diameter
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.["4"]) {  // Double gates use 4" diameter
+        braceBandUnitCost = braceBandsCosts[material]["4"];
+      }
+
+      const braceBandSubtotal = baseQuantity * braceBandUnitCost;
+
+      newCosts["Brace Bands (Double Gate Post)"] = {
+        quantity: baseQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+    }
+
+    // Brace Bands (Sliding Gate Post) calculation
+    if (numberOfSlidingGates > 0) {
+      // Calculate base quantity from extra rail selection
+      let baseQuantity = numberOfSlidingGates * 
+        (extraRail === "None" || extraRail === "Middle" ? 2 : 1);
+
+      // Add quantity for 3 strand barbed wire
+      if (threeStrandBarbedWire === "Yes") {
+        baseQuantity += numberOfSlidingGates * 3;
+      }
+
+      // Add quantity for H braces if enabled
+      if (hasHBrace) {
+        baseQuantity += numberOfSlidingGates;
+      }
+
+      // Get unit cost based on material and sliding gate post diameter
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.[slidingGatePostDiameter]) {
+        braceBandUnitCost = braceBandsCosts[material][slidingGatePostDiameter];
+      }
+
+      const braceBandSubtotal = baseQuantity * braceBandUnitCost;
+
+      newCosts["Brace Bands (Sliding Gate Post)"] = {
+        quantity: baseQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+    }
+
+    // Top/Middle/Bottom Rails
+    if (totalLinearLength > 0) {
+      // Determine rail multiplier based on extra rail selection
+      let railMultiplier = 1; // Default for "none"
+      if (extraRail === "both") {
+        railMultiplier = 3;
+      } else if (extraRail === "top" || extraRail === "bottom") {
+        railMultiplier = 2;
+      }
+
+      // Calculate base number of rails needed
+      let railsNeeded = (parseFloat(totalLinearLength) / 20) * 1.05 * railMultiplier;
+
+      // Add rails for H braces if applicable
+      if (hasHBrace) {
+        railsNeeded += numberOfPulls * 2;
+      }
+
+      // Get unit cost for the rail based on diameter, material and thickness
+      const getRailUnitCost = () => {
+        if (defaultPostCosts[material]?.[postThickness]?.[topRailDiameter]) {
+          return defaultPostCosts[material][postThickness][topRailDiameter];
+        }
+        return 0;
+      };
+
+      const unitCost = getRailUnitCost();
+      // Standard length for rails is 21 feet
+      const standardLength = 21;
+      const railQuantity = Math.ceil(railsNeeded);
+      const subtotal = railQuantity * unitCost * standardLength;
+      
+      newCosts["Top/Middle/Bottom Rails"] = {
+        quantity: railQuantity,
+        unitCost: unitCost,
+        standardLength: standardLength,
+        subtotal: subtotal
+      };
+
+      // Fence Sleeve calculation
+      if (postThickness === "SCH 40") {
+        // Get unit cost for the sleeve based on diameter and material
+        const getSleeveUnitCost = () => {
+          const sleeveCosts = {
+            Black: {
+              "1 3/8": 3.2,
+              "1 5/8": 3.18
+            },
+            Galvanized: {
+              "1 3/8": 2.25,
+              "1 5/8": 2.47
+            }
+          };
+          return sleeveCosts[material]?.[topRailDiameter] || 0;
+        };
+
+        const sleeveUnitCost = getSleeveUnitCost();
+        // Formula is just unit cost x quantity
+        const sleeveSubtotal = railQuantity * sleeveUnitCost;
+        
+        newCosts["Fence Sleeve"] = {
+          quantity: railQuantity,
+          unitCost: sleeveUnitCost,
+          standardLength: null,
+          subtotal: sleeveSubtotal
+        };
+
+        // Rail clamps calculation
+        const getRailClampUnitCost = () => {
+          if (railClampsCosts[material] && 
+              railClampsCosts[material][linePostDiameter] && 
+              railClampsCosts[material][linePostDiameter][topRailDiameter]) {
+            return railClampsCosts[material][linePostDiameter][topRailDiameter];
+          }
+          return 0;
+        };
+
+        const railClampUnitCost = getRailClampUnitCost();
+        const railClampSubtotal = railQuantity * railClampUnitCost;
+
+        newCosts["Rail Clamps"] = {
+          quantity: railQuantity,
+          unitCost: railClampUnitCost,
+          standardLength: null,
+          subtotal: railClampSubtotal
+        };
+      }
+    }
+
+    // Chain Link Mesh calculation
+    if (totalLinearLength > 0 && heightOfFence > 0) {
+      const meshQuantity = Math.ceil(parseFloat(totalLinearLength) / 50);
+      const meshUnitCost = meshTypeOptions[meshType] || 0;
+      const meshSubtotal = parseFloat(heightOfFence) * 50 * meshQuantity * meshUnitCost;
+
+      newCosts["Chain Link Mesh"] = {
+        quantity: meshQuantity,
+        unitCost: meshUnitCost,
+        standardLength: 50,
+        subtotal: meshSubtotal
+      };
+    }
+
     // Fence Slats calculation
-    if (hasFenceSlats && totalLinearLength > 0) {
+    if (hasFenceSlats === "Yes" && totalLinearLength > 0) {
       // Calculate quantity: (total linear length / 10) * 1.1, rounded up
       const slatQuantity = Math.ceil((parseFloat(totalLinearLength) / 10) * 1.1);
       
@@ -949,7 +1213,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Line posts
     if (linePostsNeeded > 0) {
       const unitCost = getUnitCost(linePostDiameter);
-      const postHeight = parseInt(heightOfFence) + lineDepthAdjustment + threeStrandBarbedWireAdjustment;
+      const postHeight = parseInt(heightOfFence) + lineDepthAdjustment + barbedWireAdjustment;
       const subtotal = linePostsNeeded * unitCost * postHeight;
 
       newCosts["Line posts"] = {
@@ -994,7 +1258,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Truss Rods calculation
-    if (hasTrussRods && numberOfPulls > 0) {
+    if (hasTrussRods === "Yes" && numberOfPulls > 0) {
       const trussRodsQuantity = numberOfPulls * 2;
       const trussRodsUnitCost = 14.09;
       const trussRodsSubtotal = trussRodsQuantity * trussRodsUnitCost;
@@ -1118,7 +1382,7 @@ const FenceCalculator = ({ customerData = {} }) => {
   }, [heightOfFence, totalLinearLength, numberOfEndTerminals, numberOfSolitaryPosts, numberOfCorners, 
       numberOfSingleGates, numberOfDoubleGates, numberOfSlidingGates, numberOfFlangedPosts, numberOfFlangedPostsOffCentered, 
       extraRail, hasHBrace, topRailDiameter, material, depthOfHoles, linePostHoleDepth,
-      commercialOrResidential, doubleGateHoleDepth, slidingGatePostDiameter, slidingGateHoleDepth,
+      commercialOrResidential, barbedWire, doubleGateHoleDepth, slidingGatePostDiameter, slidingGateHoleDepth,
       hasDuckbillGateStop, duckbillPostThickness, numberOfPulls, pullLengths, postSpacing, 
       linePostDiameter, terminalPostDiameter, cornerPostDiameter, meshType, hasFenceSlats, threeStrandBarbedWire, hasTrussRods,
       needsLineClearing, lineClearingFootage, needsTearOut, tearOutFootage, estimatedDays]);
@@ -1150,16 +1414,6 @@ const FenceCalculator = ({ customerData = {} }) => {
   };
 
   const pricePoints = calculateTotalPrice();
-
-  useEffect(() => {
-    if (heightOfFenceInFeet) {
-      let actualHeight = parseInt(heightOfFenceInFeet);
-      if (threeStrandBarbedWire) {
-        actualHeight += 1;
-      }
-      setHeightOfFence(actualHeight.toString());
-    }
-  }, [heightOfFenceInFeet, threeStrandBarbedWire]);
 
   const renderHeightOfFenceSection = () => {
     return (
@@ -2061,39 +2315,79 @@ const FenceCalculator = ({ customerData = {} }) => {
               </div>
 
               <div>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={hasTrussRods}
-                      onChange={(e) => setHasTrussRods(e.target.checked)}
-                    />
-                  }
-                  label="Truss Rods"
-                />
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  With truss rods?
+                </label>
+                <select
+                  value={hasTrussRods}
+                  onChange={(e) => setHasTrussRods(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
               </div>
 
               <div>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={threeStrandBarbedWire}
-                      onChange={(e) => setThreeStrandBarbedWire(e.target.checked)}
-                    />
-                  }
-                  label="3 Strand Barbed Wire"
-                />
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  3 strand barbed wire?
+                </label>
+                <select
+                  value={threeStrandBarbedWire}
+                  onChange={(e) => setThreeStrandBarbedWire(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
               </div>
 
               <div>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={hasFenceSlats}
-                      onChange={(e) => setHasFenceSlats(e.target.checked)}
-                    />
-                  }
-                  label="Fence Slats"
-                />
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Barbed Wire?
+                </label>
+                <select
+                  value={barbedWire}
+                  onChange={(e) => setBarbedWire(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Fence slats?
+                </label>
+                <select
+                  value={hasFenceSlats}
+                  onChange={(e) => setHasFenceSlats(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
               </div>
             </div>
           </AccordionDetails>
@@ -2306,8 +2600,8 @@ const FenceCalculator = ({ customerData = {} }) => {
               gaugeOfMesh={meshType}
               typeOfMeshFold={meshFold}
               withHBraces={hasHBrace}
-              withTrussRods={hasTrussRods}
-              barbedWire={threeStrandBarbedWire}
+              withTrussRods={hasTrussRods === "Yes"}
+              barbedWire={barbedWire === "Yes"}
               spacingOfPosts={postSpacing}
               depthOfHoles={depthOfHoles}
               numberOfSingleGates={numberOfSingleGates}
