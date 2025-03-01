@@ -51,10 +51,10 @@ export const postCosts = {
 
 // Mesh costs
 export const meshCosts = {
-  "8F Black": 1.55,
-  "9F Black": 0.62,
-  "9G Galv": 0.92,
-  "11G Galv": 0.59
+  "8F": 1.55,
+  "9F": 0.62,
+  "9G": 0.92,
+  "11G": 0.59
 };
 
 // Dome cap costs
