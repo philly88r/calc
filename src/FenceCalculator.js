@@ -938,131 +938,17 @@ const FenceCalculator = ({ customerData = {} }) => {
       };
     }
 
-    // Brace Bands calculation
-    if (numberOfEndTerminals > 0) {
-      // Calculate base quantity from extra rail selection
-      let baseQuantity = numberOfEndTerminals * 
-        (extraRail === "None" || extraRail === "Middle" ? 2 : 1);
+    // Chain Link Mesh calculation
+    if (totalLinearLength > 0 && heightOfFence > 0) {
+      const meshQuantity = Math.ceil(parseFloat(totalLinearLength) / 50);
+      const meshUnitCost = meshTypeOptions[meshType] || 0;
+      const meshSubtotal = parseFloat(heightOfFence) * 50 * meshQuantity * meshUnitCost;
 
-      // Add quantity for 3 strand barbed wire
-      if (threeStrandBarbedWire === "Yes") {
-        baseQuantity += numberOfEndTerminals * 3;
-      }
-
-      // Add quantity for H braces if enabled
-      if (hasHBrace) {
-        baseQuantity += numberOfEndTerminals;  // C53 in the formula appears to be terminal post quantity
-      }
-
-      // Get unit cost based on material and terminal post diameter
-      let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.[terminalPostDiameter]) {
-        braceBandUnitCost = braceBandsCosts[material][terminalPostDiameter];
-      }
-
-      const braceBandSubtotal = baseQuantity * braceBandUnitCost;
-
-      newCosts["Brace Bands"] = {
-        quantity: baseQuantity,
-        unitCost: braceBandUnitCost,
-        standardLength: null,
-        subtotal: braceBandSubtotal
-      };
-    }
-
-    // Brace Bands (Single Gate Post) calculation
-    if (numberOfSingleGates > 0) {
-      // Calculate base quantity from extra rail selection
-      let baseQuantity = numberOfSingleGates * 
-        (extraRail === "None" || extraRail === "Middle" ? 2 : 1);
-
-      // Add quantity for 3 strand barbed wire
-      if (threeStrandBarbedWire === "Yes") {
-        baseQuantity += numberOfSingleGates * 3;
-      }
-
-      // Add quantity for H braces if enabled
-      if (hasHBrace) {
-        baseQuantity += numberOfSingleGates;
-      }
-
-      // Get unit cost based on material and single gate post diameter
-      let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.["2 7/8"]) {  // Single gates use 2 7/8" diameter
-        braceBandUnitCost = braceBandsCosts[material]["2 7/8"];
-      }
-
-      const braceBandSubtotal = baseQuantity * braceBandUnitCost;
-
-      newCosts["Brace Bands (Single Gate Post)"] = {
-        quantity: baseQuantity,
-        unitCost: braceBandUnitCost,
-        standardLength: null,
-        subtotal: braceBandSubtotal
-      };
-    }
-
-    // Brace Bands (Double Gate Post) calculation
-    if (numberOfDoubleGates > 0) {
-      // Calculate base quantity from extra rail selection
-      let baseQuantity = numberOfDoubleGates * 
-        (extraRail === "None" || extraRail === "Middle" ? 2 : 1);
-
-      // Add quantity for 3 strand barbed wire
-      if (threeStrandBarbedWire === "Yes") {
-        baseQuantity += numberOfDoubleGates * 3;
-      }
-
-      // Add quantity for H braces if enabled
-      if (hasHBrace) {
-        baseQuantity += numberOfDoubleGates;
-      }
-
-      // Get unit cost based on material and double gate post diameter
-      let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.["4"]) {  // Double gates use 4" diameter
-        braceBandUnitCost = braceBandsCosts[material]["4"];
-      }
-
-      const braceBandSubtotal = baseQuantity * braceBandUnitCost;
-
-      newCosts["Brace Bands (Double Gate Post)"] = {
-        quantity: baseQuantity,
-        unitCost: braceBandUnitCost,
-        standardLength: null,
-        subtotal: braceBandSubtotal
-      };
-    }
-
-    // Brace Bands (Sliding Gate Post) calculation
-    if (numberOfSlidingGates > 0) {
-      // Calculate base quantity from extra rail selection
-      let baseQuantity = numberOfSlidingGates * 
-        (extraRail === "None" || extraRail === "Middle" ? 2 : 1);
-
-      // Add quantity for 3 strand barbed wire
-      if (threeStrandBarbedWire === "Yes") {
-        baseQuantity += numberOfSlidingGates * 3;
-      }
-
-      // Add quantity for H braces if enabled
-      if (hasHBrace) {
-        baseQuantity += numberOfSlidingGates;
-      }
-
-      // Get unit cost based on material and sliding gate post diameter
-      let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.[slidingGatePostDiameter]) {
-        braceBandUnitCost = braceBandsCosts[material][slidingGatePostDiameter];
-      }
-
-      const braceBandSubtotal = baseQuantity * braceBandUnitCost;
-
-      newCosts["Brace Bands (Sliding Gate Post)"] = {
-        quantity: baseQuantity,
-        unitCost: braceBandUnitCost,
-        standardLength: null,
-        subtotal: braceBandSubtotal
+      newCosts["Chain Link Mesh"] = {
+        quantity: meshQuantity,
+        unitCost: meshUnitCost,
+        standardLength: 50,
+        subtotal: meshSubtotal
       };
     }
 
@@ -1072,7 +958,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       let railMultiplier = 1; // Default for "none"
       if (extraRail === "both") {
         railMultiplier = 3;
-      } else if (extraRail === "top" || extraRail === "bottom") {
+      } else if (extraRail === "top" || extraRail === "bottom" || extraRail === "middle") {
         railMultiplier = 2;
       }
 
@@ -1153,20 +1039,6 @@ const FenceCalculator = ({ customerData = {} }) => {
           subtotal: railClampSubtotal
         };
       }
-    }
-
-    // Chain Link Mesh calculation
-    if (totalLinearLength > 0 && heightOfFence > 0) {
-      const meshQuantity = Math.ceil(parseFloat(totalLinearLength) / 50);
-      const meshUnitCost = meshTypeOptions[meshType] || 0;
-      const meshSubtotal = parseFloat(heightOfFence) * 50 * meshQuantity * meshUnitCost;
-
-      newCosts["Chain Link Mesh"] = {
-        quantity: meshQuantity,
-        unitCost: meshUnitCost,
-        standardLength: 50,
-        subtotal: meshSubtotal
-      };
     }
 
     // Fence Slats calculation
@@ -2224,6 +2096,54 @@ const FenceCalculator = ({ customerData = {} }) => {
           <AccordionDetails>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={hasHBrace}
+                      onChange={(e) => setHasHBrace(e.target.checked)}
+                    />
+                  }
+                  label="With H braces?"
+                />
+              </div>
+
+              <div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={hasTrussRods === "Yes"}
+                      onChange={(e) => setHasTrussRods(e.target.checked ? "Yes" : "No")}
+                    />
+                  }
+                  label="With truss rods?"
+                />
+              </div>
+
+              <div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={threeStrandBarbedWire === "Yes"}
+                      onChange={(e) => setThreeStrandBarbedWire(e.target.checked ? "Yes" : "No")}
+                    />
+                  }
+                  label="3 strand barbed wire?"
+                />
+              </div>
+
+              <div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={hasFenceSlats === "Yes"}
+                      onChange={(e) => setHasFenceSlats(e.target.checked ? "Yes" : "No")}
+                    />
+                  }
+                  label="Fence slats?"
+                />
+              </div>
+
+              <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                   Width of holes
                 </label>
@@ -2303,81 +2223,12 @@ const FenceCalculator = ({ customerData = {} }) => {
               </div>
 
               <div>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={hasHBrace}
-                      onChange={(e) => setHasHBrace(e.target.checked)}
-                    />
-                  }
-                  label="With H braces?"
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  With truss rods?
-                </label>
-                <select
-                  value={hasTrussRods}
-                  onChange={(e) => setHasTrussRods(e.target.value)}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                >
-                  <option value="No">No</option>
-                  <option value="Yes">Yes</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  3 strand barbed wire?
-                </label>
-                <select
-                  value={threeStrandBarbedWire}
-                  onChange={(e) => setThreeStrandBarbedWire(e.target.value)}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                >
-                  <option value="No">No</option>
-                  <option value="Yes">Yes</option>
-                </select>
-              </div>
-
-              <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                   Barbed Wire?
                 </label>
                 <select
                   value={barbedWire}
                   onChange={(e) => setBarbedWire(e.target.value)}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                >
-                  <option value="No">No</option>
-                  <option value="Yes">Yes</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Fence slats?
-                </label>
-                <select
-                  value={hasFenceSlats}
-                  onChange={(e) => setHasFenceSlats(e.target.value)}
                   style={{
                     border: '1px solid #d1d5db',
                     borderRadius: '0.375rem',
