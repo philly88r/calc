@@ -28,11 +28,21 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
+const useIsMobile = () => {
+  const { breakpoints } = useTheme();
+  const isMobile = useMediaQuery(breakpoints.down('sm'));
+  return isMobile;
+};
+
 const FenceCalculator = ({ customerData = {} }) => {
+  const isMobile = useIsMobile();
+  
   const [heightOfFence, setHeightOfFence] = useState('');
   const [heightOfFenceInFeet, setHeightOfFenceInFeet] = useState('8');
   const [totalLinearLength, setTotalLinearLength] = useState('');
@@ -1921,8 +1931,14 @@ const FenceCalculator = ({ customerData = {} }) => {
                 Post Options
               </Typography>
 
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: '1rem', 
+                alignItems: isMobile ? 'stretch' : 'center', 
+                marginBottom: '1rem' 
+              }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Number of Terminal Posts
                   </label>
@@ -1939,7 +1955,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     }}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Terminal Post Diameter
                   </label>
@@ -1958,7 +1974,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value="4">4"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Terminal Post Thickness
                   </label>
@@ -1978,7 +1994,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Depth (inches)
                   </label>
@@ -1999,7 +2015,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value={48}>48"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Width (inches)
                   </label>
@@ -2022,8 +2038,14 @@ const FenceCalculator = ({ customerData = {} }) => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: '1rem', 
+                alignItems: isMobile ? 'stretch' : 'center', 
+                marginBottom: '1rem' 
+              }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Number of Corner Posts
                   </label>
@@ -2040,7 +2062,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     }}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Corner Post Diameter
                   </label>
@@ -2059,7 +2081,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value="4">4"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Corner Post Thickness
                   </label>
@@ -2079,7 +2101,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Depth (inches)
                   </label>
@@ -2100,7 +2122,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value={48}>48"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Width (inches)
                   </label>
@@ -2123,8 +2145,14 @@ const FenceCalculator = ({ customerData = {} }) => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: '1rem', 
+                alignItems: isMobile ? 'stretch' : 'center', 
+                marginBottom: '1rem' 
+              }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Number of Line Posts
                   </label>
@@ -2142,7 +2170,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     }}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Line Post Diameter
                   </label>
@@ -2161,7 +2189,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value="2 3/8">2 3/8"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Line Post Thickness
                   </label>
@@ -2181,7 +2209,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Depth (inches)
                   </label>
@@ -2201,7 +2229,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value={42}>42"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Width (inches)
                   </label>
@@ -2222,8 +2250,14 @@ const FenceCalculator = ({ customerData = {} }) => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: '1rem', 
+                alignItems: isMobile ? 'stretch' : 'center', 
+                marginBottom: '1rem' 
+              }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Number of Single Gates
                   </label>
@@ -2241,7 +2275,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     }}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Single Gate Post Diameter
                   </label>
@@ -2259,7 +2293,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value="4">4"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Single Gate Post Thickness
                   </label>
@@ -2279,7 +2313,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Depth (inches)
                   </label>
@@ -2300,7 +2334,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value={48}>48"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Width (inches)
                   </label>
@@ -2323,8 +2357,14 @@ const FenceCalculator = ({ customerData = {} }) => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: '1rem', 
+                alignItems: isMobile ? 'stretch' : 'center', 
+                marginBottom: '1rem' 
+              }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Number of Double Gates
                   </label>
@@ -2342,7 +2382,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     }}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Double Gate Post Diameter
                   </label>
@@ -2359,7 +2399,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value="4">4"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Double Gate Post Thickness
                   </label>
@@ -2379,7 +2419,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Depth (inches)
                   </label>
@@ -2400,7 +2440,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value={48}>48"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Width (inches)
                   </label>
@@ -2422,8 +2462,14 @@ const FenceCalculator = ({ customerData = {} }) => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: '1rem', 
+                alignItems: isMobile ? 'stretch' : 'center', 
+                marginBottom: '1rem' 
+              }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Number of Sliding Gates
                   </label>
@@ -2441,7 +2487,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     }}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Sliding Gate Post Diameter
                   </label>
@@ -2458,7 +2504,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value="4">4"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Sliding Gate Post Thickness
                   </label>
@@ -2478,7 +2524,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Depth (inches)
                   </label>
@@ -2499,7 +2545,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <option value={48}>48"</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                     Hole Width (inches)
                   </label>
