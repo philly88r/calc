@@ -811,6 +811,106 @@ const FenceCalculator = ({ customerData = {} }) => {
       };
     }
 
+    // Brace Bands calculation for terminal posts
+    if (numberOfEndTerminals > 0 && hasHBrace) {
+      const braceBandsPerPost = 2;
+      const braceBandsQuantity = numberOfEndTerminals * braceBandsPerPost;
+      
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.[terminalPostDiameter]) {
+        braceBandUnitCost = braceBandsCosts[material][terminalPostDiameter];
+      }
+
+      const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
+
+      newCosts["Brace Bands (Terminal Post)"] = {
+        quantity: braceBandsQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+    }
+
+    // Brace Bands calculation for corner posts
+    if (numberOfCorners > 0 && hasHBrace) {
+      const braceBandsPerPost = 4;
+      const braceBandsQuantity = numberOfCorners * braceBandsPerPost;
+      
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.[cornerPostDiameter]) {
+        braceBandUnitCost = braceBandsCosts[material][cornerPostDiameter];
+      }
+
+      const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
+
+      newCosts["Brace Bands (Corner Post)"] = {
+        quantity: braceBandsQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+    }
+
+    // Brace Bands calculation for single gate posts
+    if (numberOfSingleGates > 0 && hasHBrace) {
+      const braceBandsPerPost = 2;
+      const braceBandsQuantity = numberOfSingleGates * 2 * braceBandsPerPost; // 2 posts per gate
+      
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.["2 7/8"]) {
+        braceBandUnitCost = braceBandsCosts[material]["2 7/8"];
+      }
+
+      const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
+
+      newCosts["Brace Bands (Single Gate Post)"] = {
+        quantity: braceBandsQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+    }
+
+    // Brace Bands calculation for double gate posts
+    if (numberOfDoubleGates > 0 && hasHBrace) {
+      const braceBandsPerPost = 2;
+      const braceBandsQuantity = numberOfDoubleGates * 2 * braceBandsPerPost; // 2 posts per gate
+      
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.["4"]) {
+        braceBandUnitCost = braceBandsCosts[material]["4"];
+      }
+
+      const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
+
+      newCosts["Brace Bands (Double Gate Post)"] = {
+        quantity: braceBandsQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+    }
+
+    // Brace Bands calculation for sliding gate posts
+    if (numberOfSlidingGates > 0 && hasHBrace) {
+      const braceBandsPerPost = 2;
+      const braceBandsQuantity = numberOfSlidingGates * 3 * braceBandsPerPost; // 3 posts per sliding gate
+      
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.[slidingGatePostDiameter]) {
+        braceBandUnitCost = braceBandsCosts[material][slidingGatePostDiameter];
+      }
+
+      const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
+
+      newCosts["Brace Bands (Sliding Gate Post)"] = {
+        quantity: braceBandsQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+    }
+
     // Tension Bars calculation
     if (numberOfPulls > 0) {
       // Calculate quantity: number of pulls * 2 + 1
@@ -1265,14 +1365,19 @@ const FenceCalculator = ({ customerData = {} }) => {
 
   // Calculate the total price
   const calculateTotalPrice = () => {
-    if (!heightOfFenceInFeet || !totalLinearLength) return;
+    if (!heightOfFenceInFeet || !totalLinearLength) {
+      return {
+        minPrice: 0,
+        targetPrice: 0,
+        maxPrice: 0
+      };
+    }
 
     let effectiveHeight = parseFloat(heightOfFenceInFeet);
     if (threeStrandBarbedWire) {
       effectiveHeight += 1;
     }
 
-    // Rest of the calculation logic...
     const materialCost = Object.values(costs || {}).reduce((total, item) => total + (item?.subtotal || 0), 0);
     const laborCost = outsideLaborTotal || 0;
     
@@ -1283,7 +1388,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Calculate different price points
     const minPrice = baseCost * (1 + markup);
     const targetPrice = baseCost * (1 + markup + 0.1); // Additional 10% for target
-    const maxPrice = maxPriceFromBreakdown; // Use max price from TotalCostBreakdown
+    const maxPrice = maxPriceFromBreakdown || 0; // Use max price from TotalCostBreakdown with fallback
     
     return {
       minPrice,
