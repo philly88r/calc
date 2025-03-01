@@ -43,6 +43,7 @@ const useIsMobile = () => {
 const FenceCalculator = ({ customerData = {} }) => {
   const isMobile = useIsMobile();
   
+  // General inputs
   const [heightOfFence, setHeightOfFence] = useState('');
   const [heightOfFenceInFeet, setHeightOfFenceInFeet] = useState('8');
   const [totalLinearLength, setTotalLinearLength] = useState('');
@@ -52,11 +53,10 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [numberOfSingleGates, setNumberOfSingleGates] = useState('');
   const [numberOfDoubleGates, setNumberOfDoubleGates] = useState('');
   const [numberOfSlidingGates, setNumberOfSlidingGates] = useState('');
-  const [numberOfFlangedPosts, setNumberOfFlangedPosts] = useState('');
-  const [numberOfFlangedPostsOffCentered, setNumberOfFlangedPostsOffCentered] = useState('');
+  const [numberOfFlangedPosts, setNumberOfFlangedPosts] = useState(0);
+  const [numberOfFlangedPostsOffCentered, setNumberOfFlangedPostsOffCentered] = useState(0);
   const [extraRail, setExtraRail] = useState('none');
   const [hasHBrace, setHasHBrace] = useState(false);
-  const [topRailDiameter, setTopRailDiameter] = useState("1 5/8");
   const [material, setMaterial] = useState("Galvanized");
   const [postThickness, setPostThickness] = useState("SCH 40");
   const [duckbillPostThickness, setDuckbillPostThickness] = useState("SCH 40");
@@ -64,22 +64,47 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [depthOfHoles, setDepthOfHoles] = useState(36);
   const [widthOfHoles, setWidthOfHoles] = useState(8);
   const [linePostHoleDepth, setLinePostHoleDepth] = useState(36);
-  const [linePostHoleWidth, setLinePostHoleWidth] = useState(8);
+  const [linePostHoleWidth, setLinePostHoleWidth] = useState(12);
   const [doubleGateHoleDepth, setDoubleGateHoleDepth] = useState('');
   const [doubleGateHoleWidth, setDoubleGateHoleWidth] = useState(12);
   const [slidingGateHoleDepth, setSlidingGateHoleDepth] = useState('');
   const [slidingGateHoleWidth, setSlidingGateHoleWidth] = useState(12);
+  const [singleGatePostHoleDepth, setSingleGatePostHoleDepth] = useState('');
+  const [singleGatePostHoleWidth, setSingleGatePostHoleWidth] = useState('');
   const [typeOfConcrete, setTypeOfConcrete] = useState("");
   const [commercialOrResidential, setCommercialOrResidential] = useState("Commercial");
   const [threeStrandBarbedWire, setThreeStrandBarbedWire] = useState(false);
-  const [slidingGatePostDiameter, setSlidingGatePostDiameter] = useState('4');
   const [numberOfPulls, setNumberOfPulls] = useState('');
 
+  // Post dimensions
+  const [terminalPostDiameter, setTerminalPostDiameter] = useState("2 7/8");
+  const [terminalPostThickness, setTerminalPostThickness] = useState("SCH 40");
+  const [cornerPostDiameter, setCornerPostDiameter] = useState("2 7/8");
+  const [cornerPostThickness, setCornerPostThickness] = useState("SCH 40");
+  const [linePostDiameter, setLinePostDiameter] = useState("1 7/8");
+  const [linePostThickness, setLinePostThickness] = useState("SCH 40");
+  const [singleGatePostDiameter, setSingleGatePostDiameter] = useState("2 7/8");
+  const [singleGatePostThickness, setSingleGatePostThickness] = useState("SCH 40");
+  const [doubleGatePostDiameter, setDoubleGatePostDiameter] = useState("4");
+  const [doubleGatePostThickness, setDoubleGatePostThickness] = useState("SCH 40");
+  const [slidingGatePostDiameter, setSlidingGatePostDiameter] = useState("4");
+  const [slidingGatePostThickness, setSlidingGatePostThickness] = useState("SCH 40");
+  const [topRailDiameter, setTopRailDiameter] = useState("1 5/8");
+  const [topRailThickness, setTopRailThickness] = useState("SCH 40"); // updated default value
+  const [gatePipeDiameter, setGatePipeDiameter] = useState("1 3/8");
+  const [flangedPostDiameter, setFlangedPostDiameter] = useState('2 7/8');
+  const [flangedPostThickness, setFlangedPostThickness] = useState('SCH 40');
+  const [flangedPostHoleDepth, setFlangedPostHoleDepth] = useState(36);
+  const [flangedPostHoleWidth, setFlangedPostHoleWidth] = useState(8);
+  const [flangedPostOffCenteredDiameter, setFlangedPostOffCenteredDiameter] = useState('2 7/8');
+  const [flangedPostOffCenteredThickness, setFlangedPostOffCenteredThickness] = useState('SCH 40');
+  const [flangedPostOffCenteredHoleDepth, setFlangedPostOffCenteredHoleDepth] = useState(36);
+  const [flangedPostOffCenteredHoleWidth, setFlangedPostOffCenteredHoleWidth] = useState(8);
+
+  const [outsideLaborTotal, setOutsideLaborTotal] = useState(0);
+  const [maxPriceFromBreakdown, setMaxPriceFromBreakdown] = useState(0);
   const [pullLengths, setPullLengths] = useState([]);
   const [postSpacing, setPostSpacing] = useState(10);
-  const [linePostDiameter, setLinePostDiameter] = useState("1 7/8");
-  const [terminalPostDiameter, setTerminalPostDiameter] = useState("2 7/8");
-  const [cornerPostDiameter, setCornerPostDiameter] = useState("2 7/8");
   const [costs, setCosts] = useState({});
   const [meshType, setMeshType] = useState('9G');
   const [meshFold, setMeshFold] = useState('kk');
@@ -90,18 +115,10 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [needsLineClearing, setNeedsLineClearing] = useState(false);
   const [lineClearingFootage, setLineClearingFootage] = useState(0);
   const [estimatedDays, setEstimatedDays] = useState('');
-  const [terminalCornerPostDiameter, setTerminalCornerPostDiameter] = useState("2 3/8");
-  const [terminalCornerPostThickness, setTerminalCornerPostThickness] = useState("0.065");
-  const [singleGatePostDiameter, setSingleGatePostDiameter] = useState("2 7/8");
-  const [singleGatePostThickness, setSingleGatePostThickness] = useState("0.065");
-  const [doubleGatePostDiameter, setDoubleGatePostDiameter] = useState("4");
-  const [doubleGatePostThickness, setDoubleGatePostThickness] = useState("0.065");
-  const [slidingGatePostThickness, setSlidingGatePostThickness] = useState("0.065");
-  const [linePostThickness, setLinePostThickness] = useState("0.065");
-  const [topRailThickness, setTopRailThickness] = useState("0.065");
-  const [gatePipeDiameter, setGatePipeDiameter] = useState("1 3/8");
-  const [outsideLaborTotal, setOutsideLaborTotal] = useState(0);
-  const [maxPriceFromBreakdown, setMaxPriceFromBreakdown] = useState(0);
+  const [fenceSlatsColor, setFenceSlatsColor] = useState("Black");
+  const [singleGates, setSingleGates] = useState([]);
+  const [doubleGates, setDoubleGates] = useState([]);
+  const [slidingGates, setSlidingGates] = useState([]);
 
   // Mesh costs
   const meshTypeOptions = meshCosts;
@@ -1509,9 +1526,10 @@ const FenceCalculator = ({ customerData = {} }) => {
     const linePostsNeeded = calculateLinePostsNeeded();
     totalVolume += linePostHoleVolume * linePostsNeeded;
 
-    // Single gate post holes (uses terminal post hole size)
+    // Single gate post holes
     const singleGatePostsQuantity = (parseInt(numberOfSingleGates) || 0) * 2;
-    totalVolume += terminalCornerHoleVolume * singleGatePostsQuantity;
+    const singleGatePostHoleVolume = calculateHoleVolume(singleGatePostHoleWidth, singleGatePostHoleDepth || depthOfHoles);
+    totalVolume += singleGatePostHoleVolume * singleGatePostsQuantity;
 
     // Double gate post holes
     const doubleGateHoleVolume = calculateHoleVolume(doubleGateHoleWidth, doubleGateHoleDepth || depthOfHoles);
@@ -1577,6 +1595,12 @@ const FenceCalculator = ({ customerData = {} }) => {
           </AccordionSummary>
           <AccordionDetails>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* Total Linear Length */}
+              {renderTotalLinearLengthSection()}
+              
+              {/* Fence Height */}
+              {renderHeightOfFenceSection()}
+              
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
                   Commercial or Residential
@@ -1598,7 +1622,7 @@ const FenceCalculator = ({ customerData = {} }) => {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Material Type
+                  Type of Coating
                 </label>
                 <select
                   value={material}
@@ -1654,17 +1678,14 @@ const FenceCalculator = ({ customerData = {} }) => {
                   <option value="kt">Knuckle/Twist</option>
                 </select>
               </div>
-
-              {renderHeightOfFenceSection()}
-              {renderTotalLinearLengthSection()}
-
+              
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Tearout Needed?
+                  Type of concrete
                 </label>
                 <select
-                  value={needsTearOut ? "Yes" : "No"}
-                  onChange={(e) => setNeedsTearOut(e.target.value === "Yes")}
+                  value={typeOfConcrete}
+                  onChange={(e) => setTypeOfConcrete(e.target.value)}
                   style={{
                     border: '1px solid #d1d5db',
                     borderRadius: '0.375rem',
@@ -1672,85 +1693,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                     width: '100%'
                   }}
                 >
-                  <option value="No">No</option>
-                  <option value="Yes">Yes</option>
+                  <option value="">Select...</option>
+                  <option value="Red">Red</option>
+                  <option value="Yellow">Yellow</option>
+                  <option value="Truck">Truck</option>
                 </select>
-              </div>
-
-              {needsTearOut && (
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Feet of Tearout Needed
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={tearOutFootage}
-                    onChange={(e) => setTearOutFootage(parseInt(e.target.value) || 0)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              )}
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Line Clearing Needed?
-                </label>
-                <select
-                  value={needsLineClearing ? "Yes" : "No"}
-                  onChange={(e) => setNeedsLineClearing(e.target.value === "Yes")}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                >
-                  <option value="No">No</option>
-                  <option value="Yes">Yes</option>
-                </select>
-              </div>
-
-              {needsLineClearing && (
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Feet of Line Clearing Needed
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={lineClearingFootage}
-                    onChange={(e) => setLineClearingFootage(parseInt(e.target.value) || 0)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              )}
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Estimated Days
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={estimatedDays}
-                  onChange={(e) => setEstimatedDays(parseInt(e.target.value) || 0)}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                />
               </div>
             </div>
           </AccordionDetails>
@@ -1809,9 +1756,23 @@ const FenceCalculator = ({ customerData = {} }) => {
                 />
               </div>
 
+              {numberOfDoubleGates > 0 && (
+                <div>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={hasDuckbillGateStop}
+                        onChange={(e) => setHasDuckbillGateStop(e.target.checked)}
+                      />
+                    }
+                    label="Duckbill gate stop for double gate?"
+                  />
+                </div>
+              )}
+
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Number of Sliding Gates/Cantilever
+                  Number of Sliding Gates/Cantilevers
                 </label>
                 <input
                   type="number"
@@ -1824,18 +1785,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                     padding: '0.5rem',
                     width: '100%'
                   }}
-                />
-              </div>
-
-              <div>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={hasDuckbillGateStop}
-                      onChange={(e) => setHasDuckbillGateStop(e.target.checked)}
-                    />
-                  }
-                  label="Duckbill Gate Stop for Double Gate?"
                 />
               </div>
             </div>
@@ -1927,644 +1876,877 @@ const FenceCalculator = ({ customerData = {} }) => {
           </AccordionSummary>
           <AccordionDetails>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <Typography variant="h6" gutterBottom>
-                Post Options
-              </Typography>
-
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: isMobile ? 'column' : 'row',
-                gap: '1rem', 
-                alignItems: isMobile ? 'stretch' : 'center', 
-                marginBottom: '1rem' 
-              }}>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Terminal Posts
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={numberOfEndTerminals || ''}
-                    onChange={(e) => setNumberOfEndTerminals(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Terminal Post Diameter
-                  </label>
-                  <select
-                    value={terminalPostDiameter}
-                    onChange={(e) => setTerminalPostDiameter(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="2 3/8">2 3/8"</option>
-                    <option value="2 7/8">2 7/8"</option>
-                    <option value="4">4"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Terminal Post Thickness
-                  </label>
-                  <select
-                    value={terminalCornerPostThickness}
-                    onChange={(e) => setTerminalCornerPostThickness(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="0.065">0.065"</option>
-                    <option value="SCH 20">SCH 20</option>
-                    <option value="SCH 40">SCH 40</option>
-                    {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Depth (inches)
-                  </label>
-                  <select
-                    value={depthOfHoles || ''}
-                    onChange={(e) => setDepthOfHoles(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={24}>24"</option>
-                    <option value={30}>30"</option>
-                    <option value={36}>36"</option>
-                    <option value={42}>42"</option>
-                    <option value={48}>48"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Width (inches)
-                  </label>
-                  <select
-                    value={widthOfHoles || ''}
-                    onChange={(e) => setWidthOfHoles(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={8}>8"</option>
-                    <option value={10}>10"</option>
-                    <option value={12}>12"</option>
-                    <option value={14}>14"</option>
-                    <option value={16}>16"</option>
-                  </select>
+              {/* Terminal Posts */}
+              <div>
+                <Typography variant="subtitle1" gutterBottom>
+                  Terminal Posts
+                </Typography>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Number of Terminal Posts
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={numberOfEndTerminals}
+                      onChange={(e) => setNumberOfEndTerminals(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Terminal Post Diameter
+                    </label>
+                    <select
+                      value={terminalPostDiameter}
+                      onChange={(e) => setTerminalPostDiameter(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="">Select...</option>
+                      <option value="2 3/8">2 3/8"</option>
+                      <option value="2 7/8">2 7/8"</option>
+                      <option value="4">4"</option>
+                      <option value="6 5/8">6 5/8"</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Terminal Post Thickness
+                    </label>
+                    <select
+                      value={terminalPostThickness}
+                      onChange={(e) => setTerminalPostThickness(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="SCH 40">SCH 40</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Depth (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={depthOfHoles}
+                      onChange={(e) => setDepthOfHoles(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Width (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={widthOfHoles}
+                      onChange={(e) => setWidthOfHoles(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: isMobile ? 'column' : 'row',
-                gap: '1rem', 
-                alignItems: isMobile ? 'stretch' : 'center', 
-                marginBottom: '1rem' 
-              }}>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Corner Posts
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={numberOfCorners || ''}
-                    onChange={(e) => setNumberOfCorners(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Corner Post Diameter
-                  </label>
-                  <select
-                    value={cornerPostDiameter}
-                    onChange={(e) => setCornerPostDiameter(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="2 3/8">2 3/8"</option>
-                    <option value="2 7/8">2 7/8"</option>
-                    <option value="4">4"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Corner Post Thickness
-                  </label>
-                  <select
-                    value={terminalCornerPostThickness}
-                    onChange={(e) => setTerminalCornerPostThickness(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="0.065">0.065"</option>
-                    <option value="SCH 20">SCH 20</option>
-                    <option value="SCH 40">SCH 40</option>
-                    {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Depth (inches)
-                  </label>
-                  <select
-                    value={depthOfHoles || ''}
-                    onChange={(e) => setDepthOfHoles(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={24}>24"</option>
-                    <option value={30}>30"</option>
-                    <option value={36}>36"</option>
-                    <option value={42}>42"</option>
-                    <option value={48}>48"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Width (inches)
-                  </label>
-                  <select
-                    value={widthOfHoles || ''}
-                    onChange={(e) => setWidthOfHoles(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={8}>8"</option>
-                    <option value={10}>10"</option>
-                    <option value={12}>12"</option>
-                    <option value={14}>14"</option>
-                    <option value={16}>16"</option>
-                  </select>
+              {/* Corner Posts */}
+              <div>
+                <Typography variant="subtitle1" gutterBottom>
+                  Corner Posts
+                </Typography>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Number of Corner Posts
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={numberOfCorners}
+                      onChange={(e) => setNumberOfCorners(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Corner Post Diameter
+                    </label>
+                    <select
+                      value={cornerPostDiameter}
+                      onChange={(e) => setCornerPostDiameter(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="2 3/8">2 3/8"</option>
+                      <option value="2 7/8">2 7/8"</option>
+                      <option value="3 1/2">3 1/2"</option>
+                      <option value="4">4"</option>
+                      <option value="6 5/8">6 5/8"</option>
+                      <option value="8 5/8">8 5/8"</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Corner Post Thickness
+                    </label>
+                    <select
+                      value={cornerPostThickness}
+                      onChange={(e) => setCornerPostThickness(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="SCH 40">SCH 40</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Depth (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={depthOfHoles}
+                      onChange={(e) => setDepthOfHoles(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Width (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={widthOfHoles}
+                      onChange={(e) => setWidthOfHoles(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: isMobile ? 'column' : 'row',
-                gap: '1rem', 
-                alignItems: isMobile ? 'stretch' : 'center', 
-                marginBottom: '1rem' 
-              }}>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Line Posts
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={calculateLinePostsNeeded() || ''}
-                    disabled
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%',
-                      backgroundColor: '#f3f4f6'
-                    }}
-                  />
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Line Post Diameter
-                  </label>
-                  <select
-                    value={linePostDiameter}
-                    onChange={(e) => setLinePostDiameter(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="1 5/8">1 5/8"</option>
-                    <option value="1 7/8">1 7/8"</option>
-                    <option value="2 3/8">2 3/8"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Line Post Thickness
-                  </label>
-                  <select
-                    value={linePostThickness}
-                    onChange={(e) => setLinePostThickness(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="0.065">0.065"</option>
-                    <option value="SCH 20">SCH 20</option>
-                    <option value="SCH 40">SCH 40</option>
-                    {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Depth (inches)
-                  </label>
-                  <select
-                    value={linePostHoleDepth || ''}
-                    onChange={(e) => setLinePostHoleDepth(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={24}>24"</option>
-                    <option value={30}>30"</option>
-                    <option value={36}>36"</option>
-                    <option value={42}>42"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Width (inches)
-                  </label>
-                  <select
-                    value={linePostHoleWidth || ''}
-                    onChange={(e) => setLinePostHoleWidth(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={8}>8"</option>
-                    <option value={10}>10"</option>
-                    <option value={12}>12"</option>
-                  </select>
+              {/* Flanged Posts Centered */}
+              <div>
+                <Typography variant="subtitle1" gutterBottom>
+                  Flanged Posts Centered
+                </Typography>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Number of Flanged Posts Centered
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={numberOfFlangedPosts}
+                      onChange={(e) => setNumberOfFlangedPosts(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Post Diameter
+                    </label>
+                    <select
+                      value={flangedPostDiameter}
+                      onChange={(e) => setFlangedPostDiameter(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="2 3/8">2 3/8"</option>
+                      <option value="2 7/8">2 7/8"</option>
+                      <option value="3 1/2">3 1/2"</option>
+                      <option value="4">4"</option>
+                      <option value="6 5/8">6 5/8"</option>
+                      <option value="8 5/8">8 5/8"</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Post Thickness
+                    </label>
+                    <select
+                      value={flangedPostThickness}
+                      onChange={(e) => setFlangedPostThickness(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="SCH 40">SCH 40</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Depth (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={flangedPostHoleDepth}
+                      onChange={(e) => setFlangedPostHoleDepth(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Width (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={flangedPostHoleWidth}
+                      onChange={(e) => setFlangedPostHoleWidth(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: isMobile ? 'column' : 'row',
-                gap: '1rem', 
-                alignItems: isMobile ? 'stretch' : 'center', 
-                marginBottom: '1rem' 
-              }}>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Single Gates
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={numberOfSingleGates || ''}
-                    disabled
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%',
-                      backgroundColor: '#f3f4f6'
-                    }}
-                  />
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Single Gate Post Diameter
-                  </label>
-                  <select
-                    value={singleGatePostDiameter}
-                    onChange={(e) => setSingleGatePostDiameter(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="2 7/8">2 7/8"</option>
-                    <option value="4">4"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Single Gate Post Thickness
-                  </label>
-                  <select
-                    value={singleGatePostThickness}
-                    onChange={(e) => setSingleGatePostThickness(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="0.065">0.065"</option>
-                    <option value="SCH 20">SCH 20</option>
-                    <option value="SCH 40">SCH 40</option>
-                    {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Depth (inches)
-                  </label>
-                  <select
-                    value={depthOfHoles || ''}
-                    onChange={(e) => setDepthOfHoles(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={24}>24"</option>
-                    <option value={30}>30"</option>
-                    <option value={36}>36"</option>
-                    <option value={42}>42"</option>
-                    <option value={48}>48"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Width (inches)
-                  </label>
-                  <select
-                    value={widthOfHoles || ''}
-                    onChange={(e) => setWidthOfHoles(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={8}>8"</option>
-                    <option value={10}>10"</option>
-                    <option value={12}>12"</option>
-                    <option value={14}>14"</option>
-                    <option value={16}>16"</option>
-                  </select>
+              {/* Flanged Posts Off Centered */}
+              <div>
+                <Typography variant="subtitle1" gutterBottom>
+                  Flanged Posts Off Centered
+                </Typography>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Number of Flanged Posts Off Centered
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={numberOfFlangedPostsOffCentered}
+                      onChange={(e) => setNumberOfFlangedPostsOffCentered(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Post Diameter
+                    </label>
+                    <select
+                      value={flangedPostOffCenteredDiameter}
+                      onChange={(e) => setFlangedPostOffCenteredDiameter(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="2 3/8">2 3/8"</option>
+                      <option value="2 7/8">2 7/8"</option>
+                      <option value="3 1/2">3 1/2"</option>
+                      <option value="4">4"</option>
+                      <option value="6 5/8">6 5/8"</option>
+                      <option value="8 5/8">8 5/8"</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Post Thickness
+                    </label>
+                    <select
+                      value={flangedPostOffCenteredThickness}
+                      onChange={(e) => setFlangedPostOffCenteredThickness(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="SCH 40">SCH 40</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Depth (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={flangedPostOffCenteredHoleDepth}
+                      onChange={(e) => setFlangedPostOffCenteredHoleDepth(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Width (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={flangedPostOffCenteredHoleWidth}
+                      onChange={(e) => setFlangedPostOffCenteredHoleWidth(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: isMobile ? 'column' : 'row',
-                gap: '1rem', 
-                alignItems: isMobile ? 'stretch' : 'center', 
-                marginBottom: '1rem' 
-              }}>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Double Gates
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={numberOfDoubleGates || ''}
-                    disabled
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%',
-                      backgroundColor: '#f3f4f6'
-                    }}
-                  />
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Double Gate Post Diameter
-                  </label>
-                  <select
-                    value={doubleGatePostDiameter}
-                    onChange={(e) => setDoubleGatePostDiameter(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="4">4"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Double Gate Post Thickness
-                  </label>
-                  <select
-                    value={doubleGatePostThickness}
-                    onChange={(e) => setDoubleGatePostThickness(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="0.065">0.065"</option>
-                    <option value="SCH 20">SCH 20</option>
-                    <option value="SCH 40">SCH 40</option>
-                    {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Depth (inches)
-                  </label>
-                  <select
-                    value={doubleGateHoleDepth || ''}
-                    onChange={(e) => setDoubleGateHoleDepth(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={24}>24"</option>
-                    <option value={30}>30"</option>
-                    <option value={36}>36"</option>
-                    <option value={42}>42"</option>
-                    <option value={48}>48"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Width (inches)
-                  </label>
-                  <select
-                    value={doubleGateHoleWidth || ''}
-                    onChange={(e) => setDoubleGateHoleWidth(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={10}>10"</option>
-                    <option value={12}>12"</option>
-                    <option value={14}>14"</option>
-                    <option value={16}>16"</option>
-                  </select>
+              {/* Line Posts */}
+              <div>
+                <Typography variant="subtitle1" gutterBottom>
+                  Line Posts
+                </Typography>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Line Post Diameter
+                    </label>
+                    <select
+                      value={linePostDiameter}
+                      onChange={(e) => setLinePostDiameter(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="1 5/8">1 5/8"</option>
+                      <option value="1 7/8">1 7/8"</option>
+                      <option value="2 3/8">2 3/8"</option>
+                      <option value="2 7/8">2 7/8"</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Line Post Thickness
+                    </label>
+                    <select
+                      value={linePostThickness}
+                      onChange={(e) => setLinePostThickness(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="SCH 40">SCH 40</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Depth (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={linePostHoleDepth}
+                      onChange={(e) => setLinePostHoleDepth(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Hole Width (inches)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={linePostHoleWidth}
+                      onChange={(e) => setLinePostHoleWidth(parseInt(e.target.value) || 0)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: isMobile ? 'column' : 'row',
-                gap: '1rem', 
-                alignItems: isMobile ? 'stretch' : 'center', 
-                marginBottom: '1rem' 
-              }}>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+              {/* Top Rail */}
+              <div>
+                <Typography variant="subtitle1" gutterBottom>
+                  Top Rail
+                </Typography>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Top Rail Diameter
+                    </label>
+                    <select
+                      value={topRailDiameter}
+                      onChange={(e) => setTopRailDiameter(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="1 3/8">1 3/8"</option>
+                      <option value="1 5/8">1 5/8"</option>
+                      <option value="1 7/8">1 7/8"</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                      Top Rail Thickness
+                    </label>
+                    <select
+                      value={topRailThickness}
+                      onChange={(e) => setTopRailThickness(e.target.value)}
+                      style={{
+                        border: '1px solid #d1d5db',
+                        borderRadius: '0.375rem',
+                        padding: '0.5rem',
+                        width: '100%'
+                      }}
+                    >
+                      <option value="SCH 40">SCH 40</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Single Gate Posts - Only show if there are single gates */}
+              {numberOfSingleGates > 0 && (
+                <div>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Single Gate Posts
+                  </Typography>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Single Gate Post Diameter
+                      </label>
+                      <select
+                        value={singleGatePostDiameter}
+                        onChange={(e) => setSingleGatePostDiameter(e.target.value)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%'
+                        }}
+                      >
+                        <option value="2 3/8">2 3/8"</option>
+                        <option value="2 7/8">2 7/8"</option>
+                        <option value="4">4"</option>
+                        <option value="6 5/8">6 5/8"</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Single Gate Post Thickness
+                      </label>
+                      <select
+                        value={singleGatePostThickness}
+                        onChange={(e) => setSingleGatePostThickness(e.target.value)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%',
+                          marginBottom: isMobile ? '1rem' : '0',
+                        }}
+                      >
+                        <option value="SCH 40">SCH 40</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Hole Depth (inches)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={singleGatePostHoleDepth}
+                        onChange={(e) => setSingleGatePostHoleDepth(parseInt(e.target.value) || 0)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Hole Width (inches)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={singleGatePostHoleWidth}
+                        onChange={(e) => setSingleGatePostHoleWidth(parseInt(e.target.value) || 0)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Double Gate Posts - Only show if there are double gates */}
+              {numberOfDoubleGates > 0 && (
+                <div>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Double Gate Posts
+                  </Typography>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Double Gate Post Diameter
+                      </label>
+                      <select
+                        value={doubleGatePostDiameter}
+                        onChange={(e) => setDoubleGatePostDiameter(e.target.value)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%'
+                        }}
+                      >
+                        <option value="2 3/8">2 3/8"</option>
+                        <option value="2 7/8">2 7/8"</option>
+                        <option value="4">4"</option>
+                        <option value="6 5/8">6 5/8"</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Double Gate Post Thickness
+                      </label>
+                      <select
+                        value={doubleGatePostThickness}
+                        onChange={(e) => setDoubleGatePostThickness(e.target.value)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%',
+                          marginBottom: isMobile ? '1rem' : '0',
+                        }}
+                      >
+                        <option value="SCH 40">SCH 40</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Hole Depth (inches)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={doubleGateHoleDepth}
+                        onChange={(e) => setDoubleGateHoleDepth(parseInt(e.target.value) || 0)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Hole Width (inches)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={doubleGateHoleWidth}
+                        onChange={(e) => setDoubleGateHoleWidth(parseInt(e.target.value) || 0)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sliding Gate Posts - Only show if there are sliding gates */}
+              {numberOfSlidingGates > 0 && (
+                <div>
+                  <Typography variant="subtitle1" gutterBottom>
+                    Sliding Gate Posts
+                  </Typography>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Sliding Gate Post Diameter
+                      </label>
+                      <select
+                        value={slidingGatePostDiameter}
+                        onChange={(e) => setSlidingGatePostDiameter(e.target.value)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%'
+                        }}
+                      >
+                        <option value="2 3/8">2 3/8"</option>
+                        <option value="2 7/8">2 7/8"</option>
+                        <option value="4">4"</option>
+                        <option value="6 5/8">6 5/8"</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Sliding Gate Post Thickness
+                      </label>
+                      <select
+                        value={slidingGatePostThickness}
+                        onChange={(e) => setSlidingGatePostThickness(e.target.value)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%',
+                          marginBottom: isMobile ? '1rem' : '0',
+                        }}
+                      >
+                        <option value="SCH 40">SCH 40</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center', marginTop: '1rem' }}>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Sliding Gate Post Hole Depth (inches)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={slidingGateHoleDepth}
+                        onChange={(e) => setSlidingGateHoleDepth(parseInt(e.target.value) || 0)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+                    <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                        Sliding Gate Post Hole Width (inches)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={slidingGateHoleWidth}
+                        onChange={(e) => setSlidingGateHoleWidth(parseInt(e.target.value) || 0)}
+                        style={{
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.375rem',
+                          padding: '0.5rem',
+                          width: '100%'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Extra Work Section */}
+        <Accordion TransitionProps={{ unmountOnExit: true }}>
+          <AccordionSummary 
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="extra-work-content"
+            id="extra-work-header"
+            sx={{
+              backgroundColor: '#f8f8f8',
+              '&.Mui-expanded': {
+                backgroundColor: '#f0f0f0',
+              }
+            }}
+          >
+            <Typography variant="h6" sx={{ color: '#6d2f2c' }}>Extra Work</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={needsTearOut}
+                      onChange={(e) => setNeedsTearOut(e.target.checked)}
+                    />
+                  }
+                  label="Tear out needed?"
+                />
+              </div>
+
+              {needsTearOut && (
+                <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Sliding Gates
+                    Number of Feet of Tear Out
                   </label>
                   <input
                     type="number"
                     min="0"
-                    value={numberOfSlidingGates || ''}
-                    disabled
+                    value={tearOutFootage}
+                    onChange={(e) => setTearOutFootage(parseInt(e.target.value) || 0)}
                     style={{
                       border: '1px solid #d1d5db',
                       borderRadius: '0.375rem',
                       padding: '0.5rem',
-                      width: '100%',
-                      backgroundColor: '#f3f4f6'
+                      width: '100%'
                     }}
                   />
                 </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
+              )}
+
+              <div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={needsLineClearing}
+                      onChange={(e) => setNeedsLineClearing(e.target.checked)}
+                    />
+                  }
+                  label="Line clearing needed?"
+                />
+              </div>
+
+              {needsLineClearing && (
+                <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Sliding Gate Post Diameter
+                    Number of Feet of Line Clearing
                   </label>
-                  <select
-                    value={slidingGatePostDiameter}
-                    onChange={(e) => setSlidingGatePostDiameter(e.target.value)}
+                  <input
+                    type="number"
+                    min="0"
+                    value={lineClearingFootage}
+                    onChange={(e) => setLineClearingFootage(parseInt(e.target.value) || 0)}
                     style={{
                       border: '1px solid #d1d5db',
                       borderRadius: '0.375rem',
                       padding: '0.5rem',
                       width: '100%'
                     }}
-                  >
-                    <option value="4">4"</option>
-                  </select>
+                  />
                 </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Sliding Gate Post Thickness
-                  </label>
-                  <select
-                    value={slidingGatePostThickness}
-                    onChange={(e) => setSlidingGatePostThickness(e.target.value)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value="0.065">0.065"</option>
-                    <option value="SCH 20">SCH 20</option>
-                    <option value="SCH 40">SCH 40</option>
-                    {material === "Galvanized" && <option value="High zinc">High Zinc</option>}
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Depth (inches)
-                  </label>
-                  <select
-                    value={slidingGateHoleDepth || ''}
-                    onChange={(e) => setSlidingGateHoleDepth(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={24}>24"</option>
-                    <option value={30}>30"</option>
-                    <option value={36}>36"</option>
-                    <option value={42}>42"</option>
-                    <option value={48}>48"</option>
-                  </select>
-                </div>
-                <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Hole Width (inches)
-                  </label>
-                  <select
-                    value={slidingGateHoleWidth || ''}
-                    onChange={(e) => setSlidingGateHoleWidth(parseInt(e.target.value) || '')}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  >
-                    <option value={10}>10"</option>
-                    <option value={12}>12"</option>
-                    <option value={14}>14"</option>
-                    <option value={16}>16"</option>
-                  </select>
-                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Estimated Work Days
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={estimatedDays}
+                  onChange={(e) => setEstimatedDays(parseInt(e.target.value) || 0)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                />
               </div>
             </div>
           </AccordionDetails>
@@ -2587,6 +2769,45 @@ const FenceCalculator = ({ customerData = {} }) => {
           </AccordionSummary>
           <AccordionDetails>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Spacing of Posts
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={postSpacing}
+                  onChange={(e) => setPostSpacing(parseInt(e.target.value) || 0)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Have extra rail?
+                </label>
+                <select
+                  value={extraRail}
+                  onChange={(e) => setExtraRail(e.target.value)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                >
+                  <option value="none">None</option>
+                  <option value="middle">Middle</option>
+                  <option value="bottom">Bottom</option>
+                  <option value="both">Both (Middle and Bottom)</option>
+                </select>
+              </div>
+
               <div>
                 <FormControlLabel
                   control={
@@ -2635,66 +2856,27 @@ const FenceCalculator = ({ customerData = {} }) => {
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Type of concrete
-                </label>
-                <select
-                  value={typeOfConcrete}
-                  onChange={(e) => setTypeOfConcrete(e.target.value)}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                >
-                  <option value="">Select...</option>
-                  <option value="Red">Red</option>
-                  <option value="Yellow">Yellow</option>
-                  <option value="Truck">Truck</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Spacing of posts
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={postSpacing}
-                  onChange={(e) => setPostSpacing(parseInt(e.target.value) || 0)}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Have extra rail?
-                </label>
-                <select
-                  value={extraRail}
-                  onChange={(e) => setExtraRail(e.target.value)}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                >
-                  <option value="none">None</option>
-                  <option value="top">Top</option>
-                  <option value="middle">Middle</option>
-                  <option value="bottom">Bottom</option>
-                  <option value="both">Both Top and Bottom</option>
-                </select>
-              </div>
+              {hasFenceSlats === "Yes" && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                    Slat Color
+                  </label>
+                  <select
+                    value={fenceSlatsColor}
+                    onChange={(e) => setFenceSlatsColor(e.target.value)}
+                    style={{
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      padding: '0.5rem',
+                      width: '100%'
+                    }}
+                  >
+                    <option value="Black">Black</option>
+                    <option value="Green">Green</option>
+                    <option value="Tan">Tan</option>
+                  </select>
+                </div>
+              )}
             </div>
           </AccordionDetails>
         </Accordion>
@@ -2718,46 +2900,32 @@ const FenceCalculator = ({ customerData = {} }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr>
-                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #E5E7EB' }}>Item</th>
-                    <th style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '2px solid #E5E7EB' }}>Quantity</th>
-                    <th style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '2px solid #E5E7EB' }}>Unit Cost</th>
-                    <th style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '2px solid #E5E7EB' }}>Subtotal</th>
+                  <tr style={{ backgroundColor: '#f3f4f6' }}>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Item</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Cost</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(costs || {}).map(([item, details]) => (
-                    <tr key={item}>
-                      <td style={{ padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>{item}</td>
-                      <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
-                        {details?.quantity || 0}
-                      </td>
-                      <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
-                        {details?.unitCost !== undefined ? `$${details.unitCost.toFixed(2)}` : 
-                         details?.meshCost !== undefined ? `$${details.meshCost.toFixed(2)}` :
-                         details?.fenceTiesCost !== undefined ? `$${details.fenceTiesCost.toFixed(2)}` :
-                         details?.hogRingsCost !== undefined ? `$${details.hogRingsCost.toFixed(2)}` :
-                         details?.domeCapsCost !== undefined ? `$${details.domeCapsCost.toFixed(2)}` :
-                         details?.wedgeAnchorsCost !== undefined ? `$${details.wedgeAnchorsCost.toFixed(2)}` :
-                         details?.eyeTopsCost !== undefined ? `$${details.eyeTopsCost.toFixed(2)}` :
-                         details?.trussRodsCost !== undefined ? `$${details.trussRodsCost.toFixed(2)}` :
-                         details?.tearOutCost !== undefined ? `$${details.tearOutCost.toFixed(2)}` :
-                         details?.lineClearingCost !== undefined ? `$${details.lineClearingCost.toFixed(2)}` : '-'}
-                      </td>
-                      <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
-                        ${(details?.subtotal || 0).toFixed(2)}
-                      </td>
-                    </tr>
+                  {Object.entries(costs || {}).map(([key, value]) => (
+                    key !== 'Total' && key !== 'Grand Total' ? (
+                      <tr key={key}>
+                        <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{key}</td>
+                        <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>${value?.subtotal?.toFixed(2) || '0.00'}</td>
+                      </tr>
+                    ) : null
                   ))}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td colSpan="3" style={{ textAlign: 'right', padding: '0.5rem', fontWeight: 'bold' }}>Total Material Cost:</td>
-                    <td style={{ textAlign: 'right', padding: '0.5rem', fontWeight: 'bold' }}>
-                      ${Object.values(costs || {}).reduce((total, item) => total + (item?.subtotal || 0), 0).toFixed(2)}
+                  <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>Total Material Cost</td>
+                    <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold' }}>
+                      ${Object.entries(costs || {}).reduce((total, [key, value]) => {
+                        if (key !== 'Total' && key !== 'Grand Total') {
+                          return total + (value?.subtotal || 0);
+                        }
+                        return total;
+                      }, 0).toFixed(2)}
                     </td>
                   </tr>
-                </tfoot>
+                </tbody>
               </table>
             </div>
           </AccordionDetails>
@@ -2782,51 +2950,41 @@ const FenceCalculator = ({ customerData = {} }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr>
-                    <th style={{ textAlign: 'left', padding: '0.5rem', borderBottom: '2px solid #E5E7EB' }}>Item</th>
-                    <th style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '2px solid #E5E7EB' }}>Cost</th>
+                  <tr style={{ backgroundColor: '#f3f4f6' }}>
+                    <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Item</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Cost</th>
                   </tr>
                 </thead>
                 <tbody>
+                  {needsTearOut && (
+                    <tr>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Tear Out ({tearOutFootage} ft)</td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
+                        ${(tearOutFootage * 3).toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
+                  {needsLineClearing && (
+                    <tr>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Line Clearing ({lineClearingFootage} ft)</td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
+                        ${(lineClearingFootage * 3).toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
                   <tr>
-                    <td style={{ padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>Line Clearing</td>
-                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
-                      ${((costs && costs["Line clearing"] && costs["Line clearing"].subtotal) || 0).toFixed(2)}
+                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Installation Labor</td>
+                    <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
+                      ${(totalLinearLength * 3).toFixed(2)}
                     </td>
                   </tr>
-                  <tr>
-                    <td style={{ padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>Tear Out</td>
-                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
-                      ${((costs && costs["Tear out"] && costs["Tear out"].subtotal) || 0).toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>Single Gates Labor</td>
-                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
-                      ${((costs && costs["Single gates labor"] && costs["Single gates labor"].subtotal) || 0).toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>Double Gates Labor</td>
-                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
-                      ${((costs && costs["Double gates labor"] && costs["Double gates labor"].subtotal) || 0).toFixed(2)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>Traveling Cost</td>
-                    <td style={{ textAlign: 'right', padding: '0.5rem', borderBottom: '1px solid #E5E7EB' }}>
-                      ${((costs && costs["Traveling Cost"] && costs["Traveling Cost"].subtotal) || 0).toFixed(2)}
+                  <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>Total Outside Labor Cost</td>
+                    <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold' }}>
+                      ${outsideLaborTotal.toFixed(2)}
                     </td>
                   </tr>
                 </tbody>
-                <tfoot>
-                  <tr>
-                    <td style={{ textAlign: 'right', padding: '0.5rem', fontWeight: 'bold' }}>Total Outside Labor Cost:</td>
-                    <td style={{ textAlign: 'right', padding: '0.5rem', fontWeight: 'bold' }}>
-                      ${(outsideLaborTotal || 0).toFixed(2)}
-                    </td>
-                  </tr>
-                </tfoot>
               </table>
             </div>
           </AccordionDetails>
@@ -2919,15 +3077,17 @@ const FenceCalculator = ({ customerData = {} }) => {
               linePostDiameter={linePostDiameter}
               topRailDiameter={topRailDiameter}
               gateFrameDiameter={gatePipeDiameter}
-              terminalPostThickness={terminalCornerPostThickness}
+              terminalPostThickness={terminalPostThickness}
               doubleGatePostThickness={doubleGatePostThickness}
               slidingGatePostThickness={slidingGatePostThickness}
-              linePostThickness={postThickness}
-              topRailThickness={postThickness}
+              linePostThickness={linePostThickness}
+              topRailThickness={topRailThickness}
               numberOfFlangedPostsCentered={numberOfFlangedPosts}
               numberOfFlangedPostsOffCentered={numberOfFlangedPostsOffCentered}
               maxPrice={pricePoints.maxPrice}
               typeOfConcrete={typeOfConcrete}
+              singleGatePostHoleDepth={singleGatePostHoleDepth}
+              singleGatePostHoleWidth={singleGatePostHoleWidth}
             />
           </DialogContent>
           <DialogActions>
