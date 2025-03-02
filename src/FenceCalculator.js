@@ -425,7 +425,8 @@ const FenceCalculator = ({ customerData = {} }) => {
 
     // Sliding gate posts
     if (numberOfSlidingGates > 0) {
-      const slidingGatePostsQty = numberOfSlidingGates * 2;
+      // Calculate quantity as number of gates times 3
+      const slidingGatePostsQty = numberOfSlidingGates * 3;
       const unitCost = getUnitCost(slidingGatePostDiameter, true);
       
       // Special height logic for sliding gate posts
