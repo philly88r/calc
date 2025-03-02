@@ -3,6 +3,7 @@ import './App.css';
 import { Container, CssBaseline, ThemeProvider, createTheme, Box, AppBar, Toolbar, Button } from '@mui/material';
 import CustomerInfo from './pages/CustomerInfo';
 import FenceCalculator from './FenceCalculator';
+import ChainlinkPriceTest from './components/ChainlinkPriceTest';
 import logo from './assets/Logo (6).png';
 import { ResponsiveProvider } from './context/ResponsiveContext';
 
@@ -73,6 +74,19 @@ function App() {
     },
   });
 
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'customer-info':
+        return <CustomerInfo onSubmit={handleCustomerInfoSubmit} initialData={customerData} />;
+      case 'calculator':
+        return <FenceCalculator customerData={customerData} />;
+      case 'pricing':
+        return <ChainlinkPriceTest />;
+      default:
+        return <CustomerInfo onSubmit={handleCustomerInfoSubmit} initialData={customerData} />;
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <ResponsiveProvider>
@@ -119,13 +133,22 @@ function App() {
                 >
                   Calculator
                 </Button>
+                <Button
+                  onClick={() => setCurrentPage('pricing')}
+                  color="inherit"
+                  sx={{ 
+                    color: '#ffffff',
+                    backgroundColor: currentPage === 'pricing' ? '#4d211f' : 'transparent',
+                    '&:hover': { backgroundColor: '#4d211f' }
+                  }}
+                >
+                  Pricing
+                </Button>
               </Box>
             </Toolbar>
           </AppBar>
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            {currentPage === 'customer-info' 
-              ? <CustomerInfo onSubmit={handleCustomerInfoSubmit} initialData={customerData} /> 
-              : <FenceCalculator customerData={customerData} />}
+            {renderCurrentPage()}
           </Container>
         </Box>
       </ResponsiveProvider>
