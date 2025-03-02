@@ -6,7 +6,9 @@ import {
   fenceTiesCosts,
   hogRingsCosts,
   wedgeAnchorCosts,
-  eyeTopsCosts
+  eyeTopsCosts,
+  hingePrices,
+  rollerPrice
 } from './data/costs';
 import OutsideLabor from './components/OutsideLabor';
 import TotalCostBreakdown from './components/TotalCostBreakdown';
@@ -50,9 +52,9 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [numberOfEndTerminals, setNumberOfEndTerminals] = useState('');
   const [numberOfSolitaryPosts, setNumberOfSolitaryPosts] = useState('');
   const [numberOfCorners, setNumberOfCorners] = useState('');
-  const [numberOfSingleGates, setNumberOfSingleGates] = useState('');
-  const [numberOfDoubleGates, setNumberOfDoubleGates] = useState('');
-  const [numberOfSlidingGates, setNumberOfSlidingGates] = useState('');
+  const [numberOfSingleGates, setNumberOfSingleGates] = useState(0);
+  const [numberOfDoubleGates, setNumberOfDoubleGates] = useState(0);
+  const [numberOfSlidingGates, setNumberOfSlidingGates] = useState(0);
   const [numberOfFlangedPosts, setNumberOfFlangedPosts] = useState(0);
   const [numberOfFlangedPostsOffCentered, setNumberOfFlangedPostsOffCentered] = useState(0);
   const [extraRail, setExtraRail] = useState('none');
@@ -119,6 +121,15 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [singleGates, setSingleGates] = useState([]);
   const [doubleGates, setDoubleGates] = useState([]);
   const [slidingGates, setSlidingGates] = useState([]);
+
+  // Gate details
+  const [singleGateSize, setSingleGateSize] = useState('4');
+  const [singleGateHingeType, setSingleGateHingeType] = useState('residential');
+  const [singleGateLatchType, setSingleGateLatchType] = useState('fork');
+  const [doubleGateSize, setDoubleGateSize] = useState('6');
+  const [doubleGateHingeType, setDoubleGateHingeType] = useState('residential');
+  const [doubleGateLatchType, setDoubleGateLatchType] = useState('fork');
+  const [slidingGateSize, setSlidingGateSize] = useState('6');
 
   // Mesh costs
   const meshTypeOptions = meshCosts;
@@ -365,7 +376,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       }
       
       const subtotal = singleGatePostsQty * unitCost * singleGatePostHeight;
-      
+
       newCosts["Single gate posts"] = {
         quantity: singleGatePostsQty,
         unitCost: unitCost,
@@ -403,7 +414,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       }
       
       const subtotal = doubleGatePostsQty * unitCost * doubleGatePostHeight;
-      
+
       newCosts["Double gate posts"] = {
         quantity: doubleGatePostsQty,
         unitCost: unitCost,
@@ -441,7 +452,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       }
       
       const subtotal = slidingGatePostsQty * unitCost * slidingGatePostHeight;
-      
+
       newCosts["Sliding gate posts"] = {
         quantity: slidingGatePostsQty,
         unitCost: unitCost,
@@ -466,7 +477,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Duckbill posts are always 3 ft tall
       const postHeight = 3;
       const subtotal = duckbillPostsQty * unitCost * postHeight;
-      
+
       newCosts["Duckbill gate stop posts"] = {
         quantity: duckbillPostsQty,
         unitCost: unitCost,
@@ -1280,7 +1291,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Cantilever/sliding gate rollers calculation
     if (numberOfSlidingGates > 0) {
       const rollersQuantity = numberOfSlidingGates * 4;
-      const rollersUnitCost = 83.3;
+      const rollersUnitCost = rollerPrice;
       const rollersSubtotal = rollersQuantity * rollersUnitCost;
 
       newCosts["Cantilever/Sliding Gate Rollers"] = {
@@ -1304,6 +1315,59 @@ const FenceCalculator = ({ customerData = {} }) => {
         subtotal: latchSubtotal
       };
     }
+
+    // Gate hardware calculation
+    const calculateGateHardwareCost = () => {
+      let totalCost = 0;
+      const coating = material.toLowerCase() === 'black' ? 'black' : 'galvanized';
+
+      // Helper to get matching female size based on male size position
+      const getMatchingFemaleSize = (maleSize) => {
+        const maleSizes = Object.keys(hingePrices.residential.male[coating]).filter(size => 
+          hingePrices.residential.male[coating][size] !== null
+        );
+        const femaleSizes = Object.keys(hingePrices.residential.female[coating]).filter(size => 
+          hingePrices.residential.female[coating][size] !== null
+        );
+        const maleIndex = maleSizes.indexOf(maleSize);
+        return femaleSizes[maleIndex] || femaleSizes[0]; // Fallback to first size if no match
+      };
+
+      // Single gates
+      if (numberOfSingleGates > 0) {
+        const hingePrice = singleGateHingeType === 'residential'
+          ? (hingePrices.residential.male[coating][singleGatePostDiameter] + 
+             hingePrices.residential.female[coating][getMatchingFemaleSize(singleGatePostDiameter)]) * 2 // 2 sets per gate
+          : hingePrices[singleGateHingeType][coating][singleGatePostDiameter] * 2; // 2 hinges per gate
+        totalCost += hingePrice * numberOfSingleGates;
+      }
+
+      // Double gates
+      if (numberOfDoubleGates > 0) {
+        const hingePrice = doubleGateHingeType === 'residential'
+          ? (hingePrices.residential.male[coating][doubleGatePostDiameter] + 
+             hingePrices.residential.female[coating][getMatchingFemaleSize(doubleGatePostDiameter)]) * 4 // 4 sets per gate
+          : hingePrices[doubleGateHingeType][coating][doubleGatePostDiameter] * 4; // 4 hinges per gate
+        totalCost += hingePrice * numberOfDoubleGates;
+      }
+
+      // Sliding gates
+      if (numberOfSlidingGates > 0) {
+        totalCost += rollerPrice * 4 * numberOfSlidingGates;
+      }
+
+      return totalCost;
+    };
+
+    const gateHardwareSubtotal = calculateGateHardwareCost();
+
+    newCosts["Residential Hinge"] = {
+      quantity: 1,
+      unitCost: gateHardwareSubtotal,
+      standardLength: null,
+      subtotal: gateHardwareSubtotal,
+      details: 'Includes hinges, latches, and rollers'
+    };
 
     // Line Clearing calculation
     let outsideLabor = 0;
@@ -1411,7 +1475,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       commercialOrResidential, threeStrandBarbedWire, doubleGateHoleDepth, slidingGatePostDiameter, slidingGateHoleDepth,
       hasDuckbillGateStop, duckbillPostThickness, numberOfPulls, pullLengths, postSpacing, 
       linePostDiameter, terminalPostDiameter, cornerPostDiameter, meshType, hasFenceSlats, hasTrussRods,
-      needsLineClearing, lineClearingFootage, needsTearOut, tearOutFootage, estimatedDays, typeOfConcrete]);
+      needsLineClearing, lineClearingFootage, estimatedDays, typeOfConcrete]);
 
   // Calculate costs when inputs change
   useEffect(() => {
@@ -1560,6 +1624,18 @@ const FenceCalculator = ({ customerData = {} }) => {
       cubicYardsNeeded: typeOfConcrete === "Truck" ? Math.ceil(bagsNeeded / 59) : null,
       totalCost: concreteCost
     };
+  };
+
+  // Helper function to get available sizes based on hinge type
+  const getAvailableSizes = (hingeType, coating) => {
+    if (hingeType === 'residential') {
+      // For residential, we show male sizes since we'll use matching female sizes
+      return Object.keys(hingePrices.residential.male[coating]).filter(size => 
+        hingePrices.residential.male[coating][size] !== null
+      );
+    } else {
+      return Object.keys(hingePrices[hingeType][coating]);
+    }
   };
 
   return (
@@ -1787,6 +1863,104 @@ const FenceCalculator = ({ customerData = {} }) => {
                   }}
                 />
               </div>
+
+              {numberOfSingleGates > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Single Gate Details
+                  </Typography>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                    <FormControl fullWidth={isMobile}>
+                      <InputLabel>Gate Size</InputLabel>
+                      <Select value={singleGateSize} onChange={(e) => setSingleGateSize(e.target.value)}>
+                        <MenuItem value="3">3'</MenuItem>
+                        <MenuItem value="4">4'</MenuItem>
+                        <MenuItem value="5">5'</MenuItem>
+                        <MenuItem value="6">6'</MenuItem>
+                        <MenuItem value="8">8'</MenuItem>
+                        <MenuItem value="10">10'</MenuItem>
+                        <MenuItem value="12">12'</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth={isMobile}>
+                      <InputLabel>Hinge Type</InputLabel>
+                      <Select value={singleGateHingeType} onChange={(e) => setSingleGateHingeType(e.target.value)}>
+                        <MenuItem value="residential">Residential</MenuItem>
+                        <MenuItem value="bulldog">Bulldog</MenuItem>
+                        <MenuItem value="180degree">180 Degree</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth={isMobile}>
+                      <InputLabel>Latch Type</InputLabel>
+                      <Select value={singleGateLatchType} onChange={(e) => setSingleGateLatchType(e.target.value)}>
+                        <MenuItem value="fork">Fork Latch</MenuItem>
+                        <MenuItem value="lockable">Lockable Latch</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </div>
+                </div>
+              )}
+
+              {numberOfDoubleGates > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Double Gate Details
+                  </Typography>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                    <FormControl fullWidth={isMobile}>
+                      <InputLabel>Gate Size</InputLabel>
+                      <Select value={doubleGateSize} onChange={(e) => setDoubleGateSize(e.target.value)}>
+                        <MenuItem value="6">6'</MenuItem>
+                        <MenuItem value="8">8'</MenuItem>
+                        <MenuItem value="10">10'</MenuItem>
+                        <MenuItem value="12">12'</MenuItem>
+                        <MenuItem value="14">14'</MenuItem>
+                        <MenuItem value="16">16'</MenuItem>
+                        <MenuItem value="20">20'</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth={isMobile}>
+                      <InputLabel>Hinge Type</InputLabel>
+                      <Select value={doubleGateHingeType} onChange={(e) => setDoubleGateHingeType(e.target.value)}>
+                        <MenuItem value="residential">Residential</MenuItem>
+                        <MenuItem value="bulldog">Bulldog</MenuItem>
+                        <MenuItem value="180degree">180 Degree</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth={isMobile}>
+                      <InputLabel>Latch Type</InputLabel>
+                      <Select value={doubleGateLatchType} onChange={(e) => setDoubleGateLatchType(e.target.value)}>
+                        <MenuItem value="fork">Fork Latch</MenuItem>
+                        <MenuItem value="lockable">Lockable Latch</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </div>
+                </div>
+              )}
+
+              {numberOfSlidingGates > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Sliding Gate Details
+                  </Typography>
+                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
+                    <FormControl fullWidth={isMobile}>
+                      <InputLabel>Gate Size</InputLabel>
+                      <Select value={slidingGateSize} onChange={(e) => setSlidingGateSize(e.target.value)}>
+                        <MenuItem value="6">6'</MenuItem>
+                        <MenuItem value="8">8'</MenuItem>
+                        <MenuItem value="10">10'</MenuItem>
+                        <MenuItem value="12">12'</MenuItem>
+                        <MenuItem value="14">14'</MenuItem>
+                        <MenuItem value="16">16'</MenuItem>
+                        <MenuItem value="20">20'</MenuItem>
+                        <MenuItem value="24">24'</MenuItem>
+                        <MenuItem value="30">30'</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </div>
+                </div>
+              )}
             </div>
           </AccordionDetails>
         </Accordion>
@@ -2968,16 +3142,34 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <tr>
                       <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Line Clearing ({lineClearingFootage} ft)</td>
                       <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
-                        ${(lineClearingFootage * 3).toFixed(2)}
+                        ${(lineClearingFootage * 2.5).toFixed(2)}
                       </td>
                     </tr>
                   )}
-                  <tr>
-                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Installation Labor</td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
-                      ${(totalLinearLength * 3).toFixed(2)}
-                    </td>
-                  </tr>
+                  {numberOfSingleGates > 0 && (
+                    <tr>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Single Gates Labor ({numberOfSingleGates})</td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
+                        ${(numberOfSingleGates * 150).toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
+                  {numberOfDoubleGates > 0 && (
+                    <tr>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Double Gates Labor ({numberOfDoubleGates})</td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
+                        ${(numberOfDoubleGates * 300).toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
+                  {estimatedDays > 0 && (
+                    <tr>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Traveling Cost ({estimatedDays} days)</td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
+                        ${(estimatedDays * 50).toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
                   <tr style={{ backgroundColor: '#f8f9fa' }}>
                     <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>Total Outside Labor Cost</td>
                     <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold' }}>
@@ -3088,6 +3280,13 @@ const FenceCalculator = ({ customerData = {} }) => {
               typeOfConcrete={typeOfConcrete}
               singleGatePostHoleDepth={singleGatePostHoleDepth}
               singleGatePostHoleWidth={singleGatePostHoleWidth}
+              singleGateSize={singleGateSize}
+              singleGateHingeType={singleGateHingeType}
+              singleGateLatchType={singleGateLatchType}
+              doubleGateSize={doubleGateSize}
+              doubleGateHingeType={doubleGateHingeType}
+              doubleGateLatchType={doubleGateLatchType}
+              slidingGateSize={slidingGateSize}
             />
           </DialogContent>
           <DialogActions>

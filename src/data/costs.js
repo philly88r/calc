@@ -146,3 +146,60 @@ export const eyeTopsCosts = {
     }
   }
 };
+
+// Hinge prices
+export const hingePrices = {
+  residential: {
+    male: {
+      black: {
+        '2 3/8': 4.94,
+        '2 7/8': 6.33,
+        '4': null
+      },
+      galvanized: {
+        '2 3/8': 3.39,
+        '2 7/8': 4.88,
+        '4': 7.80
+      }
+    },
+    female: {
+      black: {
+        '1 3/8': 2.53,
+        '1 5/8': 2.66,
+        '1 7/8': 3.51
+      },
+      galvanized: {
+        '1 3/8': 2.18,
+        '1 5/8': 1.88,
+        '1 7/8': 2.90
+      }
+    }
+  },
+  bulldog: {
+    black: {
+      '2 3/8': 19.60,
+      '2 7/8': 17.84,
+      '4': 58.68
+    },
+    galvanized: {
+      '2 3/8': 15.29,
+      '2 7/8': 14.01,
+      '4': 17.89
+    }
+  },
+  '180degree': {
+    black: {
+      '2 3/8': 28.87,
+      '2 7/8': 29.75,
+      '4': 38.57
+    },
+    galvanized: {
+      '2 3/8': 18.11,
+      '2 7/8': 20.54,
+      '4': 17.84
+    }
+  }
+};
+
+// Sliding gate roller price
+export const rollerPrice = 83.3; // Each gate needs 4 rollers

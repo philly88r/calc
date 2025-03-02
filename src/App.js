@@ -4,6 +4,7 @@ import { Container, CssBaseline, ThemeProvider, createTheme, Box, AppBar, Toolba
 import CustomerInfo from './pages/CustomerInfo';
 import FenceCalculator from './FenceCalculator';
 import logo from './assets/Logo (6).png';
+import { ResponsiveProvider } from './context/ResponsiveContext';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('customer-info');
@@ -74,58 +75,60 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
-        <AppBar position="static" elevation={0}>
-          <Toolbar sx={{ justifyContent: 'space-between', padding: '1rem 1.5rem' }}>
-            <Box sx={{ 
-              height: { xs: '80px', sm: '100px' }, 
-              display: 'flex', 
-              alignItems: 'center',
-              '& img': {
-                height: '100%',
-                width: 'auto',
-                objectFit: 'contain',
-                maxWidth: 'none'
-              }
-            }}>
-              <img 
-                src={logo}
-                alt="South Texas Fence & Deck Logo" 
-              />
-            </Box>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                onClick={() => setCurrentPage('customer-info')}
-                color="inherit"
-                sx={{ 
-                  color: '#ffffff',
-                  backgroundColor: currentPage === 'customer-info' ? '#4d211f' : 'transparent',
-                  '&:hover': { backgroundColor: '#4d211f' }
-                }}
-              >
-                Customer Info
-              </Button>
-              <Button
-                onClick={() => setCurrentPage('calculator')}
-                color="inherit"
-                sx={{ 
-                  color: '#ffffff',
-                  backgroundColor: currentPage === 'calculator' ? '#4d211f' : 'transparent',
-                  '&:hover': { backgroundColor: '#4d211f' }
-                }}
-              >
-                Calculator
-              </Button>
-            </Box>
-          </Toolbar>
-        </AppBar>
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-          {currentPage === 'customer-info' 
-            ? <CustomerInfo onSubmit={handleCustomerInfoSubmit} initialData={customerData} /> 
-            : <FenceCalculator customerData={customerData} />}
-        </Container>
-      </Box>
+      <ResponsiveProvider>
+        <CssBaseline />
+        <Box sx={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
+          <AppBar position="static" elevation={0}>
+            <Toolbar sx={{ justifyContent: 'space-between', padding: '1rem 1.5rem' }}>
+              <Box sx={{ 
+                height: { xs: '80px', sm: '100px' }, 
+                display: 'flex', 
+                alignItems: 'center',
+                '& img': {
+                  height: '100%',
+                  width: 'auto',
+                  objectFit: 'contain',
+                  maxWidth: 'none'
+                }
+              }}>
+                <img 
+                  src={logo}
+                  alt="South Texas Fence & Deck Logo" 
+                />
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button
+                  onClick={() => setCurrentPage('customer-info')}
+                  color="inherit"
+                  sx={{ 
+                    color: '#ffffff',
+                    backgroundColor: currentPage === 'customer-info' ? '#4d211f' : 'transparent',
+                    '&:hover': { backgroundColor: '#4d211f' }
+                  }}
+                >
+                  Customer Info
+                </Button>
+                <Button
+                  onClick={() => setCurrentPage('calculator')}
+                  color="inherit"
+                  sx={{ 
+                    color: '#ffffff',
+                    backgroundColor: currentPage === 'calculator' ? '#4d211f' : 'transparent',
+                    '&:hover': { backgroundColor: '#4d211f' }
+                  }}
+                >
+                  Calculator
+                </Button>
+              </Box>
+            </Toolbar>
+          </AppBar>
+          <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+            {currentPage === 'customer-info' 
+              ? <CustomerInfo onSubmit={handleCustomerInfoSubmit} initialData={customerData} /> 
+              : <FenceCalculator customerData={customerData} />}
+          </Container>
+        </Box>
+      </ResponsiveProvider>
     </ThemeProvider>
   );
 }
