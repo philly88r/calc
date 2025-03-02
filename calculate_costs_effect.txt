@@ -1,0 +1,4 @@
+  // Calculate costs when inputs change
+  useEffect(() => {
+    calculateCosts();
+  }, [calculateCosts]);
