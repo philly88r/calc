@@ -1361,7 +1361,7 @@ const FenceCalculator = ({ customerData = {} }) => {
 
     const gateHardwareSubtotal = calculateGateHardwareCost();
 
-    newCosts["Residential Hinge"] = {
+    newCosts["Gate Hardware"] = {
       quantity: 1,
       unitCost: gateHardwareSubtotal,
       standardLength: null,
@@ -1369,7 +1369,31 @@ const FenceCalculator = ({ customerData = {} }) => {
       details: 'Includes hinges, latches, and rollers'
     };
 
-    // Line Clearing calculation
+    // Single gate calculation
+    if (numberOfSingleGates > 0) {
+      const singleGateRate = 150.0; // $150.00 per gate
+      const singleGateSubtotal = numberOfSingleGates * singleGateRate;
+
+      newCosts["Single Gate"] = {
+        quantity: numberOfSingleGates,
+        unitCost: singleGateRate,
+        subtotal: singleGateSubtotal
+      };
+    }
+
+    // Double gate calculation
+    if (numberOfDoubleGates > 0) {
+      const doubleGateRate = 300.0; // $300.00 per gate
+      const doubleGateSubtotal = numberOfDoubleGates * doubleGateRate;
+
+      newCosts["Double Gate"] = {
+        quantity: numberOfDoubleGates,
+        unitCost: doubleGateRate,
+        subtotal: doubleGateSubtotal
+      };
+    }
+
+    // Line clearing calculation
     let outsideLabor = 0;
     if (needsLineClearing && lineClearingFootage > 0) {
       const lineClearingRate = 2.5; // $2.50 per foot
@@ -1383,7 +1407,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       };
     }
 
-    // Tear Out calculation
+    // Tear out calculation
     if (needsTearOut && tearOutFootage > 0) {
       const tearOutRate = 3.0; // $3.00 per foot
       const tearOutSubtotal = tearOutFootage * tearOutRate;
@@ -1396,33 +1420,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       };
     }
 
-    // Single Gates Labor calculation
-    if (numberOfSingleGates > 0) {
-      const singleGatesLaborRate = 150.0; // $150.00 per gate
-      const singleGatesLaborSubtotal = numberOfSingleGates * singleGatesLaborRate;
-      outsideLabor += singleGatesLaborSubtotal;
-
-      newCosts["Single gates labor"] = {
-        quantity: numberOfSingleGates,
-        unitCost: singleGatesLaborRate,
-        subtotal: singleGatesLaborSubtotal
-      };
-    }
-
-    // Double Gates Labor calculation
-    if (numberOfDoubleGates > 0) {
-      const doubleGatesLaborRate = 300.0; // $300.00 per gate
-      const doubleGatesLaborSubtotal = numberOfDoubleGates * doubleGatesLaborRate;
-      outsideLabor += doubleGatesLaborSubtotal;
-
-      newCosts["Double gates labor"] = {
-        quantity: numberOfDoubleGates,
-        unitCost: doubleGatesLaborRate,
-        subtotal: doubleGatesLaborSubtotal
-      };
-    }
-
-    // Traveling Cost calculation
+    // Traveling cost calculation
     if (estimatedDays > 0) {
       const dailyRate = 50; // $50 per day
       const travelingCostSubtotal = estimatedDays * dailyRate;
@@ -3130,14 +3128,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {needsTearOut && (
-                    <tr>
-                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Tear Out ({tearOutFootage} ft)</td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
-                        ${(tearOutFootage * 3).toFixed(2)}
-                      </td>
-                    </tr>
-                  )}
                   {needsLineClearing && (
                     <tr>
                       <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Line Clearing ({lineClearingFootage} ft)</td>
@@ -3146,19 +3136,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                       </td>
                     </tr>
                   )}
-                  {numberOfSingleGates > 0 && (
+                  {needsTearOut && (
                     <tr>
-                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Single Gates Labor ({numberOfSingleGates})</td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Tear Out ({tearOutFootage} ft)</td>
                       <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
-                        ${(numberOfSingleGates * 150).toFixed(2)}
-                      </td>
-                    </tr>
-                  )}
-                  {numberOfDoubleGates > 0 && (
-                    <tr>
-                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Double Gates Labor ({numberOfDoubleGates})</td>
-                      <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
-                        ${(numberOfDoubleGates * 300).toFixed(2)}
+                        ${(tearOutFootage * 3).toFixed(2)}
                       </td>
                     </tr>
                   )}
