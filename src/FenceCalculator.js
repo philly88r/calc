@@ -9,10 +9,10 @@ import {
   eyeTopsCosts,
   hingePrices,
   rollerPrice
-} from './data/costs';
-import OutsideLabor from './components/OutsideLabor';
-import TotalCostBreakdown from './components/TotalCostBreakdown';
-import Proposal from './components/Proposal';
+} from './data/costs.js';
+import OutsideLabor from './components/OutsideLabor.js';
+import TotalCostBreakdown from './components/TotalCostBreakdown.js';
+import Proposal from './components/Proposal.js';
 import { 
   Typography, 
   Box, 
@@ -32,9 +32,16 @@ import {
   DialogContent,
   DialogActions,
   useMediaQuery,
-  useTheme
+  useTheme,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Paper
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore.js';
 
 const useIsMobile = () => {
   const { breakpoints } = useTheme();
@@ -52,11 +59,11 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [numberOfEndTerminals, setNumberOfEndTerminals] = useState('');
   const [numberOfSolitaryPosts, setNumberOfSolitaryPosts] = useState('');
   const [numberOfCorners, setNumberOfCorners] = useState('');
-  const [numberOfSingleGates, setNumberOfSingleGates] = useState(0);
-  const [numberOfDoubleGates, setNumberOfDoubleGates] = useState(0);
-  const [numberOfSlidingGates, setNumberOfSlidingGates] = useState(0);
-  const [numberOfFlangedPosts, setNumberOfFlangedPosts] = useState(0);
-  const [numberOfFlangedPostsOffCentered, setNumberOfFlangedPostsOffCentered] = useState(0);
+  const [numberOfSingleGates, setNumberOfSingleGates] = useState('');
+  const [numberOfDoubleGates, setNumberOfDoubleGates] = useState('');
+  const [numberOfSlidingGates, setNumberOfSlidingGates] = useState('');
+  const [numberOfFlangedPosts, setNumberOfFlangedPosts] = useState('');
+  const [numberOfFlangedPostsOffCentered, setNumberOfFlangedPostsOffCentered] = useState('');
   const [extraRail, setExtraRail] = useState('none');
   const [hasHBrace, setHasHBrace] = useState(false);
   const [material, setMaterial] = useState("Galvanized");
@@ -73,7 +80,7 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [slidingGateHoleWidth, setSlidingGateHoleWidth] = useState(12);
   const [singleGatePostHoleDepth, setSingleGatePostHoleDepth] = useState('');
   const [singleGatePostHoleWidth, setSingleGatePostHoleWidth] = useState('');
-  const [typeOfConcrete, setTypeOfConcrete] = useState("");
+  const [typeOfConcrete, setTypeOfConcrete] = useState("Yellow");
   const [commercialOrResidential, setCommercialOrResidential] = useState("Commercial");
   const [threeStrandBarbedWire, setThreeStrandBarbedWire] = useState(false);
   const [numberOfPulls, setNumberOfPulls] = useState('');
@@ -94,17 +101,17 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [topRailDiameter, setTopRailDiameter] = useState("1 5/8");
   const [topRailThickness, setTopRailThickness] = useState("SCH 40"); // updated default value
   const [gatePipeDiameter, setGatePipeDiameter] = useState("1 3/8");
-  const [flangedPostDiameter, setFlangedPostDiameter] = useState('2 7/8');
-  const [flangedPostThickness, setFlangedPostThickness] = useState('SCH 40');
-  const [flangedPostHoleDepth, setFlangedPostHoleDepth] = useState(36);
-  const [flangedPostHoleWidth, setFlangedPostHoleWidth] = useState(8);
-  const [flangedPostOffCenteredDiameter, setFlangedPostOffCenteredDiameter] = useState('2 7/8');
-  const [flangedPostOffCenteredThickness, setFlangedPostOffCenteredThickness] = useState('SCH 40');
-  const [flangedPostOffCenteredHoleDepth, setFlangedPostOffCenteredHoleDepth] = useState(36);
-  const [flangedPostOffCenteredHoleWidth, setFlangedPostOffCenteredHoleWidth] = useState(8);
+  const [flangedPostDiameter, setFlangedPostDiameter] = useState("");
+  const [flangedPostThickness, setFlangedPostThickness] = useState("");
+  const [flangedPostHoleDepth, setFlangedPostHoleDepth] = useState('');
+  const [flangedPostHoleWidth, setFlangedPostHoleWidth] = useState('');
+  const [flangedPostOffCenteredDiameter, setFlangedPostOffCenteredDiameter] = useState("");
+  const [flangedPostOffCenteredThickness, setFlangedPostOffCenteredThickness] = useState("");
+  const [flangedPostOffCenteredHoleDepth, setFlangedPostOffCenteredHoleDepth] = useState('');
+  const [flangedPostOffCenteredHoleWidth, setFlangedPostOffCenteredHoleWidth] = useState('');
 
-  const [outsideLaborTotal, setOutsideLaborTotal] = useState(0);
-  const [maxPriceFromBreakdown, setMaxPriceFromBreakdown] = useState(0);
+  const [outsideLaborTotal, setOutsideLaborTotal] = useState('');
+  const [maxPriceFromBreakdown, setMaxPriceFromBreakdown] = useState('');
   const [pullLengths, setPullLengths] = useState([]);
   const [postSpacing, setPostSpacing] = useState(10);
   const [costs, setCosts] = useState({});
@@ -113,9 +120,9 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [hasFenceSlats, setHasFenceSlats] = useState('No');
   const [hasTrussRods, setHasTrussRods] = useState("No");
   const [needsTearOut, setNeedsTearOut] = useState(false);
-  const [tearOutFootage, setTearOutFootage] = useState(0);
+  const [tearOutFootage, setTearOutFootage] = useState('');
   const [needsLineClearing, setNeedsLineClearing] = useState(false);
-  const [lineClearingFootage, setLineClearingFootage] = useState(0);
+  const [lineClearingFootage, setLineClearingFootage] = useState('');
   const [estimatedDays, setEstimatedDays] = useState('');
   const [fenceSlatsColor, setFenceSlatsColor] = useState("Black");
   const [singleGates, setSingleGates] = useState([]);
@@ -335,11 +342,12 @@ const FenceCalculator = ({ customerData = {} }) => {
     if (totalTerminalPosts > 0) {
       const unitCost = getUnitCost(terminalPostDiameter);
       const postHeight = parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment;
-      const subtotal = totalTerminalPosts * unitCost * postHeight;
-      
+      const costPerPost = unitCost * postHeight;
+      const subtotal = totalTerminalPosts * costPerPost;
+
       newCosts["Terminal posts"] = {
         quantity: totalTerminalPosts,
-        unitCost: unitCost,
+        unitCost: costPerPost,
         postHeight: postHeight,
         subtotal: subtotal
       };
@@ -349,18 +357,19 @@ const FenceCalculator = ({ customerData = {} }) => {
     if (numberOfCorners > 0) {
       const unitCost = getUnitCost(cornerPostDiameter);
       const postHeight = parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment;
-      const subtotal = numberOfCorners * unitCost * postHeight;
-      
+      const costPerPost = unitCost * postHeight;
+      const subtotal = numberOfCorners * costPerPost;
+
       newCosts["Corner posts"] = {
         quantity: numberOfCorners,
-        unitCost: unitCost,
+        unitCost: costPerPost,
         postHeight: postHeight,
         subtotal: subtotal
       };
     }
 
     // Single gate posts
-    if (numberOfSingleGates > 0) {
+    if (numberOfSingleGates && numberOfSingleGates > 0) {
       const singleGatePostsQty = numberOfSingleGates * 2;
       const unitCost = getUnitCost("2 7/8", true);
       
@@ -375,18 +384,19 @@ const FenceCalculator = ({ customerData = {} }) => {
         singleGatePostHeight += barbedWireAdjustment;
       }
       
-      const subtotal = singleGatePostsQty * unitCost * singleGatePostHeight;
+      const costPerPost = unitCost * singleGatePostHeight;
+      const subtotal = singleGatePostsQty * costPerPost;
 
       newCosts["Single gate posts"] = {
         quantity: singleGatePostsQty,
-        unitCost: unitCost,
+        unitCost: costPerPost,
         postHeight: singleGatePostHeight,
         subtotal: subtotal
       };
     }
 
     // Double gate posts
-    if (numberOfDoubleGates > 0) {
+    if (numberOfDoubleGates && numberOfDoubleGates > 0) {
       const doubleGatePostsQty = numberOfDoubleGates * 2;
       const unitCost = getUnitCost("4", true);
       
@@ -413,57 +423,63 @@ const FenceCalculator = ({ customerData = {} }) => {
         doubleGatePostHeight += barbedWireAdjustment;
       }
       
-      const subtotal = doubleGatePostsQty * unitCost * doubleGatePostHeight;
+      const costPerPost = unitCost * doubleGatePostHeight;
+      const subtotal = doubleGatePostsQty * costPerPost;
 
       newCosts["Double gate posts"] = {
         quantity: doubleGatePostsQty,
-        unitCost: unitCost,
+        unitCost: costPerPost,
         postHeight: doubleGatePostHeight,
         subtotal: subtotal
       };
     }
 
-    // Sliding gate posts
-    if (numberOfSlidingGates > 0) {
-      // Calculate quantity as number of gates times 3
-      const slidingGatePostsQty = numberOfSlidingGates * 3;
-      const unitCost = getUnitCost(slidingGatePostDiameter, true);
+    // Sliding Gate Posts
+    if (numberOfSlidingGates && numberOfSlidingGates > 0) {
+      const slidingGatePostQuantity = numberOfSlidingGates * 3;
+      let unitCost = 0;
       
-      // Special height logic for sliding gate posts
-      let slidingGatePostHeight = parseInt(heightOfFence);
-      
-      // If sliding gate hole depth is specified, use that for adjustment
-      if (slidingGateHoleDepth) {
-        const slidingGateDepthAdjustment = commercialOrResidential === "Commercial" 
-          ? (slidingGateHoleDepth === 24 || slidingGateHoleDepth === 30 ? 2 : 
-            slidingGateHoleDepth === 36 || slidingGateHoleDepth === 42 ? 3 : 
-            slidingGateHoleDepth === 48 ? 4 : 0)
-          : (slidingGateHoleDepth === 24 || slidingGateHoleDepth === 30 ? 2 : 
-            slidingGateHoleDepth === 36 || slidingGateHoleDepth === 42 ? 3 : 0);
-        
-        slidingGatePostHeight += slidingGateDepthAdjustment;
-      } else {
-        // Otherwise use the regular depth adjustment
-        slidingGatePostHeight += terminalDepthAdjustment;
+      if (defaultPostCosts[material]?.[postThickness]?.[slidingGatePostDiameter]) {
+        unitCost = defaultPostCosts[material][postThickness][slidingGatePostDiameter];
       }
-      
-      // Add barbed wire adjustment if applicable
-      if (threeStrandBarbedWire) {
-        slidingGatePostHeight += barbedWireAdjustment;
-      }
-      
-      const subtotal = slidingGatePostsQty * unitCost * slidingGatePostHeight;
 
-      newCosts["Sliding gate posts"] = {
-        quantity: slidingGatePostsQty,
-        unitCost: unitCost,
-        postHeight: slidingGatePostHeight,
+      // Calculate height adjustments
+      let totalPostHeight = parseFloat(heightOfFence);
+      
+      // Add depth adjustment
+      if (commercialOrResidential === "Commercial") {
+        if (slidingGateHoleDepth === 36 || slidingGateHoleDepth === 42) {
+          totalPostHeight += 3;
+        }
+      } else {
+        if (depthOfHoles === 36 || depthOfHoles === 42) {
+          totalPostHeight += 3;
+        }
+      }
+
+      // Add height adjustment based on fence height
+      if (totalPostHeight === 48) {
+        totalPostHeight += 4;
+      } else if (totalPostHeight === 36 || totalPostHeight === 42) {
+        totalPostHeight += 3;
+      } else if (totalPostHeight === 24 || totalPostHeight === 30) {
+        totalPostHeight += 2;
+      }
+
+      // Calculate the total cost per post (unit cost * height)
+      const costPerPost = unitCost * totalPostHeight;
+      const subtotal = slidingGatePostQuantity * costPerPost;
+
+      newCosts["Sliding Gate Posts"] = {
+        quantity: slidingGatePostQuantity,
+        unitCost: costPerPost,
+        postHeight: totalPostHeight,
         subtotal: subtotal
       };
     }
 
     // Duckbill gate stop posts for double gates
-    if (hasDuckbillGateStop && numberOfDoubleGates > 0) {
+    if (hasDuckbillGateStop && numberOfDoubleGates && numberOfDoubleGates > 0) {
       const duckbillPostsQty = numberOfDoubleGates * 2;
       
       // Get cost for 1 5/8" diameter with specified thickness
@@ -477,11 +493,12 @@ const FenceCalculator = ({ customerData = {} }) => {
       const unitCost = getDuckbillCost();
       // Duckbill posts are always 3 ft tall
       const postHeight = 3;
-      const subtotal = duckbillPostsQty * unitCost * postHeight;
+      const costPerPost = unitCost * postHeight;
+      const subtotal = duckbillPostsQty * costPerPost;
 
       newCosts["Duckbill gate stop posts"] = {
         quantity: duckbillPostsQty,
-        unitCost: unitCost,
+        unitCost: costPerPost,
         postHeight: postHeight,
         subtotal: subtotal
       };
@@ -530,7 +547,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Dome Cap Single Gate Post calculation
-    if (numberOfSingleGates > 0) {
+    if (numberOfSingleGates && numberOfSingleGates > 0) {
       // Get unit cost based on material and terminal post diameter (used for single gates)
       const getDomeCapUnitCost = () => {
         if (domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter]) {
@@ -553,7 +570,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Dome Cap Sliding Gate Post calculation
-    if (numberOfSlidingGates > 0) {
+    if (numberOfSlidingGates && numberOfSlidingGates > 0) {
       // Get unit cost based on material and terminal post diameter (used for sliding gates)
       const getDomeCapUnitCost = () => {
         if (domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter]) {
@@ -576,7 +593,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Dome Cap Double Gate Post calculation
-    if (numberOfDoubleGates > 0) {
+    if (numberOfDoubleGates && numberOfDoubleGates > 0) {
       // Get unit cost based on material and terminal post diameter (used for double gates)
       const getDomeCapUnitCost = () => {
         if (domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter]) {
@@ -598,7 +615,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Dome Cap Duckbill Gate Stop Post calculation
-    if (hasDuckbillGateStop === true && numberOfDoubleGates > 0) {
+    if (hasDuckbillGateStop && numberOfDoubleGates && numberOfDoubleGates > 0) {
       const getDomeCapUnitCost = () => {
         const duckbillDiameter = duckbillPostThickness === "1 5/8 SCH 40" ? "1 5/8" : "2 3/8";
         if (domeCapOptions[material] && domeCapOptions[material][duckbillDiameter]) {
@@ -698,58 +715,21 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Barbed Wire calculation
-    if (threeStrandBarbedWire && totalLinearLength > 0) {
-      // Calculate quantity: total linear length * 3 strands / 1320 feet per roll
-      const barbedWireQuantity = Math.ceil((parseFloat(totalLinearLength) * 3) / 1320);
-      const barbedWireSubtotal = barbedWireQuantity * BARBED_WIRE_UNIT_COST;
+    if (threeStrandBarbedWire && totalLinearLength) {
+      // Calculate number of rolls needed (1 roll = 1320 feet)
+      const FEET_PER_ROLL = 1320;
+      const barbedWireLength = parseFloat(totalLinearLength);
+      // Need 3 strands, so multiply total length by 3
+      const totalBarbedWireNeeded = barbedWireLength * 3;
+      // Calculate how many rolls we need, rounding up
+      const rollsNeeded = Math.ceil(totalBarbedWireNeeded / FEET_PER_ROLL);
+      const barbedWireSubtotal = rollsNeeded * BARBED_WIRE_UNIT_COST;
 
       newCosts["Barbed Wire"] = {
-        quantity: barbedWireQuantity,
+        quantity: rollsNeeded,
         unitCost: BARBED_WIRE_UNIT_COST,
-        standardLength: 1320,
+        standardLength: FEET_PER_ROLL,
         subtotal: barbedWireSubtotal
-      };
-    }
-
-    // Sliding Gate Post calculation
-    if (numberOfSlidingGates > 0) {
-      const slidingGatePostQuantity = numberOfSlidingGates * 3;
-      let unitCost = 0;
-      
-      if (defaultPostCosts[material]?.[postThickness]?.[slidingGatePostDiameter]) {
-        unitCost = defaultPostCosts[material][postThickness][slidingGatePostDiameter];
-      }
-
-      // Calculate height adjustments
-      let totalPostHeight = parseFloat(heightOfFence);
-      
-      // Add depth adjustment
-      if (commercialOrResidential === "Commercial") {
-        if (slidingGateHoleDepth === 36 || slidingGateHoleDepth === 42) {
-          totalPostHeight += 3;
-        }
-      } else {
-        if (depthOfHoles === 36 || depthOfHoles === 42) {
-          totalPostHeight += 3;
-        }
-      }
-
-      // Add height adjustment based on fence height
-      if (totalPostHeight === 48) {
-        totalPostHeight += 4;
-      } else if (totalPostHeight === 36 || totalPostHeight === 42) {
-        totalPostHeight += 3;
-      } else if (totalPostHeight === 24 || totalPostHeight === 30) {
-        totalPostHeight += 2;
-      }
-
-      const subtotal = slidingGatePostQuantity * unitCost * totalPostHeight;
-
-      newCosts["Sliding Gate Posts"] = {
-        quantity: slidingGatePostQuantity,
-        unitCost: unitCost,
-        postHeight: totalPostHeight,
-        subtotal: subtotal
       };
     }
 
@@ -796,7 +776,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Tension Bands (Single Gate Post) calculation
-    if (numberOfSingleGates > 0 && heightOfFence > 0) {
+    if (numberOfSingleGates && numberOfSingleGates > 0 && heightOfFence > 0) {
       // Calculate quantity: (height of fence - 1) * single gate post quantity
       const tensionBandQuantity = (parseFloat(heightOfFence) - 1) * numberOfSingleGates;
 
@@ -817,7 +797,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Tension Bands (Double Gate Post) calculation
-    if (numberOfDoubleGates > 0 && heightOfFence > 0) {
+    if (numberOfDoubleGates && numberOfDoubleGates > 0 && heightOfFence > 0) {
       // Calculate quantity: (height of fence - 1) * double gate post quantity
       const tensionBandQuantity = (parseFloat(heightOfFence) - 1) * numberOfDoubleGates;
 
@@ -838,7 +818,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Tension Bands (Sliding Gate Post) calculation
-    if (numberOfSlidingGates > 0 && heightOfFence > 0) {
+    if (numberOfSlidingGates && numberOfSlidingGates > 0 && heightOfFence > 0) {
       // Calculate quantity: (height of fence - 1) * sliding gate post quantity
       const tensionBandQuantity = (parseFloat(heightOfFence) - 1) * numberOfSlidingGates;
 
@@ -899,7 +879,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Brace Bands calculation for single gate posts
-    if (numberOfSingleGates > 0 && hasHBrace) {
+    if (numberOfSingleGates && numberOfSingleGates > 0 && hasHBrace) {
       const braceBandsPerPost = 2;
       const braceBandsQuantity = numberOfSingleGates * 2 * braceBandsPerPost; // 2 posts per gate
       
@@ -919,7 +899,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Brace Bands calculation for double gate posts
-    if (numberOfDoubleGates > 0 && hasHBrace) {
+    if (numberOfDoubleGates && numberOfDoubleGates > 0 && hasHBrace) {
       const braceBandsPerPost = 2;
       const braceBandsQuantity = numberOfDoubleGates * 2 * braceBandsPerPost; // 2 posts per gate
       
@@ -939,7 +919,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Brace Bands calculation for sliding gate posts
-    if (numberOfSlidingGates > 0 && hasHBrace) {
+    if (numberOfSlidingGates && numberOfSlidingGates > 0 && hasHBrace) {
       const braceBandsPerPost = 2;
       const braceBandsQuantity = numberOfSlidingGates * 3 * braceBandsPerPost; // 3 posts per sliding gate
       
@@ -1128,11 +1108,12 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Standard length for rails is 21 feet
       const standardLength = 21;
       const railQuantity = Math.ceil(railsNeeded);
-      const subtotal = railQuantity * unitCost * standardLength;
+      const costPerPost = unitCost * standardLength;
+      const subtotal = railQuantity * costPerPost;
       
       newCosts["Top/Middle/Bottom Rails"] = {
         quantity: railQuantity,
-        unitCost: unitCost,
+        unitCost: costPerPost,
         standardLength: standardLength,
         subtotal: subtotal
       };
@@ -1232,11 +1213,12 @@ const FenceCalculator = ({ customerData = {} }) => {
     if (linePostsNeeded > 0) {
       const unitCost = getUnitCost(linePostDiameter);
       const postHeight = parseInt(heightOfFence) + lineDepthAdjustment + barbedWireAdjustment;
-      const subtotal = linePostsNeeded * unitCost * postHeight;
+      const costPerPost = unitCost * postHeight;
+      const subtotal = linePostsNeeded * costPerPost;
 
       newCosts["Line posts"] = {
         quantity: linePostsNeeded,
-        unitCost: unitCost,
+        unitCost: costPerPost,
         postHeight: postHeight,
         subtotal: subtotal
       };
@@ -1290,7 +1272,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Cantilever/sliding gate rollers calculation
-    if (numberOfSlidingGates > 0) {
+    if (numberOfSlidingGates && numberOfSlidingGates > 0) {
       const rollersQuantity = numberOfSlidingGates * 4;
       const rollersUnitCost = rollerPrice;
       const rollersSubtotal = rollersQuantity * rollersUnitCost;
@@ -1304,7 +1286,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Cantilever/sliding gate latch calculation
-    if (numberOfSlidingGates > 0) {
+    if (numberOfSlidingGates && numberOfSlidingGates > 0) {
       const latchQuantity = numberOfSlidingGates;
       const latchUnitCost = 22.68;
       const latchSubtotal = latchQuantity * latchUnitCost;
@@ -1335,7 +1317,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       };
 
       // Single gates
-      if (numberOfSingleGates > 0) {
+      if (numberOfSingleGates && numberOfSingleGates > 0) {
         const hingePrice = singleGateHingeType === 'residential'
           ? (hingePrices.residential.male[coating][singleGatePostDiameter] + 
              hingePrices.residential.female[coating][getMatchingFemaleSize(singleGatePostDiameter)]) * 2 // 2 sets per gate
@@ -1344,7 +1326,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       }
 
       // Double gates
-      if (numberOfDoubleGates > 0) {
+      if (numberOfDoubleGates && numberOfDoubleGates > 0) {
         const hingePrice = doubleGateHingeType === 'residential'
           ? (hingePrices.residential.male[coating][doubleGatePostDiameter] + 
              hingePrices.residential.female[coating][getMatchingFemaleSize(doubleGatePostDiameter)]) * 4 // 4 sets per gate
@@ -1352,26 +1334,28 @@ const FenceCalculator = ({ customerData = {} }) => {
         totalCost += hingePrice * numberOfDoubleGates;
       }
 
-      // Sliding gates
-      if (numberOfSlidingGates > 0) {
-        totalCost += rollerPrice * 4 * numberOfSlidingGates;
-      }
+      // We don't include sliding gates here as they're calculated separately
 
       return totalCost;
     };
 
-    const gateHardwareSubtotal = calculateGateHardwareCost();
-
-    newCosts["Gate Hardware"] = {
-      quantity: 1,
-      unitCost: gateHardwareSubtotal,
-      standardLength: null,
-      subtotal: gateHardwareSubtotal,
-      details: 'Includes hinges, latches, and rollers'
-    };
+    // Only add gate hardware if there are non-sliding gates
+    if ((numberOfSingleGates && numberOfSingleGates > 0) || (numberOfDoubleGates && numberOfDoubleGates > 0)) {
+      const gateHardwareSubtotal = calculateGateHardwareCost();
+      
+      if (gateHardwareSubtotal > 0) {
+        newCosts["Gate Hardware"] = {
+          quantity: 1,
+          unitCost: gateHardwareSubtotal,
+          standardLength: null,
+          subtotal: gateHardwareSubtotal,
+          details: 'Includes hinges and latches'
+        };
+      }
+    }
 
     // Single gate calculation
-    if (numberOfSingleGates > 0) {
+    if (numberOfSingleGates && numberOfSingleGates > 0) {
       const singleGateRate = 150.0; // $150.00 per gate
       const singleGateSubtotal = numberOfSingleGates * singleGateRate;
 
@@ -1383,7 +1367,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Double gate calculation
-    if (numberOfDoubleGates > 0) {
+    if (numberOfDoubleGates && numberOfDoubleGates > 0) {
       const doubleGateRate = 300.0; // $300.00 per gate
       const doubleGateSubtotal = numberOfDoubleGates * doubleGateRate;
 
@@ -1396,7 +1380,7 @@ const FenceCalculator = ({ customerData = {} }) => {
 
     // Line clearing calculation
     let outsideLabor = 0;
-    if (needsLineClearing && lineClearingFootage > 0) {
+    if (needsLineClearing && lineClearingFootage && lineClearingFootage > 0) {
       const lineClearingRate = 2.5; // $2.50 per foot
       const lineClearingSubtotal = lineClearingFootage * lineClearingRate;
       outsideLabor += lineClearingSubtotal;
@@ -1409,7 +1393,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Tear out calculation
-    if (needsTearOut && tearOutFootage > 0) {
+    if (needsTearOut && tearOutFootage && tearOutFootage > 0) {
       const tearOutRate = 3.0; // $3.00 per foot
       const tearOutSubtotal = tearOutFootage * tearOutRate;
       outsideLabor += tearOutSubtotal;
@@ -1464,8 +1448,9 @@ const FenceCalculator = ({ customerData = {} }) => {
         totalCost += newCosts[key].subtotal;
       }
     }
-    newCosts["Total"] = totalCost;
-    newCosts["Grand Total"] = totalCost * 1.0825; // Adding 8.25% tax
+    // Remove Total and Grand Total entries - they're not needed as we calculate the total in the table
+    // newCosts["Total"] = totalCost;
+    // newCosts["Grand Total"] = totalCost * 1.0825; // Adding 8.25% tax
 
     setCosts(newCosts);
   }, [heightOfFence, totalLinearLength, numberOfEndTerminals, numberOfSolitaryPosts, numberOfCorners, 
@@ -1637,6 +1622,141 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
   };
 
+  // Calculate single gate hardware cost
+  const calculateSingleGateHardwareCost = (gate) => {
+    if (!gate || !gate.size) return 0;
+    
+    const coating = material.toLowerCase() === 'black' ? 'black' : 'galvanized';
+    
+    // Helper to get matching female size based on male size position
+    const getMatchingFemaleSize = (maleSize) => {
+      const maleSizes = Object.keys(hingePrices.residential.male[coating]).filter(size => 
+        hingePrices.residential.male[coating][size] !== null
+      );
+      const femaleSizes = Object.keys(hingePrices.residential.female[coating]).filter(size => 
+        hingePrices.residential.female[coating][size] !== null
+      );
+      const maleIndex = maleSizes.indexOf(maleSize);
+      return femaleSizes[maleIndex] || femaleSizes[0]; // Fallback to first size if no match
+    };
+    
+    // Calculate hinge cost
+    let hingeCost = 0;
+    if (gate.hingeType === 'residential') {
+      hingeCost = (hingePrices.residential.male[coating][singleGatePostDiameter] + 
+                  hingePrices.residential.female[coating][getMatchingFemaleSize(singleGatePostDiameter)]) * 2; // 2 sets per gate
+    } else if (gate.hingeType) {
+      hingeCost = hingePrices[gate.hingeType][coating][singleGatePostDiameter] * 2; // 2 hinges per gate
+    }
+    
+    // Add latch cost
+    let latchCost = 0;
+    if (gate.latchType === 'fork') {
+      latchCost = 15.00; // Example cost for fork latch
+    } else if (gate.latchType === 'lockable') {
+      latchCost = 25.00; // Example cost for lockable latch
+    }
+    
+    return Number(hingeCost + latchCost).toFixed(2);
+  };
+
+  // Calculate double gate hardware cost
+  const calculateDoubleGateHardwareCost = (gate) => {
+    if (!gate || !gate.size) return 0;
+    
+    const coating = material.toLowerCase() === 'black' ? 'black' : 'galvanized';
+    
+    // Helper to get matching female size based on male size position
+    const getMatchingFemaleSize = (maleSize) => {
+      const maleSizes = Object.keys(hingePrices.residential.male[coating]).filter(size => 
+        hingePrices.residential.male[coating][size] !== null
+      );
+      const femaleSizes = Object.keys(hingePrices.residential.female[coating]).filter(size => 
+        hingePrices.residential.female[coating][size] !== null
+      );
+      const maleIndex = maleSizes.indexOf(maleSize);
+      return femaleSizes[maleIndex] || femaleSizes[0]; // Fallback to first size if no match
+    };
+    
+    // Calculate hinge cost (double gates use 4 hinges)
+    let hingeCost = 0;
+    if (gate.hingeType === 'residential') {
+      hingeCost = (hingePrices.residential.male[coating][doubleGatePostDiameter] + 
+                  hingePrices.residential.female[coating][getMatchingFemaleSize(doubleGatePostDiameter)]) * 4; // 4 sets per gate
+    } else if (gate.hingeType) {
+      hingeCost = hingePrices[gate.hingeType][coating][doubleGatePostDiameter] * 4; // 4 hinges per gate
+    }
+    
+    // Add latch cost
+    let latchCost = 0;
+    if (gate.latchType === 'fork') {
+      latchCost = 20.00; // Example cost for fork latch
+    } else if (gate.latchType === 'lockable') {
+      latchCost = 30.00; // Example cost for lockable latch
+    }
+    
+    // Add duckbill gate stop cost if applicable
+    let duckbillCost = 0;
+    if (hasDuckbillGateStop) {
+      duckbillCost = 35.00; // Example cost for duckbill gate stop
+    }
+    
+    return Number(hingeCost + latchCost + duckbillCost).toFixed(2);
+  };
+
+  // Calculate sliding gate hardware cost
+  const calculateSlidingGateHardwareCost = (gate) => {
+    if (!gate || !gate.size) return 0;
+    
+    // Calculate based on size
+    const size = parseFloat(gate.size);
+    // 4 rollers per gate + latch
+    return Number((rollerPrice * 4) + 22.68).toFixed(2); // Roller price plus latch price
+  };
+
+  // Calculate total material cost
+  const calculateTotalMaterialCost = () => {
+    let total = 0;
+    
+    // Sum up all subtotals from the costs object
+    if (costs) {
+      Object.values(costs).forEach(item => {
+        if (item && item.subtotal !== undefined && item.subtotal !== null) {
+          total += Number(item.subtotal) || 0;
+        }
+      });
+    }
+    
+    // Add single gate hardware costs
+    if (numberOfSingleGates && numberOfSingleGates > 0) {
+      singleGates.forEach(gate => {
+        if (gate && gate.size) {
+          total += Number(calculateSingleGateHardwareCost(gate)) || 0;
+        }
+      });
+    }
+    
+    // Add double gate hardware costs
+    if (numberOfDoubleGates && numberOfDoubleGates > 0) {
+      doubleGates.forEach(gate => {
+        if (gate && gate.size) {
+          total += Number(calculateDoubleGateHardwareCost(gate)) || 0;
+        }
+      });
+    }
+    
+    // Add sliding gate hardware costs
+    if (numberOfSlidingGates && numberOfSlidingGates > 0) {
+      slidingGates.forEach(gate => {
+        if (gate && gate.size) {
+          total += Number(calculateSlidingGateHardwareCost(gate)) || 0;
+        }
+      });
+    }
+    
+    return total;
+  };
+
   return (
     <div style={{ 
       maxWidth: '1200px', 
@@ -1778,6 +1898,74 @@ const FenceCalculator = ({ customerData = {} }) => {
           </AccordionDetails>
         </Accordion>
 
+        {/* Pull Section */}
+        <Accordion TransitionProps={{ unmountOnExit: true }}>
+          <AccordionSummary 
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="pull-section-content"
+            id="pull-section-header"
+            sx={{
+              backgroundColor: '#f8f8f8',
+              '&.Mui-expanded': {
+                backgroundColor: '#f0f0f0',
+              }
+            }}
+          >
+            <Typography variant="h6" sx={{ color: '#6d2f2c' }}>Pull Section</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Number of Pulls
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={numberOfPulls}
+                  onChange={(e) => {
+                    const newValue = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
+                    setNumberOfPulls(newValue);
+                    // Reset pull lengths array when number of pulls changes
+                    setPullLengths(new Array(newValue).fill(''));
+                  }}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                />
+              </div>
+
+              {/* Pull Length Inputs */}
+              {numberOfPulls > 0 && pullLengths.map((length, index) => (
+                <div key={index}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                    Pull {index + 1} Length (ft)
+                  </label>
+                  <input
+                    type="number"
+                    value={length}
+                    onChange={(e) => {
+                      const newPullLengths = [...pullLengths];
+                      newPullLengths[index] = parseFloat(e.target.value) || 0;
+                      setPullLengths(newPullLengths);
+                    }}
+                    style={{
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      padding: '0.5rem',
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </AccordionDetails>
+        </Accordion>
+
         {/* Gates Section */}
         <Accordion TransitionProps={{ unmountOnExit: true }}>
           <AccordionSummary 
@@ -1803,7 +1991,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                   type="number"
                   min="0"
                   value={numberOfSingleGates}
-                  onChange={(e) => setNumberOfSingleGates(parseInt(e.target.value) || 0)}
+                  onChange={(e) => setNumberOfSingleGates(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   style={{
                     border: '1px solid #d1d5db',
                     borderRadius: '0.375rem',
@@ -1821,7 +2009,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                   type="number"
                   min="0"
                   value={numberOfDoubleGates}
-                  onChange={(e) => setNumberOfDoubleGates(parseInt(e.target.value) || 0)}
+                  onChange={(e) => setNumberOfDoubleGates(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   style={{
                     border: '1px solid #d1d5db',
                     borderRadius: '0.375rem',
@@ -1831,7 +2019,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                 />
               </div>
 
-              {numberOfDoubleGates > 0 && (
+              {numberOfDoubleGates && numberOfDoubleGates > 0 && (
                 <div>
                   <FormControlLabel
                     control={
@@ -1853,7 +2041,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                   type="number"
                   min="0"
                   value={numberOfSlidingGates}
-                  onChange={(e) => setNumberOfSlidingGates(parseInt(e.target.value) || 0)}
+                  onChange={(e) => setNumberOfSlidingGates(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
                   style={{
                     border: '1px solid #d1d5db',
                     borderRadius: '0.375rem',
@@ -1863,7 +2051,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                 />
               </div>
 
-              {numberOfSingleGates > 0 && (
+              {numberOfSingleGates && numberOfSingleGates > 0 && (
                 <div style={{ marginTop: '1rem' }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Single Gate Details
@@ -1900,7 +2088,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                 </div>
               )}
 
-              {numberOfDoubleGates > 0 && (
+              {numberOfDoubleGates && numberOfDoubleGates > 0 && (
                 <div style={{ marginTop: '1rem' }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Double Gate Details
@@ -1937,7 +2125,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                 </div>
               )}
 
-              {numberOfSlidingGates > 0 && (
+              {numberOfSlidingGates && numberOfSlidingGates > 0 && (
                 <div style={{ marginTop: '1rem' }}>
                   <Typography variant="subtitle2" gutterBottom>
                     Sliding Gate Details
@@ -1960,74 +2148,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                   </div>
                 </div>
               )}
-            </div>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Pull Section */}
-        <Accordion TransitionProps={{ unmountOnExit: true }}>
-          <AccordionSummary 
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="pull-section-content"
-            id="pull-section-header"
-            sx={{
-              backgroundColor: '#f8f8f8',
-              '&.Mui-expanded': {
-                backgroundColor: '#f0f0f0',
-              }
-            }}
-          >
-            <Typography variant="h6" sx={{ color: '#6d2f2c' }}>Pull Section</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Number of Pulls
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={numberOfPulls}
-                  onChange={(e) => {
-                    const newValue = Math.min(100, Math.max(0, parseInt(e.target.value) || 0));
-                    setNumberOfPulls(newValue);
-                    // Reset pull lengths array when number of pulls changes
-                    setPullLengths(new Array(newValue).fill(0));
-                  }}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                />
-              </div>
-
-              {/* Pull Length Inputs */}
-              {numberOfPulls > 0 && pullLengths.map((length, index) => (
-                <div key={index}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Pull {index + 1} Length (ft)
-                  </label>
-                  <input
-                    type="number"
-                    value={length}
-                    onChange={(e) => {
-                      const newPullLengths = [...pullLengths];
-                      newPullLengths[index] = parseFloat(e.target.value) || 0;
-                      setPullLengths(newPullLengths);
-                    }}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              ))}
             </div>
           </AccordionDetails>
         </Accordion>
@@ -2283,6 +2403,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
+                      <option value="">Select</option>
                       <option value="2 3/8">2 3/8"</option>
                       <option value="2 7/8">2 7/8"</option>
                       <option value="3 1/2">3 1/2"</option>
@@ -2305,6 +2426,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
+                      <option value="">Select</option>
                       <option value="SCH 40">SCH 40</option>
                     </select>
                   </div>
@@ -2382,6 +2504,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
+                      <option value="">Select</option>
                       <option value="2 3/8">2 3/8"</option>
                       <option value="2 7/8">2 7/8"</option>
                       <option value="3 1/2">3 1/2"</option>
@@ -2404,6 +2527,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
+                      <option value="">Select</option>
                       <option value="SCH 40">SCH 40</option>
                     </select>
                   </div>
@@ -2570,7 +2694,7 @@ const FenceCalculator = ({ customerData = {} }) => {
               </div>
 
               {/* Single Gate Posts - Only show if there are single gates */}
-              {numberOfSingleGates > 0 && (
+              {numberOfSingleGates && numberOfSingleGates > 0 && (
                 <div>
                   <Typography variant="subtitle1" gutterBottom>
                     Single Gate Posts
@@ -2653,7 +2777,7 @@ const FenceCalculator = ({ customerData = {} }) => {
               )}
 
               {/* Double Gate Posts - Only show if there are double gates */}
-              {numberOfDoubleGates > 0 && (
+              {numberOfDoubleGates && numberOfDoubleGates > 0 && (
                 <div>
                   <Typography variant="subtitle1" gutterBottom>
                     Double Gate Posts
@@ -2736,7 +2860,7 @@ const FenceCalculator = ({ customerData = {} }) => {
               )}
 
               {/* Sliding Gate Posts - Only show if there are sliding gates */}
-              {numberOfSlidingGates > 0 && (
+              {numberOfSlidingGates && numberOfSlidingGates > 0 && (
                 <div>
                   <Typography variant="subtitle1" gutterBottom>
                     Sliding Gate Posts
@@ -2773,18 +2897,15 @@ const FenceCalculator = ({ customerData = {} }) => {
                           border: '1px solid #d1d5db',
                           borderRadius: '0.375rem',
                           padding: '0.5rem',
-                          width: '100%',
-                          marginBottom: isMobile ? '1rem' : '0',
+                          width: '100%'
                         }}
                       >
                         <option value="SCH 40">SCH 40</option>
                       </select>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center', marginTop: '1rem' }}>
                     <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                        Sliding Gate Post Hole Depth (inches)
+                        Hole Depth (inches)
                       </label>
                       <input
                         type="number"
@@ -2801,7 +2922,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     </div>
                     <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
                       <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                        Sliding Gate Post Hole Width (inches)
+                        Hole Width (inches)
                       </label>
                       <input
                         type="number"
@@ -2823,111 +2944,9 @@ const FenceCalculator = ({ customerData = {} }) => {
           </AccordionDetails>
         </Accordion>
 
-        {/* Extra Work Section */}
+        {/* Additional Information Section */}
         <Accordion TransitionProps={{ unmountOnExit: true }}>
           <AccordionSummary 
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="extra-work-content"
-            id="extra-work-header"
-            sx={{
-              backgroundColor: '#f8f8f8',
-              '&.Mui-expanded': {
-                backgroundColor: '#f0f0f0',
-              }
-            }}
-          >
-            <Typography variant="h6" sx={{ color: '#6d2f2c' }}>Extra Work</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={needsTearOut}
-                      onChange={(e) => setNeedsTearOut(e.target.checked)}
-                    />
-                  }
-                  label="Tear out needed?"
-                />
-              </div>
-
-              {needsTearOut && (
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Feet of Tear Out
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={tearOutFootage}
-                    onChange={(e) => setTearOutFootage(parseInt(e.target.value) || 0)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              )}
-
-              <div>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={needsLineClearing}
-                      onChange={(e) => setNeedsLineClearing(e.target.checked)}
-                    />
-                  }
-                  label="Line clearing needed?"
-                />
-              </div>
-
-              {needsLineClearing && (
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                    Number of Feet of Line Clearing
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={lineClearingFootage}
-                    onChange={(e) => setLineClearingFootage(parseInt(e.target.value) || 0)}
-                    style={{
-                      border: '1px solid #d1d5db',
-                      borderRadius: '0.375rem',
-                      padding: '0.5rem',
-                      width: '100%'
-                    }}
-                  />
-                </div>
-              )}
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                  Estimated Work Days
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  value={estimatedDays}
-                  onChange={(e) => setEstimatedDays(parseInt(e.target.value) || 0)}
-                  style={{
-                    border: '1px solid #d1d5db',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem',
-                    width: '100%'
-                  }}
-                />
-              </div>
-            </div>
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Additional Information Section */}
-        <Accordion TransitionProps={{ unmountOnExit: true }} defaultExpanded>
-          <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
             aria-controls="additional-info-content"
             id="additional-info-header"
@@ -3054,9 +3073,111 @@ const FenceCalculator = ({ customerData = {} }) => {
           </AccordionDetails>
         </Accordion>
 
+        {/* Extra Work Section */}
+        <Accordion TransitionProps={{ unmountOnExit: true }}>
+          <AccordionSummary 
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="extra-work-content"
+            id="extra-work-header"
+            sx={{
+              backgroundColor: '#f8f8f8',
+              '&.Mui-expanded': {
+                backgroundColor: '#f0f0f0',
+              }
+            }}
+          >
+            <Typography variant="h6" sx={{ color: '#6d2f2c' }}>Extra Work</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={needsTearOut}
+                      onChange={(e) => setNeedsTearOut(e.target.checked)}
+                    />
+                  }
+                  label="Tear out needed?"
+                />
+              </div>
+
+              {needsTearOut && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                    Number of Feet of Tear Out
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={tearOutFootage}
+                    onChange={(e) => setTearOutFootage(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                    style={{
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      padding: '0.5rem',
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              )}
+
+              <div>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={needsLineClearing}
+                      onChange={(e) => setNeedsLineClearing(e.target.checked)}
+                    />
+                  }
+                  label="Line clearing needed?"
+                />
+              </div>
+
+              {needsLineClearing && (
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                    Number of Feet of Line Clearing
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={lineClearingFootage}
+                    onChange={(e) => setLineClearingFootage(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                    style={{
+                      border: '1px solid #d1d5db',
+                      borderRadius: '0.375rem',
+                      padding: '0.5rem',
+                      width: '100%'
+                    }}
+                  />
+                </div>
+              )}
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                  Estimated Work Days
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={estimatedDays}
+                  onChange={(e) => setEstimatedDays(parseInt(e.target.value) || 0)}
+                  style={{
+                    border: '1px solid #d1d5db',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem',
+                    width: '100%'
+                  }}
+                />
+              </div>
+            </div>
+          </AccordionDetails>
+        </Accordion>
+
         {/* Material Cost Section */}
         <Accordion TransitionProps={{ unmountOnExit: true }}>
-          <AccordionSummary
+          <AccordionSummary 
             expandIcon={<ExpandMoreIcon />}
             aria-controls="material-cost-content"
             id="material-cost-header"
@@ -3071,42 +3192,106 @@ const FenceCalculator = ({ customerData = {} }) => {
           </AccordionSummary>
           <AccordionDetails>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ backgroundColor: '#f3f4f6' }}>
-                    <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Item</th>
-                    <th style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(costs || {}).map(([key, value]) => (
-                    key !== 'Total' && key !== 'Grand Total' ? (
-                      <tr key={key}>
-                        <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>{key}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>${value?.subtotal?.toFixed(2) || '0.00'}</td>
-                      </tr>
-                    ) : null
-                  ))}
-                  <tr style={{ backgroundColor: '#f8f9fa' }}>
-                    <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>Total Material Cost</td>
-                    <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold' }}>
-                      ${Object.entries(costs || {}).reduce((total, [key, value]) => {
-                        if (key !== 'Total' && key !== 'Grand Total') {
-                          return total + (value?.subtotal || 0);
-                        }
-                        return total;
-                      }, 0).toFixed(2)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+              {/* Single material costs table that includes everything */}
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Material</TableCell>
+                      <TableCell align="right">Quantity</TableCell>
+                      <TableCell align="right">Unit Cost</TableCell>
+                      <TableCell align="right">Subtotal</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {/* Regular materials */}
+                    {Object.entries(costs).map(([key, value]) => (
+                      <TableRow key={key}>
+                        <TableCell component="th" scope="row">
+                          {key}
+                        </TableCell>
+                        <TableCell align="right">
+                          {value && value.quantity !== undefined ? value.quantity : '-'}
+                          {value && value.standardLength ? ` (${value.standardLength}' lengths)` : ''}
+                        </TableCell>
+                        <TableCell align="right">
+                          ${value && value.unitCost !== undefined ? Number(value.unitCost).toFixed(2) : '0.00'}
+                        </TableCell>
+                        <TableCell align="right">
+                          ${value && value.subtotal !== undefined ? Number(value.subtotal).toFixed(2) : '0.00'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+
+                    {/* Single Gate Hardware */}
+                    {numberOfSingleGates && numberOfSingleGates > 0 && singleGates.map((gate, index) => (
+                      gate.size && (
+                        <TableRow key={`single-gate-${index}`}>
+                          <TableCell component="th" scope="row">
+                            Single Gate Hardware (Gate {index + 1}, {gate.size}")
+                          </TableCell>
+                          <TableCell align="right">1</TableCell>
+                          <TableCell align="right">
+                            ${calculateSingleGateHardwareCost(gate)}
+                          </TableCell>
+                          <TableCell align="right">
+                            ${calculateSingleGateHardwareCost(gate)}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    ))}
+
+                    {/* Double Gate Hardware */}
+                    {numberOfDoubleGates && numberOfDoubleGates > 0 && doubleGates.map((gate, index) => (
+                      gate.size && (
+                        <TableRow key={`double-gate-${index}`}>
+                          <TableCell component="th" scope="row">
+                            Double Gate Hardware (Gate {index + 1}, {gate.size}")
+                          </TableCell>
+                          <TableCell align="right">1</TableCell>
+                          <TableCell align="right">
+                            ${calculateDoubleGateHardwareCost(gate)}
+                          </TableCell>
+                          <TableCell align="right">
+                            ${calculateDoubleGateHardwareCost(gate)}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    ))}
+
+                    {/* Sliding Gate Hardware */}
+                    {numberOfSlidingGates && numberOfSlidingGates > 0 && slidingGates.map((gate, index) => (
+                      gate.size && (
+                        <TableRow key={`sliding-gate-${index}`}>
+                          <TableCell component="th" scope="row">
+                            Sliding Gate Hardware (Gate {index + 1}, {gate.size}")
+                          </TableCell>
+                          <TableCell align="right">1</TableCell>
+                          <TableCell align="right">
+                            ${calculateSlidingGateHardwareCost(gate)}
+                          </TableCell>
+                          <TableCell align="right">
+                            ${calculateSlidingGateHardwareCost(gate)}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    ))}
+
+                    {/* Total Material Cost */}
+                    <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
+                      <TableCell colSpan={3} align="right"><strong>Total Material Cost:</strong></TableCell>
+                      <TableCell align="right"><strong>${calculateTotalMaterialCost() ? Number(calculateTotalMaterialCost()).toFixed(2) : '0.00'}</strong></TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </div>
           </AccordionDetails>
         </Accordion>
 
         {/* Outside Labor Section */}
         <Accordion TransitionProps={{ unmountOnExit: true }}>
-          <AccordionSummary
+          <AccordionSummary 
             expandIcon={<ExpandMoreIcon />}
             aria-controls="outside-labor-content"
             id="outside-labor-header"
@@ -3129,7 +3314,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {needsLineClearing && (
+                  {needsLineClearing && lineClearingFootage && (
                     <tr>
                       <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Line Clearing ({lineClearingFootage} ft)</td>
                       <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
@@ -3137,7 +3322,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                       </td>
                     </tr>
                   )}
-                  {needsTearOut && (
+                  {needsTearOut && tearOutFootage && (
                     <tr>
                       <td style={{ padding: '0.75rem', borderBottom: '1px solid #e5e7eb' }}>Tear Out ({tearOutFootage} ft)</td>
                       <td style={{ padding: '0.75rem', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>
@@ -3156,7 +3341,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                   <tr style={{ backgroundColor: '#f8f9fa' }}>
                     <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>Total Outside Labor Cost</td>
                     <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 'bold' }}>
-                      ${outsideLaborTotal.toFixed(2)}
+                      ${(outsideLaborTotal || 0).toFixed(2)}
                     </td>
                   </tr>
                 </tbody>
@@ -3167,7 +3352,7 @@ const FenceCalculator = ({ customerData = {} }) => {
 
         {/* Total Cost Breakdown Section */}
         <Accordion TransitionProps={{ unmountOnExit: true }}>
-          <AccordionSummary
+          <AccordionSummary 
             expandIcon={<ExpandMoreIcon />}
             aria-controls="total-cost-breakdown-content"
             id="total-cost-breakdown-header"
@@ -3182,7 +3367,7 @@ const FenceCalculator = ({ customerData = {} }) => {
           </AccordionSummary>
           <AccordionDetails>
             <TotalCostBreakdown 
-              materialsCost={Object.values(costs || {}).reduce((total, item) => total + (item?.subtotal || 0), 0)} 
+              materialsCost={calculateTotalMaterialCost()} 
               outsideLaborCost={outsideLaborTotal || 0}
               isCommercial={commercialOrResidential === "Commercial"}
               onMaxPriceCalculated={handleMaxPriceCalculated}
@@ -3227,7 +3412,7 @@ const FenceCalculator = ({ customerData = {} }) => {
               customerEmail={customerData?.email || ''}
               customerJobSiteAddress={customerData?.siteAddress || ''}
               salesRep={`${customerData?.salesRep || ''} ${customerData?.salesRepTel ? `(${customerData.salesRepTel})` : ''}`}
-              materialsCost={Object.values(costs || {}).reduce((total, item) => total + (item?.subtotal || 0), 0)}
+              materialsCost={calculateTotalMaterialCost()}
               outsideLaborCost={outsideLaborTotal || 0}
               isCommercial={commercialOrResidential === "Commercial"}
               costs={costs}
