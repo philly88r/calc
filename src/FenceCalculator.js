@@ -3199,6 +3199,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                     <TableRow>
                       <TableCell>Material</TableCell>
                       <TableCell align="right">Quantity</TableCell>
+                      <TableCell>Description</TableCell>
                       <TableCell align="right">Unit Cost</TableCell>
                       <TableCell align="right">Subtotal</TableCell>
                     </TableRow>
@@ -3214,6 +3215,36 @@ const FenceCalculator = ({ customerData = {} }) => {
                           {value && value.quantity !== undefined ? value.quantity : '-'}
                           {value && value.standardLength ? ` (${value.standardLength}' lengths)` : ''}
                         </TableCell>
+                        <TableCell>
+                          {key.includes("Terminal posts") && `${terminalPostDiameter}" ${material} ${postThickness}, ${value?.postHeight}' height`}
+                          {key.includes("Corner posts") && `${cornerPostDiameter}" ${material} ${postThickness}, ${value?.postHeight}' height`}
+                          {key.includes("Line posts") && `${linePostDiameter}" ${material} ${postThickness}, ${value?.postHeight}' height`}
+                          {key.includes("Single gate posts") && `2 7/8" ${material} ${postThickness}, ${value?.postHeight}' height`}
+                          {key.includes("Double gate posts") && `4" ${material} ${postThickness}, ${value?.postHeight}' height`}
+                          {key.includes("Sliding Gate Posts") && `${slidingGatePostDiameter}" ${material} ${postThickness}, ${value?.postHeight}' height`}
+                          {key.includes("Duckbill gate stop posts") && `1 5/8" ${material} ${duckbillPostThickness}, ${value?.postHeight}' height`}
+                          {key.includes("Top/Middle/Bottom Rails") && `${topRailDiameter}" ${material} ${topRailThickness}`}
+                          {key.includes("Fence Mesh") && `${meshType} ${material} ${meshFold}`}
+                          {key.includes("Dome Cap") && `For ${terminalPostDiameter}" posts`}
+                          {key.includes("Tension Bands") && `For ${terminalPostDiameter}" posts`}
+                          {key.includes("Brace Bands") && `For ${terminalPostDiameter}" posts`}
+                          {(key.includes("3 Strand Barbed Wire") || key.includes("Barbed Wire")) && `15.5 gauge 4-point`}
+                          {key.includes("Concrete (Red)") && `80 lb bags`}
+                          {key.includes("Concrete (Yellow)") && `60 lb bags`}
+                          {key.includes("Concrete (Truck)") && `Ready-mix concrete`}
+                          {key.includes("Fence Slats") && `${material} slats`}
+                          {key.includes("Line clearing") && `${lineClearingFootage} linear feet`}
+                          {key.includes("Tear out") && `${tearOutFootage} linear feet`}
+                          {value && value.details && value.details}
+                          {key.includes("Eye Tops") && `${linePostDiameter}" x ${topRailDiameter}" ${material}`}
+                          {key.includes("Loop Caps") && `${linePostDiameter}" x ${topRailDiameter}" ${material}`}
+                          {key.includes("Rail Clamps") && `${linePostDiameter}" x ${topRailDiameter}" ${material}`}
+                          {key.includes("Barb Arms") && `${linePostDiameter}" x ${topRailDiameter}" ${material}`}
+                          {key.includes("Tension Bars") && `${heightOfFence}' ${material}`}
+                          {key.includes("Rail Ends") && `${topRailDiameter}" ${material}`}
+                          {key.includes("Cantilever/Sliding Gate Rollers") && `${slidingGatePostDiameter}"`}
+                          {key.includes("Cantilever/Sliding Gate Latch") && `${slidingGatePostDiameter}"`}
+                        </TableCell>
                         <TableCell align="right">
                           ${value && value.unitCost !== undefined ? Number(value.unitCost).toFixed(2) : '0.00'}
                         </TableCell>
@@ -3222,7 +3253,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                         </TableCell>
                       </TableRow>
                     ))}
-
                     {/* Single Gate Hardware */}
                     {numberOfSingleGates && numberOfSingleGates > 0 && singleGates.map((gate, index) => (
                       gate.size && (
@@ -3231,6 +3261,12 @@ const FenceCalculator = ({ customerData = {} }) => {
                             Single Gate Hardware (Gate {index + 1}, {gate.size}")
                           </TableCell>
                           <TableCell align="right">1</TableCell>
+                          <TableCell>
+                            {gate.hingeType === 'residential' ? 
+                              `Residential hinges for ${gate.size}" gate` 
+                              : `${gate.hingeType} hinges for ${gate.size}" gate`}
+                            {gate.latchType && ` with ${gate.latchType} latch`}
+                          </TableCell>
                           <TableCell align="right">
                             ${calculateSingleGateHardwareCost(gate)}
                           </TableCell>
@@ -3240,7 +3276,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                         </TableRow>
                       )
                     ))}
-
                     {/* Double Gate Hardware */}
                     {numberOfDoubleGates && numberOfDoubleGates > 0 && doubleGates.map((gate, index) => (
                       gate.size && (
@@ -3249,6 +3284,13 @@ const FenceCalculator = ({ customerData = {} }) => {
                             Double Gate Hardware (Gate {index + 1}, {gate.size}")
                           </TableCell>
                           <TableCell align="right">1</TableCell>
+                          <TableCell>
+                            {gate.hingeType === 'residential' ? 
+                              `Residential hinges for ${gate.size}" gate` 
+                              : `${gate.hingeType} hinges for ${gate.size}" gate`}
+                            {gate.latchType && ` with ${gate.latchType} latch`}
+                            {hasDuckbillGateStop ? ' with duckbill gate stop' : ''}
+                          </TableCell>
                           <TableCell align="right">
                             ${calculateDoubleGateHardwareCost(gate)}
                           </TableCell>
@@ -3258,7 +3300,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                         </TableRow>
                       )
                     ))}
-
                     {/* Sliding Gate Hardware */}
                     {numberOfSlidingGates && numberOfSlidingGates > 0 && slidingGates.map((gate, index) => (
                       gate.size && (
@@ -3267,6 +3308,9 @@ const FenceCalculator = ({ customerData = {} }) => {
                             Sliding Gate Hardware (Gate {index + 1}, {gate.size}")
                           </TableCell>
                           <TableCell align="right">1</TableCell>
+                          <TableCell>
+                            Sliding gate hardware for {gate.size}" gate (rollers, track, and latch)
+                          </TableCell>
                           <TableCell align="right">
                             ${calculateSlidingGateHardwareCost(gate)}
                           </TableCell>
@@ -3276,10 +3320,9 @@ const FenceCalculator = ({ customerData = {} }) => {
                         </TableRow>
                       )
                     ))}
-
                     {/* Total Material Cost */}
                     <TableRow sx={{ backgroundColor: '#f8f9fa' }}>
-                      <TableCell colSpan={3} align="right"><strong>Total Material Cost:</strong></TableCell>
+                      <TableCell colSpan={4} align="right"><strong>Total Material Cost:</strong></TableCell>
                       <TableCell align="right"><strong>${calculateTotalMaterialCost() ? Number(calculateTotalMaterialCost()).toFixed(2) : '0.00'}</strong></TableCell>
                     </TableRow>
                   </TableBody>
