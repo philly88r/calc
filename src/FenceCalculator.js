@@ -133,10 +133,10 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [singleGateSize, setSingleGateSize] = useState('4');
   const [singleGateHingeType, setSingleGateHingeType] = useState('residential');
   const [singleGateLatchType, setSingleGateLatchType] = useState('fork');
-  const [doubleGateSize, setDoubleGateSize] = useState('6');
+  const [doubleGateSize, setDoubleGateSize] = useState('');
   const [doubleGateHingeType, setDoubleGateHingeType] = useState('residential');
   const [doubleGateLatchType, setDoubleGateLatchType] = useState('fork');
-  const [slidingGateSize, setSlidingGateSize] = useState('6');
+  const [slidingGateSize, setSlidingGateSize] = useState('');
 
   // Mesh costs
   const meshTypeOptions = meshCosts;
@@ -637,7 +637,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Eye Tops / Loop Caps calculation
-    if (threeStrandBarbedWire) {
+    if (!threeStrandBarbedWire) {
       const linePostsNeeded = calculateLinePostsNeeded();
       
       // Get unit cost based on material, line post diameter, and top rail diameter
@@ -665,7 +665,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     const linePostsNeeded = calculateLinePostsNeeded();
 
     // Rail Clamps calculation
-    if (linePostsNeeded > 0) {
+    if (linePostsNeeded > 0 && extraRail !== 'none') {
       // Calculate quantity based on extra rail selection
       let railClampMultiplier = 0;
       switch (extraRail) {
@@ -674,6 +674,7 @@ const FenceCalculator = ({ customerData = {} }) => {
           break;
         case "top":
         case "bottom":
+        case "middle":
           railClampMultiplier = 1;
           break;
       }
@@ -839,8 +840,20 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Brace Bands calculation for terminal posts
-    if (numberOfEndTerminals > 0 && hasHBrace) {
-      const braceBandsPerPost = 2;
+    if (numberOfEndTerminals > 0) {
+      // Base: 2 per post
+      let braceBandsPerPost = 2;
+      
+      // Add 1 if has middle or both extra rails
+      if (extraRail === "middle" || extraRail === "both") {
+        braceBandsPerPost += 1;
+      }
+      
+      // Add 3 if has barbed wire
+      if (threeStrandBarbedWire) {
+        braceBandsPerPost += 3;
+      }
+      
       const braceBandsQuantity = numberOfEndTerminals * braceBandsPerPost;
       
       let braceBandUnitCost = 0;
@@ -859,8 +872,20 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Brace Bands calculation for corner posts
-    if (numberOfCorners > 0 && hasHBrace) {
-      const braceBandsPerPost = 4;
+    if (numberOfCorners > 0) {
+      // Base: 4 per post (double the terminal posts)
+      let braceBandsPerPost = 4;
+      
+      // Add 2 if has middle or both extra rails (double the terminal posts)
+      if (extraRail === "middle" || extraRail === "both") {
+        braceBandsPerPost += 2;
+      }
+      
+      // Add 6 if has barbed wire (double the terminal posts)
+      if (threeStrandBarbedWire) {
+        braceBandsPerPost += 6;
+      }
+      
       const braceBandsQuantity = numberOfCorners * braceBandsPerPost;
       
       let braceBandUnitCost = 0;
@@ -879,7 +904,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Brace Bands calculation for single gate posts
-    if (numberOfSingleGates && numberOfSingleGates > 0 && hasHBrace) {
+    if (numberOfSingleGates && numberOfSingleGates > 0) {
       const braceBandsPerPost = 2;
       const braceBandsQuantity = numberOfSingleGates * 2 * braceBandsPerPost; // 2 posts per gate
       
@@ -899,7 +924,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Brace Bands calculation for double gate posts
-    if (numberOfDoubleGates && numberOfDoubleGates > 0 && hasHBrace) {
+    if (numberOfDoubleGates && numberOfDoubleGates > 0) {
       const braceBandsPerPost = 2;
       const braceBandsQuantity = numberOfDoubleGates * 2 * braceBandsPerPost; // 2 posts per gate
       
@@ -919,7 +944,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Brace Bands calculation for sliding gate posts
-    if (numberOfSlidingGates && numberOfSlidingGates > 0 && hasHBrace) {
+    if (numberOfSlidingGates && numberOfSlidingGates > 0) {
       const braceBandsPerPost = 2;
       const braceBandsQuantity = numberOfSlidingGates * 3 * braceBandsPerPost; // 3 posts per sliding gate
       
@@ -935,6 +960,48 @@ const FenceCalculator = ({ customerData = {} }) => {
         unitCost: braceBandUnitCost,
         standardLength: null,
         subtotal: braceBandSubtotal
+      };
+    }
+
+    // Extra Brace Bands for H braces
+    if (hasHBrace) {
+      // Calculate total posts except line posts
+      const totalNonLinePosts = 
+        parseInt(numberOfEndTerminals || 0) + 
+        parseInt(numberOfCorners || 0) + 
+        (parseInt(numberOfSingleGates || 0) * 2) + // 2 posts per single gate
+        (parseInt(numberOfDoubleGates || 0) * 2) + // 2 posts per double gate
+        (parseInt(numberOfSlidingGates || 0) * 3); // 3 posts per sliding gate
+      
+      // Add 1 for each post, add 2 for each corner post
+      const extraBraceBandsQuantity = 
+        (parseInt(numberOfEndTerminals || 0) * 1) + // 1 extra per terminal post
+        (parseInt(numberOfCorners || 0) * 2) +      // 2 extra per corner post
+        (parseInt(numberOfSingleGates || 0) * 2 * 1) + // 1 extra per single gate post (2 posts)
+        (parseInt(numberOfDoubleGates || 0) * 2 * 1) + // 1 extra per double gate post (2 posts)
+        (parseInt(numberOfSlidingGates || 0) * 3 * 1); // 1 extra per sliding gate post (3 posts)
+      
+      // Get unit cost based on material and post diameter (using terminal post diameter as default)
+      let braceBandUnitCost = 0;
+      if (braceBandsCosts[material]?.[terminalPostDiameter]) {
+        braceBandUnitCost = braceBandsCosts[material][terminalPostDiameter];
+      }
+
+      const braceBandSubtotal = extraBraceBandsQuantity * braceBandUnitCost;
+
+      newCosts["Extra Brace Bands for H Braces"] = {
+        quantity: extraBraceBandsQuantity,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: braceBandSubtotal
+      };
+      
+      // Brace bands for line posts for H braces
+      newCosts["Brace Bands (Line Posts for H Braces)"] = {
+        quantity: totalNonLinePosts,
+        unitCost: braceBandUnitCost,
+        standardLength: null,
+        subtotal: totalNonLinePosts * braceBandUnitCost
       };
     }
 
@@ -1410,12 +1477,6 @@ const FenceCalculator = ({ customerData = {} }) => {
       const dailyRate = 50; // $50 per day
       const travelingCostSubtotal = estimatedDays * dailyRate;
       outsideLabor += travelingCostSubtotal;
-
-      newCosts["Traveling Cost"] = {
-        quantity: estimatedDays,
-        unitCost: dailyRate,
-        subtotal: travelingCostSubtotal
-      };
     }
 
     // Update outside labor total
@@ -1848,10 +1909,10 @@ const FenceCalculator = ({ customerData = {} }) => {
                     width: '100%'
                   }}
                 >
-                  <option value="8F">8F</option>
-                  <option value="9F">9F</option>
-                  <option value="9G">9G</option>
-                  <option value="11G">11G</option>
+                  <option value="8F">8F (Black)</option>
+                  <option value="9F">9F (Black)</option>
+                  <option value="9G">9G (Galv)</option>
+                  <option value="11G">11G (Galv)</option>
                 </select>
               </div>
 
@@ -2056,35 +2117,45 @@ const FenceCalculator = ({ customerData = {} }) => {
                   <Typography variant="subtitle2" gutterBottom>
                     Single Gate Details
                   </Typography>
-                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
-                    <FormControl fullWidth={isMobile}>
-                      <InputLabel>Gate Size</InputLabel>
-                      <Select value={singleGateSize} onChange={(e) => setSingleGateSize(e.target.value)}>
-                        <MenuItem value="3">3'</MenuItem>
-                        <MenuItem value="4">4'</MenuItem>
-                        <MenuItem value="5">5'</MenuItem>
-                        <MenuItem value="6">6'</MenuItem>
-                        <MenuItem value="8">8'</MenuItem>
-                        <MenuItem value="10">10'</MenuItem>
-                        <MenuItem value="12">12'</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <FormControl fullWidth={isMobile}>
-                      <InputLabel>Hinge Type</InputLabel>
-                      <Select value={singleGateHingeType} onChange={(e) => setSingleGateHingeType(e.target.value)}>
-                        <MenuItem value="residential">Residential</MenuItem>
-                        <MenuItem value="bulldog">Bulldog</MenuItem>
-                        <MenuItem value="180degree">180 Degree</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <FormControl fullWidth={isMobile}>
-                      <InputLabel>Latch Type</InputLabel>
-                      <Select value={singleGateLatchType} onChange={(e) => setSingleGateLatchType(e.target.value)}>
-                        <MenuItem value="fork">Fork Latch</MenuItem>
-                        <MenuItem value="lockable">Lockable Latch</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </div>
+                  {Array.from({ length: parseInt(numberOfSingleGates) }).map((_, index) => (
+                    <div key={`single-gate-${index}`} style={{ 
+                      display: 'flex', 
+                      flexDirection: isMobile ? 'column' : 'row', 
+                      gap: '1rem', 
+                      alignItems: isMobile ? 'stretch' : 'center',
+                      marginBottom: '1rem',
+                      padding: '0.5rem',
+                      backgroundColor: '#f9f9f9',
+                      borderRadius: '0.375rem'
+                    }}>
+                      <Typography variant="body2" sx={{ minWidth: '80px' }}>Gate {index + 1}:</Typography>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Width (ft)
+                        </label>
+                        <input
+                          type="number"
+                          min="3"
+                          step="0.1"
+                          defaultValue="4"
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        />
+                      </div>
+                      <FormControl fullWidth={isMobile} sx={{ flex: 1 }}>
+                        <InputLabel>Hinge Type</InputLabel>
+                        <Select defaultValue="residential">
+                          <MenuItem value="residential">Residential</MenuItem>
+                          <MenuItem value="bulldog">Bulldog</MenuItem>
+                          <MenuItem value="180degree">180 Degree</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -2093,35 +2164,52 @@ const FenceCalculator = ({ customerData = {} }) => {
                   <Typography variant="subtitle2" gutterBottom>
                     Double Gate Details
                   </Typography>
-                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
-                    <FormControl fullWidth={isMobile}>
-                      <InputLabel>Gate Size</InputLabel>
-                      <Select value={doubleGateSize} onChange={(e) => setDoubleGateSize(e.target.value)}>
-                        <MenuItem value="6">6'</MenuItem>
-                        <MenuItem value="8">8'</MenuItem>
-                        <MenuItem value="10">10'</MenuItem>
-                        <MenuItem value="12">12'</MenuItem>
-                        <MenuItem value="14">14'</MenuItem>
-                        <MenuItem value="16">16'</MenuItem>
-                        <MenuItem value="20">20'</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <FormControl fullWidth={isMobile}>
-                      <InputLabel>Hinge Type</InputLabel>
-                      <Select value={doubleGateHingeType} onChange={(e) => setDoubleGateHingeType(e.target.value)}>
-                        <MenuItem value="residential">Residential</MenuItem>
-                        <MenuItem value="bulldog">Bulldog</MenuItem>
-                        <MenuItem value="180degree">180 Degree</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <FormControl fullWidth={isMobile}>
-                      <InputLabel>Latch Type</InputLabel>
-                      <Select value={doubleGateLatchType} onChange={(e) => setDoubleGateLatchType(e.target.value)}>
-                        <MenuItem value="fork">Fork Latch</MenuItem>
-                        <MenuItem value="lockable">Lockable Latch</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </div>
+                  {Array.from({ length: parseInt(numberOfDoubleGates) }).map((_, index) => (
+                    <div key={`double-gate-${index}`} style={{ 
+                      display: 'flex', 
+                      flexDirection: isMobile ? 'column' : 'row', 
+                      gap: '1rem', 
+                      alignItems: isMobile ? 'stretch' : 'center',
+                      marginBottom: '1rem',
+                      padding: '0.5rem',
+                      backgroundColor: '#f9f9f9',
+                      borderRadius: '0.375rem'
+                    }}>
+                      <Typography variant="body2" sx={{ minWidth: '80px' }}>Gate {index + 1}:</Typography>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Width (ft)
+                        </label>
+                        <input
+                          type="number"
+                          min="6"
+                          step="0.1"
+                          defaultValue="6"
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        />
+                      </div>
+                      <FormControl fullWidth={isMobile} sx={{ flex: 1 }}>
+                        <InputLabel>Hinge Type</InputLabel>
+                        <Select defaultValue="residential">
+                          <MenuItem value="residential">Residential</MenuItem>
+                          <MenuItem value="bulldog">Bulldog</MenuItem>
+                          <MenuItem value="180degree">180 Degree</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <FormControl fullWidth={isMobile} sx={{ flex: 1 }}>
+                        <InputLabel>Latch Type</InputLabel>
+                        <Select defaultValue="fork">
+                          <MenuItem value="fork">Fork Latch</MenuItem>
+                          <MenuItem value="lockable">Lockable Latch</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -2130,22 +2218,37 @@ const FenceCalculator = ({ customerData = {} }) => {
                   <Typography variant="subtitle2" gutterBottom>
                     Sliding Gate Details
                   </Typography>
-                  <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '1rem', alignItems: isMobile ? 'stretch' : 'center' }}>
-                    <FormControl fullWidth={isMobile}>
-                      <InputLabel>Gate Size</InputLabel>
-                      <Select value={slidingGateSize} onChange={(e) => setSlidingGateSize(e.target.value)}>
-                        <MenuItem value="6">6'</MenuItem>
-                        <MenuItem value="8">8'</MenuItem>
-                        <MenuItem value="10">10'</MenuItem>
-                        <MenuItem value="12">12'</MenuItem>
-                        <MenuItem value="14">14'</MenuItem>
-                        <MenuItem value="16">16'</MenuItem>
-                        <MenuItem value="20">20'</MenuItem>
-                        <MenuItem value="24">24'</MenuItem>
-                        <MenuItem value="30">30'</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </div>
+                  {Array.from({ length: parseInt(numberOfSlidingGates) }).map((_, index) => (
+                    <div key={`sliding-gate-${index}`} style={{ 
+                      display: 'flex', 
+                      flexDirection: isMobile ? 'column' : 'row', 
+                      gap: '1rem', 
+                      alignItems: isMobile ? 'stretch' : 'center',
+                      marginBottom: '1rem',
+                      padding: '0.5rem',
+                      backgroundColor: '#f9f9f9',
+                      borderRadius: '0.375rem'
+                    }}>
+                      <Typography variant="body2" sx={{ minWidth: '80px' }}>Gate {index + 1}:</Typography>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Width (ft)
+                        </label>
+                        <input
+                          type="number"
+                          min="6"
+                          step="0.1"
+                          defaultValue="6"
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
