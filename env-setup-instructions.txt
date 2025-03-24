@@ -1,0 +1,14 @@
+IMPORTANT: Please create a file named '.env' in the root directory with the following content:
+
+# Database configuration
+DB_HOST=db.kdhwrlhzevzekoanusbs.supabase.co
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASSWORD=your_password_here
+
+# Server configuration
+PORT=3001
+
+NOTE: This file contains sensitive information and should not be committed to Git.
+The .gitignore file is already configured to exclude this file from version control.

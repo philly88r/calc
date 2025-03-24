@@ -1,0 +1,48 @@
+========================================
+Testing Lightspeed API...
+API Key: lsxs...D82p
+URL: https://api.lightspeedapp.com/api/3.0/price_books
+========================================
+Request options:
+{
+  "method": "GET",
+  "headers": {
+    "Authorization": "Bearer [MASKED]",
+    "Content-Type": "application/json",
+    "Accept": "application/json"
+  }
+}
+Sending request...
+========================================
+Response status: 200
+Response status text: OK
+Response headers:
+  cache-control: private, no-cache, no-store, max-age=0, must-revalidate
+  cf-cache-status: DYNAMIC
+  cf-ray: 91b6db463ea6be15-ATL
+  connection: keep-alive
+  content-encoding: gzip
+  content-language: en
+  content-type: text/html; charset=utf-8
+  date: Wed, 05 Mar 2025 04:26:41 GMT
+  server: cloudflare
+  set-cookie: next-i18next=en; Path=/; Expires=Thu, 05 Mar 2026 04:26:41 GMT; SameSite=Strict, __cf_bm=7H5vRh9Uj_F3QegljShnf5xdqVCMkD.A2xQw86WI4.s-1741148801-1.0.1.1-6LMRGkiXjkNWqEHvDt2BXI01n096KLx7Appd1b01JE2zXGpGh28mCRXHB_nOupLloHelvn_8mPj7Ljq0vlqKd15UIAO3w7mbU0RqNgBxcKs; path=/; expires=Wed, 05-Mar-25 04:56:41 GMT; domain=.lightspeedapp.com; HttpOnly; Secure; SameSite=None
+  strict-transport-security: max-age=15552000; includeSubDomains
+  transfer-encoding: chunked
+  vary: Accept-Encoding
+  x-content-type-options: nosniff
+  x-dns-prefetch-control: off
+  x-download-options: noopen
+  x-envoy-upstream-service-time: 42
+  x-frame-options: SAMEORIGIN
+  x-ls-referring-product: 
+  x-powered-by: Next.js
+  x-xss-protection: 1; mode=block
+Content-Type: text/html; charset=utf-8
+========================================
+Response is not JSON. First 500 chars of response:
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><title>Lightspeed ID</title><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="msapplication-square70x70logo" content="/images/smalltile.png"/><meta name="msapplication-square150x150logo" content="/images/mediumtile.png"/><meta name="msapplication-square310x310logo" content="/images/largetile.png"/><meta name="msapplication-wide310x150logo" content="/images/wid
+========================================
+AUTHENTICATION ERROR: Response appears to be HTML - likely an authentication issue
+This usually means the API key is invalid, expired, or does not have the correct permissions.
+========================================

@@ -419,9 +419,38 @@ const Proposal = ({
           <Typography variant="h6" sx={{ color: '#6d2f2c', mb: 2 }}>Materials List:</Typography>
           <Paper variant="outlined" sx={{ p: 2 }}>
             {costs && Object.entries(costs).length > 0 ? (
-              Object.entries(costs).map(([item, details]) => (
-                <Typography key={item}>• {item}: {details?.quantity || 0} {details?.unit || 'units'}</Typography>
-              ))
+              <>
+                {/* Gate section */}
+                {Object.entries(costs).filter(([item]) => item.includes('Gate')).length > 0 && (
+                  <>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 1, mb: 1 }}>Gates:</Typography>
+                    {Object.entries(costs)
+                      .filter(([item]) => item.includes('Gate'))
+                      .map(([item, details]) => (
+                        <Typography key={item}>
+                          • {item}: {details?.quantity || 0} {details?.unit || 'units'} 
+                          {details?.unitCost ? ` @ $${parseFloat(details.unitCost).toFixed(2)} each` : ''} 
+                          {details?.subtotal ? ` = $${parseFloat(details.subtotal).toFixed(2)}` : ''}
+                          {details?.details ? ` (${details.details})` : ''}
+                          {details?.sku ? ` [SKU: ${details.sku}]` : ''}
+                        </Typography>
+                      ))}
+                  </>
+                )}
+
+                {/* Other materials */}
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2, mb: 1 }}>Other Materials:</Typography>
+                {Object.entries(costs)
+                  .filter(([item]) => !item.includes('Gate'))
+                  .map(([item, details]) => (
+                    <Typography key={item}>
+                      • {item}: {details?.quantity || 0} {details?.unit || 'units'} 
+                      {details?.unitCost ? ` @ $${parseFloat(details.unitCost).toFixed(2)} each` : ''} 
+                      {details?.subtotal ? ` = $${parseFloat(details.subtotal).toFixed(2)}` : ''}
+                      {details?.details ? ` (${details.details})` : ''}
+                    </Typography>
+                  ))}
+              </>
             ) : (
               <Typography>• All posts, rails, and hardware needed for installation</Typography>
             )}

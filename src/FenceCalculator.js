@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  postCosts as defaultPostCosts,
-  meshCosts,
-  domeCapCosts,
-  fenceTiesCosts,
-  hogRingsCosts,
-  wedgeAnchorCosts,
-  eyeTopsCosts,
-  hingePrices,
-  rollerPrice
+  DEFAULT_BARBED_WIRE_GAUGE, DEFAULT_BARBED_WIRE_POINT,
+  postCosts, topRailCosts, meshCosts, domeCapCosts, fenceTiesCosts, hogRingsCosts,
+  wedgeAnchorCosts, eyeTopsCosts, bulldogHingeCosts, femaleGateHingeCosts, maleGateHingeCosts, 
+  industrialHingeCosts, rollerPrice, barbedWireCosts, braceBandsCosts, cantileverLatchCosts,
+  tensionBandCosts, tensionBarsCosts, slatCosts, nutsAndBoltsCosts, concreteCosts,
+  railClampsCosts, barbArmsCosts
 } from './data/costs.js';
+import gateData, { findMatchingGate, getAvailableGateHeights, getAvailableGateWidths } from './GateData.js';
 import OutsideLabor from './components/OutsideLabor.js';
 import TotalCostBreakdown from './components/TotalCostBreakdown.js';
 import Proposal from './components/Proposal.js';
@@ -67,8 +65,8 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [extraRail, setExtraRail] = useState('none');
   const [hasHBrace, setHasHBrace] = useState(false);
   const [material, setMaterial] = useState("Galvanized");
-  const [postThickness, setPostThickness] = useState("SCH 40");
-  const [duckbillPostThickness, setDuckbillPostThickness] = useState("SCH 40");
+  const [postThickness, setPostThickness] = useState("Industrial SCH 40");
+  const [duckbillPostThickness, setDuckbillPostThickness] = useState("Industrial SCH 40");
   const [hasDuckbillGateStop, setHasDuckbillGateStop] = useState(false);
   const [depthOfHoles, setDepthOfHoles] = useState(36);
   const [widthOfHoles, setWidthOfHoles] = useState(8);
@@ -87,19 +85,19 @@ const FenceCalculator = ({ customerData = {} }) => {
 
   // Post dimensions
   const [terminalPostDiameter, setTerminalPostDiameter] = useState("2 7/8");
-  const [terminalPostThickness, setTerminalPostThickness] = useState("SCH 40");
+  const [terminalPostThickness, setTerminalPostThickness] = useState("Industrial SCH 40");
   const [cornerPostDiameter, setCornerPostDiameter] = useState("2 7/8");
-  const [cornerPostThickness, setCornerPostThickness] = useState("SCH 40");
+  const [cornerPostThickness, setCornerPostThickness] = useState("Industrial SCH 40");
   const [linePostDiameter, setLinePostDiameter] = useState("1 7/8");
-  const [linePostThickness, setLinePostThickness] = useState("SCH 40");
+  const [linePostThickness, setLinePostThickness] = useState("Industrial SCH 40");
   const [singleGatePostDiameter, setSingleGatePostDiameter] = useState("2 7/8");
-  const [singleGatePostThickness, setSingleGatePostThickness] = useState("SCH 40");
+  const [singleGatePostThickness, setSingleGatePostThickness] = useState("Industrial SCH 40");
   const [doubleGatePostDiameter, setDoubleGatePostDiameter] = useState("4");
-  const [doubleGatePostThickness, setDoubleGatePostThickness] = useState("SCH 40");
+  const [doubleGatePostThickness, setDoubleGatePostThickness] = useState("Industrial SCH 40");
   const [slidingGatePostDiameter, setSlidingGatePostDiameter] = useState("4");
-  const [slidingGatePostThickness, setSlidingGatePostThickness] = useState("SCH 40");
+  const [slidingGatePostThickness, setSlidingGatePostThickness] = useState("Industrial SCH 40");
   const [topRailDiameter, setTopRailDiameter] = useState("1 5/8");
-  const [topRailThickness, setTopRailThickness] = useState("SCH 40"); // updated default value
+  const [topRailThickness, setTopRailThickness] = useState("SCH 40"); 
   const [gatePipeDiameter, setGatePipeDiameter] = useState("1 3/8");
   const [flangedPostDiameter, setFlangedPostDiameter] = useState("");
   const [flangedPostThickness, setFlangedPostThickness] = useState("");
@@ -130,13 +128,18 @@ const FenceCalculator = ({ customerData = {} }) => {
   const [slidingGates, setSlidingGates] = useState([]);
 
   // Gate details
-  const [singleGateSize, setSingleGateSize] = useState('4');
+  const [gateType, setGateType] = useState('single'); // single, double, sliding
+  const [gateCommercialResidential, setGateCommercialResidential] = useState('commercial');
+  const [gateBarbed, setGateBarbed] = useState(false);
+  const [gateFinish, setGateFinish] = useState('galvanized');
+  const [gateFrameDiameter, setGateFrameDiameter] = useState('1 5/8');
+  const [singleGateSize, setSingleGateSize] = useState("6'x4");
   const [singleGateHingeType, setSingleGateHingeType] = useState('residential');
   const [singleGateLatchType, setSingleGateLatchType] = useState('fork');
-  const [doubleGateSize, setDoubleGateSize] = useState('');
+  const [doubleGateSize, setDoubleGateSize] = useState("6'x12");
   const [doubleGateHingeType, setDoubleGateHingeType] = useState('residential');
   const [doubleGateLatchType, setDoubleGateLatchType] = useState('fork');
-  const [slidingGateSize, setSlidingGateSize] = useState('');
+  const [slidingGateSize, setSlidingGateSize] = useState("6'x10");
 
   // Mesh costs
   const meshTypeOptions = meshCosts;
@@ -162,116 +165,28 @@ const FenceCalculator = ({ customerData = {} }) => {
   const hogRingsOptions = hogRingsCosts;
 
   // Rail clamps costs
-  const railClampsCosts = {
-    "Black": {
-      "1 5/8": { "1 3/8": 4.93, "1 5/8": 6.90 },
-      "1 7/8": { "1 3/8": 6.45, "1 5/8": 6.84 },
-      "2 3/8": { "1 3/8": null, "1 5/8": 7.50 },
-      "2 7/8": { "1 3/8": null, "1 5/8": 8.98 },
-      "4": { "1 3/8": null, "1 5/8": 10.76 }
-    },
-    "Galvanized": {
-      "1 5/8": { "1 3/8": 3.86, "1 5/8": 3.33 },
-      "1 7/8": { "1 3/8": 3.35, "1 5/8": 3.43 },
-      "2 3/8": { "1 3/8": null, "1 5/8": 4.78 },
-      "2 7/8": { "1 3/8": null, "1 5/8": 6.00 },
-      "4": { "1 3/8": null, "1 5/8": 7.02 }
-    }
-  };
+  const railClampsCost = railClampsCosts;
 
   // Barb arms costs
-  const barbArmsCosts = {
-    "Black": {
-      "1 5/8": { "1 3/8": null, "1 5/8": 10.52 },
-      "1 7/8": { "1 3/8": null, "1 5/8": 10.40 },
-      "2 3/8": { "1 3/8": null, "1 5/8": 11.07 },
-      "2 7/8": { "1 3/8": null, "1 5/8": 20.76 },
-      "4": { "1 3/8": null, "1 5/8": 33.65 }
-    },
-    "Galvanized": {
-      "1 5/8": { "1 3/8": null, "1 5/8": 6.99 },
-      "1 7/8": { "1 3/8": null, "1 5/8": 5.93 },
-      "2 3/8": { "1 3/8": null, "1 5/8": 5.96 },
-      "2 7/8": { "1 3/8": null, "1 5/8": 13.96 },
-      "4": { "1 3/8": null, "1 5/8": 17.48 }
-    }
-  };
+  // Using barbArmsCosts directly from import
 
   // Tension bands costs
-  const tensionBandsCosts = {
-    "Black": {
-      "2 3/8": 0.94,
-      "2 7/8": 1.18,
-      "4": 1.61
-    },
-    "Galvanized": {
-      "2 3/8": 0.86,
-      "2 7/8": 0.98,
-      "4": 1.08
-    }
-  };
+  const tensionBandsCost = tensionBandCosts;
 
   // Tension bars costs
-  const tensionBarsCosts = {
-    "Black": {
-      "4": 4.41,
-      "5": 5.45,
-      "6": 9.41,
-      "7": 15.35,
-      "8": 17.58
-    },
-    "Galvanized": {
-      "4": 4.31,
-      "5": 3.47,
-      "6": 5.70,
-      "7": 8.51,
-      "8": 9.00
-    }
-  };
+  const tensionBarsCost = tensionBarsCosts;
 
   // Brace bands costs
-  const braceBandsCosts = {
-    "Black": {
-      "1 5/8": 1.67,
-      "1 7/8": 1.82,
-      "2 3/8": 0.86,
-      "2 7/8": 1.47,
-      "4": 2.39
-    },
-    "Galvanized": {
-      "1 5/8": 0.69,
-      "1 7/8": 1.10,
-      "2 3/8": 0.74,
-      "2 7/8": 0.84,
-      "4": 1.27
-    }
-  };
+  const braceBandsCost = braceBandsCosts;
 
-  // Barbed wire unit cost
-  const BARBED_WIRE_UNIT_COST = 60.06;
+  // Barbed wire costs
+  const barbedWireCost = barbedWireCosts;
 
   // Fence slats costs per 10 linear feet
-  const slatCosts = {
-    "4": 59.83,
-    "5": 71.15,
-    "6": 92.17,
-    "7": 73.00,
-    "8": 124.51,
-    "10": 200.00
-  };
+  const slatCost = slatCosts;
 
   // Nuts and bolts costs (per 100pc)
-  const nutsAndBoltsCosts = {
-    "Black": 12.74,
-    "Galvanized": 7.84
-  };
-
-  // Concrete costs
-  const CONCRETE_COSTS = {
-    "Red": 7.41,    // per bag
-    "Yellow": 4.88, // per bag
-    "Truck": 170    // per cubic yard
-  };
+  const nutsAndBoltsCost = nutsAndBoltsCosts;
 
   // Initialize or update pull lengths when number of pulls changes
   useEffect(() => {
@@ -297,6 +212,51 @@ const FenceCalculator = ({ customerData = {} }) => {
       if (!length) return total;
       return total + Math.ceil(parseFloat(length) / postSpacing);
     }, 0) - numberOfPulls;
+  };
+
+  // Find the closest post size that is greater than or equal to the required height
+  const findPostSize = (material, thickness, diameter, requiredHeight) => {
+    // Check if the material, thickness, and diameter exist in the postCosts
+    if (!postCosts[material] || !postCosts[material][thickness] || !postCosts[material][thickness][diameter]) {
+      return { size: null, cost: 0, sku: null };
+    }
+    
+    // Get available sizes for this post type
+    const availableSizes = Object.keys(postCosts[material][thickness][diameter]);
+    
+    // Convert sizes like "8ft" to numeric values
+    const sizeValues = availableSizes.map(size => parseFloat(size.replace('ft', '')));
+    
+    // Sort sizes in ascending order
+    sizeValues.sort((a, b) => a - b);
+    
+    // Find the smallest size that is >= requiredHeight
+    let closestSize = null;
+    for (let i = 0; i < sizeValues.length; i++) {
+      if (sizeValues[i] >= requiredHeight) {
+        closestSize = sizeValues[i];
+        break;
+      }
+    }
+    
+    // If no size is big enough, return the largest available
+    if (closestSize === null && sizeValues.length > 0) {
+      closestSize = Math.max(...sizeValues);
+    }
+    
+    if (closestSize) {
+      const sizeKey = `${closestSize}ft`;
+      const postData = postCosts[material][thickness][diameter][sizeKey];
+      
+      return {
+        size: sizeKey,
+        cost: postData.price || 0,
+        sku: postData.sku || null
+      };
+    }
+    
+    // If no sizes available, return null and 0
+    return { size: null, cost: 0, sku: null };
   };
 
   // Use useCallback to memoize the calculateCosts function
@@ -325,56 +285,45 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Calculate total number of terminal posts
     const totalTerminalPosts = parseInt(numberOfEndTerminals || 0) + parseInt(numberOfSolitaryPosts || 0);
 
-    // Get the appropriate cost based on material, thickness, and diameter
-    const getUnitCost = (diameter, isHighZinc = false) => {
-      if (isHighZinc && material === "Galvanized" && defaultPostCosts[material]["High zinc"] && defaultPostCosts[material]["High zinc"][diameter]) {
-        return defaultPostCosts[material]["High zinc"][diameter];
-      }
-      
-      if (defaultPostCosts[material] && defaultPostCosts[material][postThickness] && defaultPostCosts[material][postThickness][diameter]) {
-        return defaultPostCosts[material][postThickness][diameter];
-      }
-      
-      return 0;
-    };
-
     // Terminal posts
     if (totalTerminalPosts > 0) {
-      const unitCost = getUnitCost(terminalPostDiameter);
-      const postHeight = parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment;
-      const costPerPost = unitCost * postHeight;
+      const { size, cost, sku } = findPostSize(material, postThickness, terminalPostDiameter, parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment);
+      const postHeight = size ? parseFloat(size.replace('ft', '')) : 0;
+      const costPerPost = cost;
       const subtotal = totalTerminalPosts * costPerPost;
 
       newCosts["Terminal posts"] = {
         quantity: totalTerminalPosts,
         unitCost: costPerPost,
         postHeight: postHeight,
-        subtotal: subtotal
+        subtotal: subtotal,
+        sku: sku
       };
     }
 
     // Corner posts
     if (numberOfCorners > 0) {
-      const unitCost = getUnitCost(cornerPostDiameter);
-      const postHeight = parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment;
-      const costPerPost = unitCost * postHeight;
+      const { size, cost, sku } = findPostSize(material, postThickness, cornerPostDiameter, parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment);
+      const postHeight = size ? parseFloat(size.replace('ft', '')) : 0;
+      const costPerPost = cost;
       const subtotal = numberOfCorners * costPerPost;
 
       newCosts["Corner posts"] = {
         quantity: numberOfCorners,
         unitCost: costPerPost,
         postHeight: postHeight,
-        subtotal: subtotal
+        subtotal: subtotal,
+        sku: sku
       };
     }
 
     // Single gate posts
     if (numberOfSingleGates && numberOfSingleGates > 0) {
       const singleGatePostsQty = numberOfSingleGates * 2;
-      const unitCost = getUnitCost("2 7/8", true);
+      const { size, cost, sku } = findPostSize(material, postThickness, "2 7/8", parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment);
       
       // Special height logic for single gate posts
-      let singleGatePostHeight = parseInt(heightOfFence);
+      let singleGatePostHeight = parseFloat(heightOfFence);
       
       // Apply depth adjustment
       singleGatePostHeight += terminalDepthAdjustment;
@@ -384,21 +333,22 @@ const FenceCalculator = ({ customerData = {} }) => {
         singleGatePostHeight += barbedWireAdjustment;
       }
       
-      const costPerPost = unitCost * singleGatePostHeight;
+      const costPerPost = cost;
       const subtotal = singleGatePostsQty * costPerPost;
 
       newCosts["Single gate posts"] = {
         quantity: singleGatePostsQty,
         unitCost: costPerPost,
         postHeight: singleGatePostHeight,
-        subtotal: subtotal
+        subtotal: subtotal,
+        sku: sku
       };
     }
 
     // Double gate posts
     if (numberOfDoubleGates && numberOfDoubleGates > 0) {
       const doubleGatePostsQty = numberOfDoubleGates * 2;
-      const unitCost = getUnitCost("4", true);
+      const { size, cost, sku } = findPostSize(material, postThickness, "4", parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment);
       
       // Special height logic for double gate posts
       let doubleGatePostHeight = parseInt(heightOfFence);
@@ -423,26 +373,23 @@ const FenceCalculator = ({ customerData = {} }) => {
         doubleGatePostHeight += barbedWireAdjustment;
       }
       
-      const costPerPost = unitCost * doubleGatePostHeight;
+      const costPerPost = cost;
       const subtotal = doubleGatePostsQty * costPerPost;
 
       newCosts["Double gate posts"] = {
         quantity: doubleGatePostsQty,
         unitCost: costPerPost,
         postHeight: doubleGatePostHeight,
-        subtotal: subtotal
+        subtotal: subtotal,
+        sku: sku
       };
     }
 
     // Sliding Gate Posts
     if (numberOfSlidingGates && numberOfSlidingGates > 0) {
       const slidingGatePostQuantity = numberOfSlidingGates * 3;
-      let unitCost = 0;
+      const { size, cost, sku } = findPostSize(material, postThickness, slidingGatePostDiameter, parseInt(heightOfFence) + terminalDepthAdjustment + barbedWireAdjustment);
       
-      if (defaultPostCosts[material]?.[postThickness]?.[slidingGatePostDiameter]) {
-        unitCost = defaultPostCosts[material][postThickness][slidingGatePostDiameter];
-      }
-
       // Calculate height adjustments
       let totalPostHeight = parseFloat(heightOfFence);
       
@@ -467,14 +414,15 @@ const FenceCalculator = ({ customerData = {} }) => {
       }
 
       // Calculate the total cost per post (unit cost * height)
-      const costPerPost = unitCost * totalPostHeight;
+      const costPerPost = cost;
       const subtotal = slidingGatePostQuantity * costPerPost;
 
       newCosts["Sliding Gate Posts"] = {
         quantity: slidingGatePostQuantity,
         unitCost: costPerPost,
         postHeight: totalPostHeight,
-        subtotal: subtotal
+        subtotal: subtotal,
+        sku: sku
       };
     }
 
@@ -483,24 +431,19 @@ const FenceCalculator = ({ customerData = {} }) => {
       const duckbillPostsQty = numberOfDoubleGates * 2;
       
       // Get cost for 1 5/8" diameter with specified thickness
-      const getDuckbillCost = () => {
-        if (defaultPostCosts[material] && defaultPostCosts[material][duckbillPostThickness] && defaultPostCosts[material][duckbillPostThickness]["1 5/8"]) {
-          return defaultPostCosts[material][duckbillPostThickness]["1 5/8"];
-        }
-        return 0;
-      };
+      const { size, cost, sku } = findPostSize(material, duckbillPostThickness, "1 5/8", 3);
       
-      const unitCost = getDuckbillCost();
       // Duckbill posts are always 3 ft tall
       const postHeight = 3;
-      const costPerPost = unitCost * postHeight;
+      const costPerPost = cost;
       const subtotal = duckbillPostsQty * costPerPost;
 
       newCosts["Duckbill gate stop posts"] = {
         quantity: duckbillPostsQty,
         unitCost: costPerPost,
         postHeight: postHeight,
-        subtotal: subtotal
+        subtotal: subtotal,
+        sku: sku
       };
     }
 
@@ -509,11 +452,14 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Get unit cost based on material and terminal post diameter
       const getDomeCapUnitCost = () => {
         if (domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter]) {
-          return domeCapOptions[material][terminalPostDiameter];
+          return domeCapOptions[material][terminalPostDiameter].price;
         }
         return 0;
       };
 
+      const domeCapSku = domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter] 
+        ? domeCapOptions[material][terminalPostDiameter].sku 
+        : null;
       const domeCapUnitCost = getDomeCapUnitCost();
       const domeCapSubtotal = numberOfEndTerminals * domeCapUnitCost;
 
@@ -521,7 +467,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: numberOfEndTerminals,
         unitCost: domeCapUnitCost,
         standardLength: null,
-        subtotal: domeCapSubtotal
+        subtotal: domeCapSubtotal,
+        sku: domeCapSku
       };
     }
 
@@ -530,11 +477,14 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Get unit cost based on material and corner post diameter
       const getDomeCapUnitCost = () => {
         if (domeCapOptions[material] && domeCapOptions[material][cornerPostDiameter]) {
-          return domeCapOptions[material][cornerPostDiameter];
+          return domeCapOptions[material][cornerPostDiameter].price;
         }
         return 0;
       };
 
+      const domeCapSku = domeCapOptions[material] && domeCapOptions[material][cornerPostDiameter] 
+        ? domeCapOptions[material][cornerPostDiameter].sku 
+        : null;
       const domeCapUnitCost = getDomeCapUnitCost();
       const domeCapSubtotal = numberOfCorners * domeCapUnitCost;
 
@@ -542,7 +492,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: numberOfCorners,
         unitCost: domeCapUnitCost,
         standardLength: null,
-        subtotal: domeCapSubtotal
+        subtotal: domeCapSubtotal,
+        sku: domeCapSku
       };
     }
 
@@ -551,13 +502,16 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Get unit cost based on material and terminal post diameter (used for single gates)
       const getDomeCapUnitCost = () => {
         if (domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter]) {
-          return domeCapOptions[material][terminalPostDiameter];
+          return domeCapOptions[material][terminalPostDiameter].price;
         }
         return 0;
       };
 
       // Each single gate needs 2 posts
       const singleGatePostQuantity = numberOfSingleGates * 2;
+      const domeCapSku = domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter] 
+        ? domeCapOptions[material][terminalPostDiameter].sku 
+        : null;
       const domeCapUnitCost = getDomeCapUnitCost();
       const domeCapSubtotal = singleGatePostQuantity * domeCapUnitCost;
 
@@ -565,7 +519,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: singleGatePostQuantity,
         unitCost: domeCapUnitCost,
         standardLength: null,
-        subtotal: domeCapSubtotal
+        subtotal: domeCapSubtotal,
+        sku: domeCapSku
       };
     }
 
@@ -574,13 +529,16 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Get unit cost based on material and terminal post diameter (used for sliding gates)
       const getDomeCapUnitCost = () => {
         if (domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter]) {
-          return domeCapOptions[material][terminalPostDiameter];
+          return domeCapOptions[material][terminalPostDiameter].price;
         }
         return 0;
       };
 
       // Each sliding gate needs 2 posts
       const slidingGatePostQuantity = numberOfSlidingGates * 2;
+      const domeCapSku = domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter] 
+        ? domeCapOptions[material][terminalPostDiameter].sku 
+        : null;
       const domeCapUnitCost = getDomeCapUnitCost();
       const domeCapSubtotal = slidingGatePostQuantity * domeCapUnitCost;
 
@@ -588,7 +546,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: slidingGatePostQuantity,
         unitCost: domeCapUnitCost,
         standardLength: null,
-        subtotal: domeCapSubtotal
+        subtotal: domeCapSubtotal,
+        sku: domeCapSku
       };
     }
 
@@ -597,12 +556,15 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Get unit cost based on material and terminal post diameter (used for double gates)
       const getDomeCapUnitCost = () => {
         if (domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter]) {
-          return domeCapOptions[material][terminalPostDiameter];
+          return domeCapOptions[material][terminalPostDiameter].price;
         }
         return 0;
       };
 
       const doubleGatePostQuantity = numberOfDoubleGates * 2;
+      const domeCapSku = domeCapOptions[material] && domeCapOptions[material][terminalPostDiameter] 
+        ? domeCapOptions[material][terminalPostDiameter].sku 
+        : null;
       const domeCapUnitCost = getDomeCapUnitCost();
       const domeCapSubtotal = doubleGatePostQuantity * domeCapUnitCost;
 
@@ -610,21 +572,25 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: doubleGatePostQuantity,
         unitCost: domeCapUnitCost,
         standardLength: null,
-        subtotal: domeCapSubtotal
+        subtotal: domeCapSubtotal,
+        sku: domeCapSku
       };
     }
 
     // Dome Cap Duckbill Gate Stop Post calculation
     if (hasDuckbillGateStop && numberOfDoubleGates && numberOfDoubleGates > 0) {
+      const duckbillDiameter = duckbillPostThickness === "1 5/8 SCH 40" ? "1 5/8" : "2 3/8";
       const getDomeCapUnitCost = () => {
-        const duckbillDiameter = duckbillPostThickness === "1 5/8 SCH 40" ? "1 5/8" : "2 3/8";
         if (domeCapOptions[material] && domeCapOptions[material][duckbillDiameter]) {
-          return domeCapOptions[material][duckbillDiameter];
+          return domeCapOptions[material][duckbillDiameter].price;
         }
         return 0;
       };
 
       const duckbillPostQuantity = numberOfDoubleGates;
+      const domeCapSku = domeCapOptions[material] && domeCapOptions[material][duckbillDiameter] 
+        ? domeCapOptions[material][duckbillDiameter].sku 
+        : null;
       const domeCapUnitCost = getDomeCapUnitCost();
       const domeCapSubtotal = duckbillPostQuantity * domeCapUnitCost;
 
@@ -632,37 +598,46 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: duckbillPostQuantity,
         unitCost: domeCapUnitCost,
         standardLength: null,
-        subtotal: domeCapSubtotal
+        subtotal: domeCapSubtotal,
+        sku: domeCapSku
       };
     }
 
     // Eye Tops / Loop Caps calculation
-    if (!threeStrandBarbedWire) {
-      const linePostsNeeded = calculateLinePostsNeeded();
-      
+    const linePostsNeeded = calculateLinePostsNeeded();
+    if (topRailDiameter && linePostDiameter && material && linePostsNeeded > 0) {
       // Get unit cost based on material, line post diameter, and top rail diameter
       const getEyeTopUnitCost = () => {
         if (eyeTopsOptions[material] && 
             eyeTopsOptions[material][linePostDiameter] && 
             eyeTopsOptions[material][linePostDiameter][topRailDiameter]) {
-          return eyeTopsOptions[material][linePostDiameter][topRailDiameter];
+          return eyeTopsOptions[material][linePostDiameter][topRailDiameter].price;
         }
         return 0;
       };
 
+      // Get SKU based on material, line post diameter, and top rail diameter
+      const getEyeTopSku = () => {
+        if (eyeTopsOptions[material] && 
+            eyeTopsOptions[material][linePostDiameter] && 
+            eyeTopsOptions[material][linePostDiameter][topRailDiameter]) {
+          return eyeTopsOptions[material][linePostDiameter][topRailDiameter].sku;
+        }
+        return null;
+      };
+
       const eyeTopUnitCost = getEyeTopUnitCost();
+      const eyeTopSku = getEyeTopSku();
       const eyeTopSubtotal = linePostsNeeded * eyeTopUnitCost;
 
       newCosts["Eye Tops / Loop Caps"] = {
         quantity: linePostsNeeded,
         unitCost: eyeTopUnitCost,
         standardLength: null,
-        subtotal: eyeTopSubtotal
+        subtotal: eyeTopSubtotal,
+        sku: eyeTopSku
       };
     }
-
-    // Calculate line posts needed once at the start
-    const linePostsNeeded = calculateLinePostsNeeded();
 
     // Rail Clamps calculation
     if (linePostsNeeded > 0 && extraRail !== 'none') {
@@ -682,8 +657,8 @@ const FenceCalculator = ({ customerData = {} }) => {
       const railClampQuantity = Math.ceil(railClampMultiplier * linePostsNeeded);
       let railClampUnitCost = 0;
       
-      if (railClampsCosts[material]?.[linePostDiameter]?.[topRailDiameter]) {
-        railClampUnitCost = railClampsCosts[material][linePostDiameter][topRailDiameter];
+      if (railClampsCost[material]?.[linePostDiameter]?.[topRailDiameter]) {
+        railClampUnitCost = railClampsCost[material][linePostDiameter][topRailDiameter];
       }
 
       const railClampSubtotal = railClampQuantity * railClampUnitCost;
@@ -701,7 +676,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Get unit cost based on material, line post diameter, and top rail diameter
       let barbArmUnitCost = 0;
       if (barbArmsCosts[material]?.[linePostDiameter]?.[topRailDiameter]) {
-        barbArmUnitCost = barbArmsCosts[material][linePostDiameter][topRailDiameter];
+        barbArmUnitCost = barbArmsCosts[material][linePostDiameter][topRailDiameter].price;
       }
 
       const barbArmQuantity = Math.ceil(linePostsNeeded);
@@ -724,11 +699,12 @@ const FenceCalculator = ({ customerData = {} }) => {
       const totalBarbedWireNeeded = barbedWireLength * 3;
       // Calculate how many rolls we need, rounding up
       const rollsNeeded = Math.ceil(totalBarbedWireNeeded / FEET_PER_ROLL);
-      const barbedWireSubtotal = rollsNeeded * BARBED_WIRE_UNIT_COST;
+      const barbedWireUnitCost = barbedWireCost[DEFAULT_BARBED_WIRE_GAUGE][DEFAULT_BARBED_WIRE_POINT].price;
+      const barbedWireSubtotal = rollsNeeded * barbedWireUnitCost;
 
       newCosts["Barbed Wire"] = {
         quantity: rollsNeeded,
-        unitCost: BARBED_WIRE_UNIT_COST,
+        unitCost: barbedWireUnitCost,
         standardLength: FEET_PER_ROLL,
         subtotal: barbedWireSubtotal
       };
@@ -736,13 +712,14 @@ const FenceCalculator = ({ customerData = {} }) => {
 
     // Tension Bands (Terminal Post) calculation
     if (numberOfEndTerminals > 0 && heightOfFence > 0) {
-      // Calculate quantity: (height of fence - 1) * terminal post quantity
       const tensionBandQuantity = (parseFloat(heightOfFence) - 1) * numberOfEndTerminals;
 
       // Get unit cost based on material and terminal post diameter
       let tensionBandUnitCost = 0;
-      if (tensionBandsCosts[material]?.[terminalPostDiameter]) {
-        tensionBandUnitCost = tensionBandsCosts[material][terminalPostDiameter];
+      let tensionBandSku = null;
+      if (tensionBandsCost[material]?.[terminalPostDiameter]) {
+        tensionBandUnitCost = tensionBandsCost[material][terminalPostDiameter].price;
+        tensionBandSku = tensionBandsCost[material][terminalPostDiameter].sku;
       }
 
       const tensionBandSubtotal = tensionBandQuantity * tensionBandUnitCost;
@@ -751,7 +728,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: tensionBandQuantity,
         unitCost: tensionBandUnitCost,
         standardLength: null,
-        subtotal: tensionBandSubtotal
+        subtotal: tensionBandSubtotal,
+        sku: tensionBandSku
       };
     }
 
@@ -762,8 +740,10 @@ const FenceCalculator = ({ customerData = {} }) => {
 
       // Get unit cost based on material and corner post diameter
       let tensionBandUnitCost = 0;
-      if (tensionBandsCosts[material]?.[cornerPostDiameter]) {
-        tensionBandUnitCost = tensionBandsCosts[material][cornerPostDiameter];
+      let tensionBandSku = null;
+      if (tensionBandsCost[material]?.[cornerPostDiameter]) {
+        tensionBandUnitCost = tensionBandsCost[material][cornerPostDiameter].price;
+        tensionBandSku = tensionBandsCost[material][cornerPostDiameter].sku;
       }
 
       const tensionBandSubtotal = tensionBandQuantity * tensionBandUnitCost;
@@ -772,19 +752,22 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: tensionBandQuantity,
         unitCost: tensionBandUnitCost,
         standardLength: null,
-        subtotal: tensionBandSubtotal
+        subtotal: tensionBandSubtotal,
+        sku: tensionBandSku
       };
     }
 
     // Tension Bands (Single Gate Post) calculation
-    if (numberOfSingleGates && numberOfSingleGates > 0 && heightOfFence > 0) {
+    if (numberOfSingleGates > 0 && heightOfFence > 0) {
       // Calculate quantity: (height of fence - 1) * single gate post quantity
       const tensionBandQuantity = (parseFloat(heightOfFence) - 1) * numberOfSingleGates;
 
-      // Get unit cost based on material and single gate post diameter
+      // Get unit cost based on material and 2 7/8" diameter (standard for single gate posts)
       let tensionBandUnitCost = 0;
-      if (tensionBandsCosts[material]?.["2 7/8"]) {
-        tensionBandUnitCost = tensionBandsCosts[material]["2 7/8"];
+      let tensionBandSku = null;
+      if (tensionBandsCost[material]?.["2 7/8"]) {
+        tensionBandUnitCost = tensionBandsCost[material]["2 7/8"].price;
+        tensionBandSku = tensionBandsCost[material]["2 7/8"].sku;
       }
 
       const tensionBandSubtotal = tensionBandQuantity * tensionBandUnitCost;
@@ -793,19 +776,22 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: tensionBandQuantity,
         unitCost: tensionBandUnitCost,
         standardLength: null,
-        subtotal: tensionBandSubtotal
+        subtotal: tensionBandSubtotal,
+        sku: tensionBandSku
       };
     }
 
     // Tension Bands (Double Gate Post) calculation
-    if (numberOfDoubleGates && numberOfDoubleGates > 0 && heightOfFence > 0) {
+    if (numberOfDoubleGates > 0 && heightOfFence > 0) {
       // Calculate quantity: (height of fence - 1) * double gate post quantity
       const tensionBandQuantity = (parseFloat(heightOfFence) - 1) * numberOfDoubleGates;
 
-      // Get unit cost based on material and double gate post diameter
+      // Get unit cost based on material and 4" diameter (standard for double gate posts)
       let tensionBandUnitCost = 0;
-      if (tensionBandsCosts[material]?.["4"]) {
-        tensionBandUnitCost = tensionBandsCosts[material]["4"];
+      let tensionBandSku = null;
+      if (tensionBandsCost[material]?.["4"]) {
+        tensionBandUnitCost = tensionBandsCost[material]["4"].price;
+        tensionBandSku = tensionBandsCost[material]["4"].sku;
       }
 
       const tensionBandSubtotal = tensionBandQuantity * tensionBandUnitCost;
@@ -814,19 +800,22 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: tensionBandQuantity,
         unitCost: tensionBandUnitCost,
         standardLength: null,
-        subtotal: tensionBandSubtotal
+        subtotal: tensionBandSubtotal,
+        sku: tensionBandSku
       };
     }
 
     // Tension Bands (Sliding Gate Post) calculation
-    if (numberOfSlidingGates && numberOfSlidingGates > 0 && heightOfFence > 0) {
+    if (numberOfSlidingGates > 0 && heightOfFence > 0) {
       // Calculate quantity: (height of fence - 1) * sliding gate post quantity
       const tensionBandQuantity = (parseFloat(heightOfFence) - 1) * numberOfSlidingGates;
 
       // Get unit cost based on material and sliding gate post diameter
       let tensionBandUnitCost = 0;
-      if (tensionBandsCosts[material]?.[slidingGatePostDiameter]) {
-        tensionBandUnitCost = tensionBandsCosts[material][slidingGatePostDiameter];
+      let tensionBandSku = null;
+      if (tensionBandsCost[material]?.[slidingGatePostDiameter]) {
+        tensionBandUnitCost = tensionBandsCost[material][slidingGatePostDiameter].price;
+        tensionBandSku = tensionBandsCost[material][slidingGatePostDiameter].sku;
       }
 
       const tensionBandSubtotal = tensionBandQuantity * tensionBandUnitCost;
@@ -835,7 +824,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: tensionBandQuantity,
         unitCost: tensionBandUnitCost,
         standardLength: null,
-        subtotal: tensionBandSubtotal
+        subtotal: tensionBandSubtotal,
+        sku: tensionBandSku
       };
     }
 
@@ -857,8 +847,10 @@ const FenceCalculator = ({ customerData = {} }) => {
       const braceBandsQuantity = numberOfEndTerminals * braceBandsPerPost;
       
       let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.[terminalPostDiameter]) {
-        braceBandUnitCost = braceBandsCosts[material][terminalPostDiameter];
+      let braceBandSku = null;
+      if (braceBandsCost[material]?.[terminalPostDiameter]) {
+        braceBandUnitCost = braceBandsCost[material][terminalPostDiameter].price;
+        braceBandSku = braceBandsCost[material][terminalPostDiameter].sku;
       }
 
       const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
@@ -867,7 +859,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: braceBandsQuantity,
         unitCost: braceBandUnitCost,
         standardLength: null,
-        subtotal: braceBandSubtotal
+        subtotal: braceBandSubtotal,
+        sku: braceBandSku
       };
     }
 
@@ -889,8 +882,10 @@ const FenceCalculator = ({ customerData = {} }) => {
       const braceBandsQuantity = numberOfCorners * braceBandsPerPost;
       
       let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.[cornerPostDiameter]) {
-        braceBandUnitCost = braceBandsCosts[material][cornerPostDiameter];
+      let braceBandSku = null;
+      if (braceBandsCost[material]?.[cornerPostDiameter]) {
+        braceBandUnitCost = braceBandsCost[material][cornerPostDiameter].price;
+        braceBandSku = braceBandsCost[material][cornerPostDiameter].sku;
       }
 
       const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
@@ -899,18 +894,21 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: braceBandsQuantity,
         unitCost: braceBandUnitCost,
         standardLength: null,
-        subtotal: braceBandSubtotal
+        subtotal: braceBandSubtotal,
+        sku: braceBandSku
       };
     }
 
     // Brace Bands calculation for single gate posts
-    if (numberOfSingleGates && numberOfSingleGates > 0) {
+    if (numberOfSingleGates > 0) {
       const braceBandsPerPost = 2;
       const braceBandsQuantity = numberOfSingleGates * 2 * braceBandsPerPost; // 2 posts per gate
       
       let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.["2 7/8"]) {
-        braceBandUnitCost = braceBandsCosts[material]["2 7/8"];
+      let braceBandSku = null;
+      if (braceBandsCost[material]?.["2 7/8"]) {
+        braceBandUnitCost = braceBandsCost[material]["2 7/8"].price;
+        braceBandSku = braceBandsCost[material]["2 7/8"].sku;
       }
 
       const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
@@ -919,18 +917,21 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: braceBandsQuantity,
         unitCost: braceBandUnitCost,
         standardLength: null,
-        subtotal: braceBandSubtotal
+        subtotal: braceBandSubtotal,
+        sku: braceBandSku
       };
     }
 
     // Brace Bands calculation for double gate posts
-    if (numberOfDoubleGates && numberOfDoubleGates > 0) {
+    if (numberOfDoubleGates > 0) {
       const braceBandsPerPost = 2;
       const braceBandsQuantity = numberOfDoubleGates * 2 * braceBandsPerPost; // 2 posts per gate
       
       let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.["4"]) {
-        braceBandUnitCost = braceBandsCosts[material]["4"];
+      let braceBandSku = null;
+      if (braceBandsCost[material]?.["4"]) {
+        braceBandUnitCost = braceBandsCost[material]["4"].price;
+        braceBandSku = braceBandsCost[material]["4"].sku;
       }
 
       const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
@@ -939,18 +940,21 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: braceBandsQuantity,
         unitCost: braceBandUnitCost,
         standardLength: null,
-        subtotal: braceBandSubtotal
+        subtotal: braceBandSubtotal,
+        sku: braceBandSku
       };
     }
 
     // Brace Bands calculation for sliding gate posts
-    if (numberOfSlidingGates && numberOfSlidingGates > 0) {
+    if (numberOfSlidingGates > 0) {
       const braceBandsPerPost = 2;
       const braceBandsQuantity = numberOfSlidingGates * 3 * braceBandsPerPost; // 3 posts per sliding gate
       
       let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.[slidingGatePostDiameter]) {
-        braceBandUnitCost = braceBandsCosts[material][slidingGatePostDiameter];
+      let braceBandSku = null;
+      if (braceBandsCost[material]?.[slidingGatePostDiameter]) {
+        braceBandUnitCost = braceBandsCost[material][slidingGatePostDiameter].price;
+        braceBandSku = braceBandsCost[material][slidingGatePostDiameter].sku;
       }
 
       const braceBandSubtotal = braceBandsQuantity * braceBandUnitCost;
@@ -959,7 +963,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: braceBandsQuantity,
         unitCost: braceBandUnitCost,
         standardLength: null,
-        subtotal: braceBandSubtotal
+        subtotal: braceBandSubtotal,
+        sku: braceBandSku
       };
     }
 
@@ -983,8 +988,10 @@ const FenceCalculator = ({ customerData = {} }) => {
       
       // Get unit cost based on material and post diameter (using terminal post diameter as default)
       let braceBandUnitCost = 0;
-      if (braceBandsCosts[material]?.[terminalPostDiameter]) {
-        braceBandUnitCost = braceBandsCosts[material][terminalPostDiameter];
+      let braceBandSku = null;
+      if (braceBandsCost[material]?.[terminalPostDiameter]) {
+        braceBandUnitCost = braceBandsCost[material][terminalPostDiameter].price;
+        braceBandSku = braceBandsCost[material][terminalPostDiameter].sku;
       }
 
       const braceBandSubtotal = extraBraceBandsQuantity * braceBandUnitCost;
@@ -993,7 +1000,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: extraBraceBandsQuantity,
         unitCost: braceBandUnitCost,
         standardLength: null,
-        subtotal: braceBandSubtotal
+        subtotal: braceBandSubtotal,
+        sku: braceBandSku
       };
       
       // Brace bands for line posts for H braces
@@ -1001,7 +1009,8 @@ const FenceCalculator = ({ customerData = {} }) => {
         quantity: totalNonLinePosts,
         unitCost: braceBandUnitCost,
         standardLength: null,
-        subtotal: totalNonLinePosts * braceBandUnitCost
+        subtotal: totalNonLinePosts * braceBandUnitCost,
+        sku: braceBandSku
       };
     }
 
@@ -1011,14 +1020,17 @@ const FenceCalculator = ({ customerData = {} }) => {
       const tensionBarQuantity = numberOfPulls * 2 + 1;
 
       // Get unit cost based on material and fence height in feet
-      const tensionBarUnitCost = tensionBarsCosts[material]?.[heightOfFenceInFeet] || 0;
+      const heightKey = `${heightOfFenceInFeet}'`;
+      const tensionBarUnitCost = tensionBarsCost[material]?.[heightKey]?.price || 0;
+      const tensionBarSku = tensionBarsCost[material]?.[heightKey]?.sku || null;
       const tensionBarSubtotal = tensionBarQuantity * tensionBarUnitCost;
 
       newCosts["Tension Bars"] = {
         quantity: tensionBarQuantity,
         unitCost: tensionBarUnitCost,
         standardLength: null,
-        subtotal: tensionBarSubtotal
+        subtotal: tensionBarSubtotal,
+        sku: tensionBarSku
       };
     }
 
@@ -1105,20 +1117,27 @@ const FenceCalculator = ({ customerData = {} }) => {
 
     if (nutsAndBoltsQuantity > 0) {
       // Get unit cost based on material (price is per 100pc)
-      const unitCost = nutsAndBoltsCosts[material] || 0;
+      const unitCost = nutsAndBoltsCost[material]?.price || 0;
+      const nutsAndBoltsSku = nutsAndBoltsCost[material]?.sku || null;
       const nutsAndBoltsSubtotal = nutsAndBoltsQuantity * unitCost;
 
       newCosts["Nuts and Bolts"] = {
         quantity: nutsAndBoltsQuantity,
         unitCost: unitCost,
         standardLength: 100, // per 100pc
-        subtotal: nutsAndBoltsSubtotal
+        subtotal: nutsAndBoltsSubtotal,
+        sku: nutsAndBoltsSku
       };
     }
 
     // Hog Rings calculation
     if (totalLinearLength) {
-      const hogRingsQuantity = Math.ceil(parseFloat(totalLinearLength) * 0.8 / 125);
+      const hogRingsQuantity = Math.ceil(
+        (extraRail === "Bottom" || extraRail === "Both") 
+        ? 0 
+        : (totalLinearLength * 0.8) / 125
+      );
+      
       const hogRingsUnitCost = material === "Black" 
         ? (commercialOrResidential === "Commercial" ? 5.53 : 11.72)
         : (commercialOrResidential === "Commercial" ? 3.76 : 3.53);
@@ -1134,14 +1153,40 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Chain Link Mesh calculation
     if (totalLinearLength > 0 && heightOfFence > 0) {
       const meshQuantity = Math.ceil(parseFloat(totalLinearLength) / 50);
-      const meshUnitCost = meshTypeOptions[meshType] || 0;
-      const meshSubtotal = parseFloat(heightOfFence) * 50 * meshQuantity * meshUnitCost;
+      
+      // Map UI mesh type values to the structure in costs.js
+      let meshMaterial = material;
+      let meshGaugeType;
+      
+      if (meshType === "8F") {
+        meshGaugeType = "Commercial 8 gauge";
+        meshMaterial = "Black";
+      } else if (meshType === "9F") {
+        meshGaugeType = "Residential 9 gauge";
+        meshMaterial = "Black";
+      } else if (meshType === "9G") {
+        meshGaugeType = "Commercial 9 gauge";
+        meshMaterial = "Galvanized";
+      } else if (meshType === "11G") {
+        meshGaugeType = "Residential 11.5 gauge";
+        meshMaterial = "Galvanized";
+      }
+      
+      // Get the height key
+      const heightKey = `${heightOfFenceInFeet}'`;
+      
+      // Get unit cost and SKU
+      const meshUnitCost = meshTypeOptions[meshMaterial]?.[meshGaugeType]?.[heightKey]?.price || 0;
+      const meshSku = meshTypeOptions[meshMaterial]?.[meshGaugeType]?.[heightKey]?.sku || null;
+      
+      const meshSubtotal = meshQuantity * meshUnitCost;
 
       newCosts["Chain Link Mesh"] = {
         quantity: meshQuantity,
         unitCost: meshUnitCost,
         standardLength: 50,
-        subtotal: meshSubtotal
+        subtotal: meshSubtotal,
+        sku: meshSku
       };
     }
 
@@ -1165,24 +1210,33 @@ const FenceCalculator = ({ customerData = {} }) => {
 
       // Get unit cost for the rail based on diameter, material and thickness
       const getRailUnitCost = () => {
-        if (defaultPostCosts[material]?.[postThickness]?.[topRailDiameter]) {
-          return defaultPostCosts[material][postThickness][topRailDiameter];
+        // Rails are typically 21ft length
+        const railLength = "21ft";
+        
+        if (postCosts[material]?.[postThickness]?.[topRailDiameter]?.[railLength]) {
+          return postCosts[material][postThickness][topRailDiameter][railLength];
         }
-        return 0;
+        
+        // Fallback to 20ft if 21ft is not available
+        if (postCosts[material]?.[postThickness]?.[topRailDiameter]?.["20ft"]) {
+          return postCosts[material][postThickness][topRailDiameter]["20ft"];
+        }
+        
+        return { price: 0, sku: "" };
       };
 
-      const unitCost = getRailUnitCost();
+      const railCost = getRailUnitCost();
       // Standard length for rails is 21 feet
       const standardLength = 21;
       const railQuantity = Math.ceil(railsNeeded);
-      const costPerPost = unitCost * standardLength;
-      const subtotal = railQuantity * costPerPost;
+      const subtotal = railQuantity * railCost.price;
       
       newCosts["Top/Middle/Bottom Rails"] = {
         quantity: railQuantity,
-        unitCost: costPerPost,
+        unitCost: railCost.price,
         standardLength: standardLength,
-        subtotal: subtotal
+        subtotal: subtotal,
+        sku: railCost.sku
       };
 
       // Fence Sleeve calculation
@@ -1215,10 +1269,10 @@ const FenceCalculator = ({ customerData = {} }) => {
 
         // Rail clamps calculation
         const getRailClampUnitCost = () => {
-          if (railClampsCosts[material] && 
-              railClampsCosts[material][linePostDiameter] && 
-              railClampsCosts[material][linePostDiameter][topRailDiameter]) {
-            return railClampsCosts[material][linePostDiameter][topRailDiameter];
+          if (railClampsCost[material] && 
+              railClampsCost[material][linePostDiameter] && 
+              railClampsCost[material][linePostDiameter][topRailDiameter]) {
+            return railClampsCost[material][linePostDiameter][topRailDiameter];
           }
           return 0;
         };
@@ -1243,7 +1297,7 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Get unit cost based on fence height
       const getUnitCost = () => {
         const height = Math.floor(parseFloat(heightOfFence)).toString();
-        return slatCosts[height] || 0;
+        return slatCost[height] || 0;
       };
 
       const slatUnitCost = getUnitCost();
@@ -1278,21 +1332,54 @@ const FenceCalculator = ({ customerData = {} }) => {
 
     // Line posts
     if (linePostsNeeded > 0) {
-      const unitCost = getUnitCost(linePostDiameter);
-      const postHeight = parseInt(heightOfFence) + lineDepthAdjustment + barbedWireAdjustment;
-      const costPerPost = unitCost * postHeight;
+      const { size, cost, sku } = findPostSize(material, postThickness, linePostDiameter, parseInt(heightOfFence) + lineDepthAdjustment + barbedWireAdjustment);
+      const postHeight = size ? parseFloat(size.replace('ft', '')) : 0;
+      const costPerPost = cost;
       const subtotal = linePostsNeeded * costPerPost;
 
       newCosts["Line posts"] = {
         quantity: linePostsNeeded,
         unitCost: costPerPost,
         postHeight: postHeight,
-        subtotal: subtotal
+        subtotal: subtotal,
+        sku: sku
       };
     }
 
     // Wedge Anchor calculation
     if (numberOfFlangedPosts > 0 || numberOfFlangedPostsOffCentered > 0) {
+      // Flanged posts centered
+      if (numberOfFlangedPosts > 0) {
+        const { size, cost, sku } = findPostSize(material, flangedPostThickness, flangedPostDiameter, parseInt(heightOfFence) + barbedWireAdjustment);
+        const postHeight = size ? parseFloat(size.replace('ft', '')) : 0;
+        const costPerPost = cost;
+        const subtotal = numberOfFlangedPosts * costPerPost;
+
+        newCosts["Flanged posts (centered)"] = {
+          quantity: numberOfFlangedPosts,
+          unitCost: costPerPost,
+          postHeight: postHeight,
+          subtotal: subtotal,
+          sku: sku
+        };
+      }
+
+      // Flanged posts off-centered
+      if (numberOfFlangedPostsOffCentered > 0) {
+        const { size, cost, sku } = findPostSize(material, flangedPostOffCenteredThickness, flangedPostOffCenteredDiameter, parseInt(heightOfFence) + barbedWireAdjustment);
+        const postHeight = size ? parseFloat(size.replace('ft', '')) : 0;
+        const costPerPost = cost;
+        const subtotal = numberOfFlangedPostsOffCentered * costPerPost;
+
+        newCosts["Flanged posts (off-centered)"] = {
+          quantity: numberOfFlangedPostsOffCentered,
+          unitCost: costPerPost,
+          postHeight: postHeight,
+          subtotal: subtotal,
+          sku: sku
+        };
+      }
+
       // Calculate quantity: ROUNDUP((Flanged posts centered + Flanged posts off centered) * 4 / 25, 0)
       const wedgeAnchorQuantity = Math.ceil((parseInt(numberOfFlangedPosts || 0) + parseInt(numberOfFlangedPostsOffCentered || 0)) * 4 / 25);
       const wedgeAnchorUnitCost = wedgeAnchorOptions[material] || 0.94;
@@ -1311,16 +1398,21 @@ const FenceCalculator = ({ customerData = {} }) => {
       // Calculate quantity: total linear length divided by 100
       const fenceTiesQuantity = Math.ceil(parseFloat(totalLinearLength) / 100);
       
-      // Set unit cost based on material
-      const fenceTiesUnitCost = fenceTiesOptions[material] || 0;
+      // Get the appropriate fence tie size based on post diameter
+      const tieSize = linePostDiameter === "1 3/8" || linePostDiameter === "1 5/8" ? "6 1/2" : "8 1/4";
+      
+      // Set unit cost and SKU based on material and size
+      const fenceTiesUnitCost = fenceTiesOptions[material]?.[tieSize]?.price || 0;
+      const fenceTiesSku = fenceTiesOptions[material]?.[tieSize]?.sku || null;
       
       const fenceTiesSubtotal = fenceTiesQuantity * fenceTiesUnitCost;
 
       newCosts["Fence Ties (100 pc)"] = {
         quantity: fenceTiesQuantity,
         unitCost: fenceTiesUnitCost,
-        standardLength: null,
-        subtotal: fenceTiesSubtotal
+        standardLength: 100, // per 100pc
+        subtotal: fenceTiesSubtotal,
+        sku: fenceTiesSku
       };
     }
 
@@ -1341,7 +1433,7 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Cantilever/sliding gate rollers calculation
     if (numberOfSlidingGates && numberOfSlidingGates > 0) {
       const rollersQuantity = numberOfSlidingGates * 4;
-      const rollersUnitCost = rollerPrice;
+      const rollersUnitCost = rollerPrice.price;
       const rollersSubtotal = rollersQuantity * rollersUnitCost;
 
       newCosts["Cantilever/Sliding Gate Rollers"] = {
@@ -1353,9 +1445,13 @@ const FenceCalculator = ({ customerData = {} }) => {
     }
 
     // Cantilever/sliding gate latch calculation
+    const cantileverLatchCosts = {
+      "2 7/8": { price: 18.50, sku: "10041" },
+      "4": { price: 23.14, sku: "10042" }
+    };
     if (numberOfSlidingGates && numberOfSlidingGates > 0) {
       const latchQuantity = numberOfSlidingGates;
-      const latchUnitCost = 22.68;
+      const latchUnitCost = cantileverLatchCosts[slidingGatePostDiameter]?.price || cantileverLatchCosts["4"].price; // Default to 4" latch if specific size not available
       const latchSubtotal = latchQuantity * latchUnitCost;
 
       newCosts["Cantilever/Sliding Gate Latch"] = {
@@ -1368,60 +1464,133 @@ const FenceCalculator = ({ customerData = {} }) => {
 
     // Gate hardware calculation
     const calculateGateHardwareCost = () => {
-      let totalCost = 0;
-      const coating = material.toLowerCase() === 'black' ? 'black' : 'galvanized';
-
-      // Helper to get matching female size based on male size position
-      const getMatchingFemaleSize = (maleSize) => {
-        const maleSizes = Object.keys(hingePrices.residential.male[coating]).filter(size => 
-          hingePrices.residential.male[coating][size] !== null
-        );
-        const femaleSizes = Object.keys(hingePrices.residential.female[coating]).filter(size => 
-          hingePrices.residential.female[coating][size] !== null
-        );
-        const maleIndex = maleSizes.indexOf(maleSize);
-        return femaleSizes[maleIndex] || femaleSizes[0]; // Fallback to first size if no match
+      // We'll return an object with separate costs for male and female hinges
+      let costs = {
+        maleHinges: { quantity: 0, cost: 0, details: [] },
+        femaleHinges: { quantity: 0, cost: 0, details: [] }
       };
+      
+      const coating = material.toLowerCase() === 'black' ? 'black' : 'galvanized';
 
       // Single gates
       if (numberOfSingleGates && numberOfSingleGates > 0) {
-        const hingePrice = singleGateHingeType === 'residential'
-          ? (hingePrices.residential.male[coating][singleGatePostDiameter] + 
-             hingePrices.residential.female[coating][getMatchingFemaleSize(singleGatePostDiameter)]) * 2 // 2 sets per gate
-          : hingePrices[singleGateHingeType][coating][singleGatePostDiameter] * 2; // 2 hinges per gate
-        totalCost += hingePrice * numberOfSingleGates;
+        // Check if the selected post diameter exists in the hinge costs
+        if (maleGateHingeCosts[coating] && maleGateHingeCosts[coating][singleGatePostDiameter]) {
+          // Male hinges - 2 per single gate
+          const maleHingePrice = maleGateHingeCosts[coating][singleGatePostDiameter].price || 0;
+          const maleSku = maleGateHingeCosts[coating][singleGatePostDiameter].sku || '';
+          const maleQuantity = numberOfSingleGates * 2; // 2 per gate
+          
+          costs.maleHinges.quantity += maleQuantity;
+          costs.maleHinges.cost += maleHingePrice * maleQuantity;
+          costs.maleHinges.details.push({
+            type: 'Single Gate',
+            size: singleGatePostDiameter,
+            sku: maleSku,
+            price: maleHingePrice,
+            quantity: maleQuantity
+          });
+          
+          // Female hinges - 2 per single gate
+          // Find the closest matching female hinge size
+          const femaleSizes = Object.keys(femaleGateHingeCosts[coating] || {}).filter(size => 
+            femaleGateHingeCosts[coating][size] !== null
+          );
+          const femaleSize = femaleSizes.length > 0 ? femaleSizes[0] : null;
+          
+          if (femaleSize) {
+            const femaleHingePrice = femaleGateHingeCosts[coating][femaleSize].price || 0;
+            const femaleSku = femaleGateHingeCosts[coating][femaleSize].sku || '';
+            const femaleQuantity = numberOfSingleGates * 2; // 2 per gate
+            
+            costs.femaleHinges.quantity += femaleQuantity;
+            costs.femaleHinges.cost += femaleHingePrice * femaleQuantity;
+            costs.femaleHinges.details.push({
+              type: 'Single Gate',
+              size: femaleSize,
+              sku: femaleSku,
+              price: femaleHingePrice,
+              quantity: femaleQuantity
+            });
+          }
+        }
       }
 
       // Double gates
       if (numberOfDoubleGates && numberOfDoubleGates > 0) {
-        const hingePrice = doubleGateHingeType === 'residential'
-          ? (hingePrices.residential.male[coating][doubleGatePostDiameter] + 
-             hingePrices.residential.female[coating][getMatchingFemaleSize(doubleGatePostDiameter)]) * 4 // 4 sets per gate
-          : hingePrices[doubleGateHingeType][coating][doubleGatePostDiameter] * 4; // 4 hinges per gate
-        totalCost += hingePrice * numberOfDoubleGates;
+        // Check if the selected post diameter exists in the hinge costs
+        if (maleGateHingeCosts[coating] && maleGateHingeCosts[coating][doubleGatePostDiameter]) {
+          // Male hinges - 4 per double gate (2 per leaf)
+          const maleHingePrice = maleGateHingeCosts[coating][doubleGatePostDiameter].price || 0;
+          const maleSku = maleGateHingeCosts[coating][doubleGatePostDiameter].sku || '';
+          const maleQuantity = numberOfDoubleGates * 4; // 4 per double gate
+          
+          costs.maleHinges.quantity += maleQuantity;
+          costs.maleHinges.cost += maleHingePrice * maleQuantity;
+          costs.maleHinges.details.push({
+            type: 'Double Gate',
+            size: doubleGatePostDiameter,
+            sku: maleSku,
+            price: maleHingePrice,
+            quantity: maleQuantity
+          });
+          
+          // Female hinges - 4 per double gate (2 per leaf)
+          // Find the closest matching female hinge size
+          const femaleSizes = Object.keys(femaleGateHingeCosts[coating] || {}).filter(size => 
+            femaleGateHingeCosts[coating][size] !== null
+          );
+          const femaleSize = femaleSizes.length > 0 ? femaleSizes[0] : null;
+          
+          if (femaleSize) {
+            const femaleHingePrice = femaleGateHingeCosts[coating][femaleSize].price || 0;
+            const femaleSku = femaleGateHingeCosts[coating][femaleSize].sku || '';
+            const femaleQuantity = numberOfDoubleGates * 4; // 4 per double gate
+            
+            costs.femaleHinges.quantity += femaleQuantity;
+            costs.femaleHinges.cost += femaleHingePrice * femaleQuantity;
+            costs.femaleHinges.details.push({
+              type: 'Double Gate',
+              size: femaleSize,
+              sku: femaleSku,
+              price: femaleHingePrice,
+              quantity: femaleQuantity
+            });
+          }
+        }
       }
 
-      // We don't include sliding gates here as they're calculated separately
-
-      return totalCost;
+      return costs;
     };
 
     // Only add gate hardware if there are non-sliding gates
     if ((numberOfSingleGates && numberOfSingleGates > 0) || (numberOfDoubleGates && numberOfDoubleGates > 0)) {
-      const gateHardwareSubtotal = calculateGateHardwareCost();
+      const gateHardwareCosts = calculateGateHardwareCost();
       
-      if (gateHardwareSubtotal > 0) {
-        newCosts["Gate Hardware"] = {
-          quantity: 1,
-          unitCost: gateHardwareSubtotal,
+      if (gateHardwareCosts.maleHinges.quantity > 0) {
+        newCosts["Male Gate Hinges"] = {
+          quantity: gateHardwareCosts.maleHinges.quantity,
+          unitCost: gateHardwareCosts.maleHinges.cost / gateHardwareCosts.maleHinges.quantity,
           standardLength: null,
-          subtotal: gateHardwareSubtotal,
-          details: 'Includes hinges and latches'
+          subtotal: gateHardwareCosts.maleHinges.cost,
+          details: gateHardwareCosts.maleHinges.details
+        };
+      }
+      
+      if (gateHardwareCosts.femaleHinges.quantity > 0) {
+        newCosts["Female Gate Hinges"] = {
+          quantity: gateHardwareCosts.femaleHinges.quantity,
+          unitCost: gateHardwareCosts.femaleHinges.cost / gateHardwareCosts.femaleHinges.quantity,
+          standardLength: null,
+          subtotal: gateHardwareCosts.femaleHinges.cost,
+          details: gateHardwareCosts.femaleHinges.details
         };
       }
     }
 
     // Single gate calculation
+    // DEPRECATED: Using dynamic gate pricing below
+    /*
     if (numberOfSingleGates && numberOfSingleGates > 0) {
       const singleGateRate = 150.0; // $150.00 per gate
       const singleGateSubtotal = numberOfSingleGates * singleGateRate;
@@ -1443,6 +1612,18 @@ const FenceCalculator = ({ customerData = {} }) => {
         unitCost: doubleGateRate,
         subtotal: doubleGateSubtotal
       };
+    }
+    */
+
+    // Calculate dynamic gate costs using the findMatchingGate function
+    const hasGates = numberOfSingleGates > 0 || numberOfDoubleGates > 0 || numberOfSlidingGates > 0;
+    if (hasGates) {
+      const dynamicGateCosts = calculateGateCosts();
+      
+      // Add each gate cost to the newCosts object
+      Object.keys(dynamicGateCosts).forEach(gateType => {
+        newCosts[gateType] = dynamicGateCosts[gateType];
+      });
     }
 
     // Line clearing calculation
@@ -1483,21 +1664,91 @@ const FenceCalculator = ({ customerData = {} }) => {
     setOutsideLaborTotal(outsideLabor);
 
     // Calculate concrete costs
+    const calculateConcreteNeeded = () => {
+      if (!heightOfFence) return null;
+
+      let totalVolume = 0;
+
+      // Helper to calculate single hole volume in cubic inches
+      const calculateHoleVolume = (width, depth) => {
+        if (!width || !depth) return 0;
+        const radius = width / 2;
+        return Math.PI * radius * radius * depth;
+      };
+
+      // Terminal/Corner posts holes
+      const terminalCornerHoleVolume = calculateHoleVolume(widthOfHoles, depthOfHoles);
+      const terminalCornerPosts = (parseInt(numberOfEndTerminals) || 0) + (parseInt(numberOfCorners) || 0);
+      totalVolume += terminalCornerHoleVolume * terminalCornerPosts;
+
+      // Line post holes
+      const linePostHoleVolume = calculateHoleVolume(linePostHoleWidth, linePostHoleDepth);
+      const linePostsNeeded = calculateLinePostsNeeded();
+      totalVolume += linePostHoleVolume * linePostsNeeded;
+
+      // Single gate post holes
+      const singleGatePostsQuantity = (parseInt(numberOfSingleGates) || 0) * 2;
+      const singleGatePostHoleVolume = calculateHoleVolume(singleGatePostHoleWidth, singleGatePostHoleDepth || depthOfHoles);
+      totalVolume += singleGatePostHoleVolume * singleGatePostsQuantity;
+
+      // Double gate post holes
+      const doubleGateHoleVolume = calculateHoleVolume(doubleGateHoleWidth, doubleGateHoleDepth || depthOfHoles);
+      const doubleGatePostsQuantity = (parseInt(numberOfDoubleGates) || 0) * 2;
+      totalVolume += doubleGateHoleVolume * doubleGatePostsQuantity;
+
+      // Sliding gate post holes
+      const slidingGateHoleVolume = calculateHoleVolume(slidingGateHoleWidth, slidingGateHoleDepth || depthOfHoles);
+      const slidingGatePostsQuantity = (parseInt(numberOfSlidingGates) || 0) * 3; // 3 posts per sliding gate
+      totalVolume += slidingGateHoleVolume * slidingGatePostsQuantity;
+
+      // Convert cubic inches to bags (multiply by 2.22 and divide by 1728 to convert from cubic inches)
+      const bagsNeeded = Math.ceil((totalVolume / 1728) * 2.22);
+      const cubicYardsNeeded = typeOfConcrete === "Truck" ? Math.ceil(bagsNeeded / 59) : null;
+
+      return {
+        bagsNeeded,
+        cubicYardsNeeded
+      };
+    };
+
+    // Calculate concrete costs
     const concreteCalculation = calculateConcreteNeeded();
     if (concreteCalculation && typeOfConcrete) {
       if (typeOfConcrete === "Truck") {
+        const cubicYardsNeeded = concreteCalculation.cubicYardsNeeded;
+        const unitCost = 170; // Truck price per cubic yard
+        const subtotal = cubicYardsNeeded * unitCost;
+        
         newCosts["Concrete (Truck)"] = {
-          quantity: concreteCalculation.cubicYardsNeeded,
-          unitCost: CONCRETE_COSTS.Truck,
+          quantity: cubicYardsNeeded,
+          unitCost: unitCost,
           standardLength: null,
-          subtotal: concreteCalculation.totalCost
+          subtotal: subtotal,
+          sku: "10423" // Truck SKU
         };
-      } else {
-        newCosts[`Concrete (${typeOfConcrete})`] = {
-          quantity: concreteCalculation.bagsNeeded,
-          unitCost: CONCRETE_COSTS[typeOfConcrete],
+      } else if (typeOfConcrete === "Red") {
+        const bagsNeeded = concreteCalculation.bagsNeeded;
+        const unitCost = 8.76; // Red 50 pound price
+        const subtotal = bagsNeeded * unitCost;
+        
+        newCosts[`Concrete (Red 50 pound)`] = {
+          quantity: bagsNeeded,
+          unitCost: unitCost,
           standardLength: null,
-          subtotal: concreteCalculation.totalCost
+          subtotal: subtotal,
+          sku: "30001" // Red 50 pound SKU
+        };
+      } else if (typeOfConcrete === "Yellow") {
+        const bagsNeeded = concreteCalculation.bagsNeeded;
+        const unitCost = 6.09; // Yellow 60 pound price
+        const subtotal = bagsNeeded * unitCost;
+        
+        newCosts[`Concrete (Yellow 60 pound)`] = {
+          quantity: bagsNeeded,
+          unitCost: unitCost,
+          standardLength: null,
+          subtotal: subtotal,
+          sku: "30004" // Yellow 60 pound SKU
         };
       }
     }
@@ -1611,75 +1862,15 @@ const FenceCalculator = ({ customerData = {} }) => {
     setOpenProposalDialog(true);
   };
 
-  // Calculate concrete needed for holes
-  const calculateConcreteNeeded = () => {
-    if (!heightOfFence) return null;
-
-    let totalBagsNeeded = 0;
-    let totalVolume = 0;
-
-    // Helper to calculate single hole volume in cubic inches
-    const calculateHoleVolume = (width, depth) => {
-      if (!width || !depth) return 0;
-      const radius = width / 2;
-      return Math.PI * radius * radius * depth;
-    };
-
-    // Terminal/Corner posts holes
-    const terminalCornerHoleVolume = calculateHoleVolume(widthOfHoles, depthOfHoles);
-    const terminalCornerPosts = (parseInt(numberOfEndTerminals) || 0) + (parseInt(numberOfCorners) || 0);
-    totalVolume += terminalCornerHoleVolume * terminalCornerPosts;
-
-    // Line post holes
-    const linePostHoleVolume = calculateHoleVolume(linePostHoleWidth, linePostHoleDepth);
-    const linePostsNeeded = calculateLinePostsNeeded();
-    totalVolume += linePostHoleVolume * linePostsNeeded;
-
-    // Single gate post holes
-    const singleGatePostsQuantity = (parseInt(numberOfSingleGates) || 0) * 2;
-    const singleGatePostHoleVolume = calculateHoleVolume(singleGatePostHoleWidth, singleGatePostHoleDepth || depthOfHoles);
-    totalVolume += singleGatePostHoleVolume * singleGatePostsQuantity;
-
-    // Double gate post holes
-    const doubleGateHoleVolume = calculateHoleVolume(doubleGateHoleWidth, doubleGateHoleDepth || depthOfHoles);
-    const doubleGatePostsQuantity = (parseInt(numberOfDoubleGates) || 0) * 2;
-    totalVolume += doubleGateHoleVolume * doubleGatePostsQuantity;
-
-    // Sliding gate post holes
-    const slidingGateHoleVolume = calculateHoleVolume(slidingGateHoleWidth, slidingGateHoleDepth || depthOfHoles);
-    const slidingGatePostsQuantity = (parseInt(numberOfSlidingGates) || 0) * 3; // 3 posts per sliding gate
-    totalVolume += slidingGateHoleVolume * slidingGatePostsQuantity;
-
-    // Convert cubic inches to bags (multiply by 2.22 and divide by 1728 to convert from cubic inches)
-    const bagsNeeded = Math.ceil((totalVolume / 1728) * 2.22);
-
-    // Calculate costs based on concrete type
-    let concreteCost = 0;
-    if (typeOfConcrete === "Red") {
-      concreteCost = bagsNeeded * CONCRETE_COSTS.Red;
-    } else if (typeOfConcrete === "Yellow") {
-      concreteCost = bagsNeeded * CONCRETE_COSTS.Yellow;
-    } else if (typeOfConcrete === "Truck") {
-      const cubicYardsNeeded = Math.ceil(bagsNeeded / 59);
-      concreteCost = cubicYardsNeeded * CONCRETE_COSTS.Truck;
-    }
-
-    return {
-      bagsNeeded,
-      cubicYardsNeeded: typeOfConcrete === "Truck" ? Math.ceil(bagsNeeded / 59) : null,
-      totalCost: concreteCost
-    };
-  };
-
   // Helper function to get available sizes based on hinge type
   const getAvailableSizes = (hingeType, coating) => {
     if (hingeType === 'residential') {
       // For residential, we show male sizes since we'll use matching female sizes
-      return Object.keys(hingePrices.residential.male[coating]).filter(size => 
-        hingePrices.residential.male[coating][size] !== null
+      return Object.keys(maleGateHingeCosts[coating] || {}).filter(size => 
+        maleGateHingeCosts[coating][size] !== null
       );
     } else {
-      return Object.keys(hingePrices[hingeType][coating]);
+      return Object.keys(industrialHingeCosts[hingeType][coating]);
     }
   };
 
@@ -1691,11 +1882,11 @@ const FenceCalculator = ({ customerData = {} }) => {
     
     // Helper to get matching female size based on male size position
     const getMatchingFemaleSize = (maleSize) => {
-      const maleSizes = Object.keys(hingePrices.residential.male[coating]).filter(size => 
-        hingePrices.residential.male[coating][size] !== null
+      const maleSizes = Object.keys(maleGateHingeCosts[coating] || {}).filter(size => 
+        maleGateHingeCosts[coating][size] !== null
       );
-      const femaleSizes = Object.keys(hingePrices.residential.female[coating]).filter(size => 
-        hingePrices.residential.female[coating][size] !== null
+      const femaleSizes = Object.keys(femaleGateHingeCosts[coating] || {}).filter(size => 
+        femaleGateHingeCosts[coating][size] !== null
       );
       const maleIndex = maleSizes.indexOf(maleSize);
       return femaleSizes[maleIndex] || femaleSizes[0]; // Fallback to first size if no match
@@ -1704,10 +1895,10 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Calculate hinge cost
     let hingeCost = 0;
     if (gate.hingeType === 'residential') {
-      hingeCost = (hingePrices.residential.male[coating][singleGatePostDiameter] + 
-                  hingePrices.residential.female[coating][getMatchingFemaleSize(singleGatePostDiameter)]) * 2; // 2 sets per gate
+      hingeCost = (maleGateHingeCosts[coating][singleGatePostDiameter].price + 
+                  femaleGateHingeCosts[coating][getMatchingFemaleSize(singleGatePostDiameter)].price) * 2; // 2 sets per gate
     } else if (gate.hingeType) {
-      hingeCost = hingePrices[gate.hingeType][coating][singleGatePostDiameter] * 2; // 2 hinges per gate
+      hingeCost = industrialHingeCosts[gate.hingeType][coating][singleGatePostDiameter].price * 2; // 2 hinges per gate
     }
     
     // Add latch cost
@@ -1729,11 +1920,11 @@ const FenceCalculator = ({ customerData = {} }) => {
     
     // Helper to get matching female size based on male size position
     const getMatchingFemaleSize = (maleSize) => {
-      const maleSizes = Object.keys(hingePrices.residential.male[coating]).filter(size => 
-        hingePrices.residential.male[coating][size] !== null
+      const maleSizes = Object.keys(maleGateHingeCosts[coating] || {}).filter(size => 
+        maleGateHingeCosts[coating][size] !== null
       );
-      const femaleSizes = Object.keys(hingePrices.residential.female[coating]).filter(size => 
-        hingePrices.residential.female[coating][size] !== null
+      const femaleSizes = Object.keys(femaleGateHingeCosts[coating] || {}).filter(size => 
+        femaleGateHingeCosts[coating][size] !== null
       );
       const maleIndex = maleSizes.indexOf(maleSize);
       return femaleSizes[maleIndex] || femaleSizes[0]; // Fallback to first size if no match
@@ -1742,10 +1933,10 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Calculate hinge cost (double gates use 4 hinges)
     let hingeCost = 0;
     if (gate.hingeType === 'residential') {
-      hingeCost = (hingePrices.residential.male[coating][doubleGatePostDiameter] + 
-                  hingePrices.residential.female[coating][getMatchingFemaleSize(doubleGatePostDiameter)]) * 4; // 4 sets per gate
+      hingeCost = (maleGateHingeCosts[coating][doubleGatePostDiameter].price + 
+                  femaleGateHingeCosts[coating][getMatchingFemaleSize(doubleGatePostDiameter)].price) * 4; // 4 sets per gate
     } else if (gate.hingeType) {
-      hingeCost = hingePrices[gate.hingeType][coating][doubleGatePostDiameter] * 4; // 4 hinges per gate
+      hingeCost = industrialHingeCosts[gate.hingeType][coating][doubleGatePostDiameter].price * 4; // 4 hinges per gate
     }
     
     // Add latch cost
@@ -1772,27 +1963,42 @@ const FenceCalculator = ({ customerData = {} }) => {
     // Calculate based on size
     const size = parseFloat(gate.size);
     // 4 rollers per gate + latch
-    return Number((rollerPrice * 4) + 22.68).toFixed(2); // Roller price plus latch price
+    const latchSize = slidingGatePostDiameter;
+    const latchCost = cantileverLatchCosts[latchSize]?.price || cantileverLatchCosts["4"].price; // Default to 4" latch if specific size not available
+    return Number((rollerPrice.price * 4) + latchCost).toFixed(2); // Roller price plus latch price
   };
 
   // Calculate total material cost
   const calculateTotalMaterialCost = () => {
     let total = 0;
+    let gateCostsTotal = 0;
+    
+    console.log("Calculating total material cost with costs:", costs);
     
     // Sum up all subtotals from the costs object
     if (costs) {
-      Object.values(costs).forEach(item => {
-        if (item && item.subtotal !== undefined && item.subtotal !== null) {
-          total += Number(item.subtotal) || 0;
+      Object.entries(costs).forEach(([item, details]) => {
+        if (details && details.subtotal !== undefined && details.subtotal !== null) {
+          total += Number(details.subtotal) || 0;
+          
+          // Track gate costs separately for debugging
+          if (item.includes('Gate')) {
+            gateCostsTotal += Number(details.subtotal) || 0;
+            console.log(`Gate cost found: ${item} - $${details.subtotal}`);
+          }
         }
       });
     }
+    
+    console.log(`Total gate costs included in material cost: $${gateCostsTotal}`);
     
     // Add single gate hardware costs
     if (numberOfSingleGates && numberOfSingleGates > 0) {
       singleGates.forEach(gate => {
         if (gate && gate.size) {
-          total += Number(calculateSingleGateHardwareCost(gate)) || 0;
+          const hardwareCost = Number(calculateSingleGateHardwareCost(gate)) || 0;
+          total += hardwareCost;
+          console.log(`Added single gate hardware cost: $${hardwareCost}`);
         }
       });
     }
@@ -1801,7 +2007,9 @@ const FenceCalculator = ({ customerData = {} }) => {
     if (numberOfDoubleGates && numberOfDoubleGates > 0) {
       doubleGates.forEach(gate => {
         if (gate && gate.size) {
-          total += Number(calculateDoubleGateHardwareCost(gate)) || 0;
+          const hardwareCost = Number(calculateDoubleGateHardwareCost(gate)) || 0;
+          total += hardwareCost;
+          console.log(`Added double gate hardware cost: $${hardwareCost}`);
         }
       });
     }
@@ -1810,12 +2018,246 @@ const FenceCalculator = ({ customerData = {} }) => {
     if (numberOfSlidingGates && numberOfSlidingGates > 0) {
       slidingGates.forEach(gate => {
         if (gate && gate.size) {
-          total += Number(calculateSlidingGateHardwareCost(gate)) || 0;
+          const hardwareCost = Number(calculateSlidingGateHardwareCost(gate)) || 0;
+          total += hardwareCost;
+          console.log(`Added sliding gate hardware cost: $${hardwareCost}`);
         }
       });
     }
     
+    console.log(`Final total material cost: $${total}`);
     return total;
+  };
+
+  // Function to find the matching gate in the database
+  const findMatchingGateLocal = (specs) => {
+    console.log("Finding matching gate for specs:", specs);
+    
+    // Filter gates by type (single, double, sliding)
+    const typeMatches = gateData.filter(gate => {
+      return gate.name.toLowerCase().includes(specs.type);
+    });
+    
+    console.log(`Found ${typeMatches.length} gates matching type: ${specs.type}`);
+    
+    // Filter by commercial/residential
+    const commercialMatches = typeMatches.filter(gate => {
+      if (specs.commercial === 'commercial') {
+        return gate.name.toLowerCase().includes('commercial');
+      } else {
+        return gate.name.toLowerCase().includes('residential');
+      }
+    });
+    
+    console.log(`Found ${commercialMatches.length} gates matching commercial/residential: ${specs.commercial}`);
+    
+    // Filter by barb wire
+    const barbWireMatches = commercialMatches.filter(gate => {
+      if (specs.barbWire) {
+        return gate.name.toLowerCase().includes('with barb wire');
+      } else {
+        return gate.name.toLowerCase().includes('no barb wire');
+      }
+    });
+    
+    console.log(`Found ${barbWireMatches.length} gates matching barb wire: ${specs.barbWire}`);
+    
+    // Filter by material (finish and diameter)
+    const materialMatches = barbWireMatches.filter(gate => {
+      return gate.name.toLowerCase().includes(specs.material.toLowerCase());
+    });
+    
+    console.log(`Found ${materialMatches.length} gates matching material: ${specs.material}`);
+    
+    // Try to find exact height and width match
+    const exactMatches = materialMatches.filter(gate => {
+      return (
+        gate.height === specs.height + "'" &&
+        gate.width === specs.width
+      );
+    });
+    
+    console.log(`Found ${exactMatches.length} exact matches for height: ${specs.height}' and width: ${specs.width}`);
+    
+    if (exactMatches.length > 0) {
+      console.log("Returning exact match:", exactMatches[0]);
+      return exactMatches[0];
+    }
+    
+    // If no exact match, find the closest match by height and width
+    if (materialMatches.length > 0) {
+      // Sort by closest height, then closest width
+      materialMatches.sort((a, b) => {
+        const aHeight = parseFloat(a.height);
+        const bHeight = parseFloat(b.height);
+        const targetHeight = parseFloat(specs.height);
+        
+        const aWidth = parseFloat(a.width);
+        const bWidth = parseFloat(b.width);
+        const targetWidth = parseFloat(specs.width);
+        
+        // Calculate differences
+        const aDiffHeight = Math.abs(aHeight - targetHeight);
+        const bDiffHeight = Math.abs(bHeight - targetHeight);
+        
+        if (aDiffHeight !== bDiffHeight) {
+          return aDiffHeight - bDiffHeight;
+        }
+        
+        const aDiffWidth = Math.abs(aWidth - targetWidth);
+        const bDiffWidth = Math.abs(bWidth - targetWidth);
+        
+        return aDiffWidth - bDiffWidth;
+      });
+      
+      console.log("Returning closest match:", materialMatches[0]);
+      return materialMatches[0];
+    }
+    
+    console.log("No matching gate found");
+    return null;
+  };
+
+  // Function to calculate gate costs based on user inputs
+  const calculateGateCosts = () => {
+    let gateCosts = {};
+    
+    // Process single gates
+    if (numberOfSingleGates && numberOfSingleGates > 0) {
+      // Create specs object for single gate
+      const singleGateSpecs = {
+        type: 'single',
+        commercial: gateCommercialResidential,
+        barbWire: gateBarbed,
+        material: `${gateFinish} ${gateFrameDiameter}`,
+        height: singleGateSize.split('x')[0].trim(),
+        width: singleGateSize.split('x')[1]?.trim() || '4'
+      };
+      
+      console.log("Single Gate Specs:", singleGateSpecs);
+      
+      // Construct the gate type string for debugging
+      let debugGateType = '';
+      if (singleGateSpecs.commercial === 'commercial') {
+        debugGateType += 'Commercial ';
+      } else {
+        debugGateType += 'Residential ';
+      }
+      debugGateType += 'single gate ';
+      if (singleGateSpecs.barbWire) {
+        debugGateType += 'with barb wire';
+      } else {
+        debugGateType += 'no barb wire';
+      }
+      debugGateType += ` - ${singleGateSpecs.material}`;
+      
+      console.log("Looking for gate type:", debugGateType);
+      
+      // Find the matching gate or the next larger size
+      const singleGateMatch = findMatchingGateLocal(singleGateSpecs);
+      
+      console.log("Single Gate Match:", singleGateMatch);
+      
+      if (singleGateMatch) {
+        gateCosts["Single Gate"] = {
+          quantity: numberOfSingleGates,
+          unitCost: singleGateMatch.price,
+          subtotal: numberOfSingleGates * singleGateMatch.price,
+          sku: singleGateMatch.itemNumber || 'CUSTOM-SINGLE',
+          details: `${singleGateSpecs.height} x ${singleGateSpecs.width}`,
+          name: singleGateMatch.name
+        };
+      } else {
+        // Fallback if no match found
+        const fallbackPrice = 150.0;
+        gateCosts["Single Gate"] = {
+          quantity: numberOfSingleGates,
+          unitCost: fallbackPrice,
+          subtotal: numberOfSingleGates * fallbackPrice,
+          sku: 'CUSTOM-SINGLE',
+          details: `${singleGateSpecs.height} x ${singleGateSpecs.width} (Custom)`,
+          name: `Custom Single Gate - ${gateFinish} ${gateFrameDiameter}`
+        };
+      }
+    }
+    
+    // Process double gates
+    if (numberOfDoubleGates && numberOfDoubleGates > 0) {
+      // Create specs object for double gate
+      const doubleGateSpecs = {
+        type: 'double',
+        commercial: gateCommercialResidential,
+        barbWire: gateBarbed,
+        material: `${gateFinish} ${gateFrameDiameter}`,
+        height: doubleGateSize.split('x')[0].trim(),
+        width: doubleGateSize.split('x')[1]?.trim() || '6'
+      };
+      
+      // Find the matching gate or the next larger size
+      const doubleGateMatch = findMatchingGateLocal(doubleGateSpecs);
+      
+      if (doubleGateMatch) {
+        gateCosts["Double Gate"] = {
+          quantity: numberOfDoubleGates,
+          unitCost: doubleGateMatch.price,
+          subtotal: numberOfDoubleGates * doubleGateMatch.price,
+          sku: doubleGateMatch.itemNumber || 'CUSTOM-DOUBLE',
+          details: `${doubleGateSpecs.height} x ${doubleGateSpecs.width}`,
+          name: doubleGateMatch.name
+        };
+      } else {
+        // Fallback if no match found
+        const fallbackPrice = 300.0;
+        gateCosts["Double Gate"] = {
+          quantity: numberOfDoubleGates,
+          unitCost: fallbackPrice,
+          subtotal: numberOfDoubleGates * fallbackPrice,
+          sku: 'CUSTOM-DOUBLE',
+          details: `${doubleGateSpecs.height} x ${doubleGateSpecs.width} (Custom)`,
+          name: `Custom Double Gate - ${gateFinish} ${gateFrameDiameter}`
+        };
+      }
+    }
+    
+    // Process sliding gates
+    if (numberOfSlidingGates && numberOfSlidingGates > 0) {
+      // Create specs object for sliding gate
+      const slidingGateSpecs = {
+        type: 'sliding',
+        commercial: gateCommercialResidential,
+        barbWire: gateBarbed,
+        material: `${gateFinish} ${gateFrameDiameter}`,
+        height: slidingGateSize.split('x')[0].trim(),
+        width: slidingGateSize.split('x')[1]?.trim() || '10'
+      };
+      
+      // Find the matching gate or the next larger size
+      const slidingGateMatch = findMatchingGateLocal(slidingGateSpecs);
+      
+      if (slidingGateMatch) {
+        gateCosts["Sliding Gate"] = {
+          quantity: numberOfSlidingGates,
+          unitCost: slidingGateMatch.price,
+          subtotal: numberOfSlidingGates * slidingGateMatch.price,
+          sku: slidingGateMatch.itemNumber || 'CUSTOM-SLIDING',
+          details: `${slidingGateSpecs.height} x ${slidingGateSpecs.width}`,
+          name: slidingGateMatch.name
+        };
+      } else {
+        // Fallback if no match found
+        const fallbackPrice = 450.0;
+        gateCosts["Sliding Gate"] = {
+          quantity: numberOfSlidingGates,
+          unitCost: fallbackPrice,
+          subtotal: numberOfSlidingGates * fallbackPrice,
+          sku: 'CUSTOM-SLIDING',
+          details: `${slidingGateSpecs.height} x ${slidingGateSpecs.width} (Custom)`,
+          name: `Custom Sliding Gate - ${gateFinish} ${gateFrameDiameter}`
+        };
+      }
+    }
+    
+    return gateCosts;
   };
 
   return (
@@ -2131,24 +2573,120 @@ const FenceCalculator = ({ customerData = {} }) => {
                       <Typography variant="body2" sx={{ minWidth: '80px' }}>Gate {index + 1}:</Typography>
                       <div style={{ flex: 1 }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                          Width (ft)
+                          Type
                         </label>
-                        <input
-                          type="number"
-                          min="3"
-                          step="0.1"
-                          defaultValue="4"
+                        <select
+                          value={gateCommercialResidential}
+                          onChange={(e) => setGateCommercialResidential(e.target.value)}
                           style={{
                             border: '1px solid #d1d5db',
                             borderRadius: '0.375rem',
                             padding: '0.5rem',
                             width: '100%'
                           }}
-                        />
+                        >
+                          <option value="commercial">Commercial</option>
+                          <option value="residential">Residential</option>
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Finish
+                        </label>
+                        <select
+                          value={gateFinish}
+                          onChange={(e) => setGateFinish(e.target.value)}
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        >
+                          <option value="black">Black</option>
+                          <option value="galvanized">Galvanized</option>
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Frame Diameter
+                        </label>
+                        <select
+                          value={gateFrameDiameter}
+                          onChange={(e) => setGateFrameDiameter(e.target.value)}
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        >
+                          <option value="1 5/8">1 5/8</option>
+                          <option value="1 7/8">1 7/8</option>
+                        </select>
+                      </div>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={gateBarbed}
+                            onChange={(e) => setGateBarbed(e.target.checked)}
+                          />
+                        }
+                        label="Barbed Wire"
+                      />
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Height (ft)
+                        </label>
+                        <select
+                          value={singleGateSize.split('x')[0].trim()}
+                          onChange={(e) => {
+                            const width = singleGateSize.split('x')[1]?.trim() || '4';
+                            setSingleGateSize(`${e.target.value}x${width}`);
+                          }}
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        >
+                          <option value="4'">4'</option>
+                          <option value="5'">5'</option>
+                          <option value="6'">6'</option>
+                          <option value="7'">7'</option>
+                          <option value="8'">8'</option>
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Width (ft)
+                        </label>
+                        <select
+                          value={singleGateSize.split('x')[1]?.trim() || '4'}
+                          onChange={(e) => {
+                            const height = singleGateSize.split('x')[0].trim() || "6'";
+                            setSingleGateSize(`${height}x${e.target.value}`);
+                          }}
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        >
+                          <option value="3">3</option>
+                          <option value="4">4</option>
+                          <option value="5">5</option>
+                          <option value="6">6</option>
+                        </select>
                       </div>
                       <FormControl fullWidth={isMobile} sx={{ flex: 1 }}>
                         <InputLabel>Hinge Type</InputLabel>
-                        <Select defaultValue="residential">
+                        <Select
+                          value={singleGateHingeType}
+                          onChange={(e) => setSingleGateHingeType(e.target.value)}
+                        >
                           <MenuItem value="residential">Residential</MenuItem>
                           <MenuItem value="bulldog">Bulldog</MenuItem>
                           <MenuItem value="180degree">180 Degree</MenuItem>
@@ -2158,7 +2696,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                   ))}
                 </div>
               )}
-
               {numberOfDoubleGates && numberOfDoubleGates > 0 && (
                 <div style={{ marginTop: '1rem' }}>
                   <Typography variant="subtitle2" gutterBottom>
@@ -2178,24 +2715,122 @@ const FenceCalculator = ({ customerData = {} }) => {
                       <Typography variant="body2" sx={{ minWidth: '80px' }}>Gate {index + 1}:</Typography>
                       <div style={{ flex: 1 }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                          Width (ft)
+                          Type
                         </label>
-                        <input
-                          type="number"
-                          min="6"
-                          step="0.1"
-                          defaultValue="6"
+                        <select
+                          value={gateCommercialResidential}
+                          onChange={(e) => setGateCommercialResidential(e.target.value)}
                           style={{
                             border: '1px solid #d1d5db',
                             borderRadius: '0.375rem',
                             padding: '0.5rem',
                             width: '100%'
                           }}
-                        />
+                        >
+                          <option value="commercial">Commercial</option>
+                          <option value="residential">Residential</option>
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Finish
+                        </label>
+                        <select
+                          value={gateFinish}
+                          onChange={(e) => setGateFinish(e.target.value)}
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        >
+                          <option value="black">Black</option>
+                          <option value="galvanized">Galvanized</option>
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Frame Diameter
+                        </label>
+                        <select
+                          value={gateFrameDiameter}
+                          onChange={(e) => setGateFrameDiameter(e.target.value)}
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        >
+                          <option value="1 5/8">1 5/8</option>
+                          <option value="1 7/8">1 7/8</option>
+                        </select>
+                      </div>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={gateBarbed}
+                            onChange={(e) => setGateBarbed(e.target.checked)}
+                          />
+                        }
+                        label="Barbed Wire"
+                      />
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Height (ft)
+                        </label>
+                        <select
+                          value={doubleGateSize.split('x')[0].trim() || "6'"}
+                          onChange={(e) => {
+                            const width = doubleGateSize.split('x')[1].trim() || '6';
+                            setDoubleGateSize(`${e.target.value}x${width}`);
+                          }}
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        >
+                          <option value="4'">4'</option>
+                          <option value="5'">5'</option>
+                          <option value="6'">6'</option>
+                          <option value="7'">7'</option>
+                          <option value="8'">8'</option>
+                        </select>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Width (ft)
+                        </label>
+                        <select
+                          value={doubleGateSize.split('x')[1].trim() || '6'}
+                          onChange={(e) => {
+                            const height = doubleGateSize.split('x')[0].trim() || "6'";
+                            setDoubleGateSize(`${height}x${e.target.value}`);
+                          }}
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        >
+                          <option value="6">6</option>
+                          <option value="8">8</option>
+                          <option value="10">10</option>
+                          <option value="12">12</option>
+                          <option value="14">14</option>
+                          <option value="16">16</option>
+                        </select>
                       </div>
                       <FormControl fullWidth={isMobile} sx={{ flex: 1 }}>
                         <InputLabel>Hinge Type</InputLabel>
-                        <Select defaultValue="residential">
+                        <Select
+                          value={doubleGateHingeType}
+                          onChange={(e) => setDoubleGateHingeType(e.target.value)}
+                        >
                           <MenuItem value="residential">Residential</MenuItem>
                           <MenuItem value="bulldog">Bulldog</MenuItem>
                           <MenuItem value="180degree">180 Degree</MenuItem>
@@ -2203,7 +2838,10 @@ const FenceCalculator = ({ customerData = {} }) => {
                       </FormControl>
                       <FormControl fullWidth={isMobile} sx={{ flex: 1 }}>
                         <InputLabel>Latch Type</InputLabel>
-                        <Select defaultValue="fork">
+                        <Select
+                          value={doubleGateLatchType}
+                          onChange={(e) => setDoubleGateLatchType(e.target.value)}
+                        >
                           <MenuItem value="fork">Fork Latch</MenuItem>
                           <MenuItem value="lockable">Lockable Latch</MenuItem>
                         </Select>
@@ -2212,7 +2850,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                   ))}
                 </div>
               )}
-
               {numberOfSlidingGates && numberOfSlidingGates > 0 && (
                 <div style={{ marginTop: '1rem' }}>
                   <Typography variant="subtitle2" gutterBottom>
@@ -2232,21 +2869,63 @@ const FenceCalculator = ({ customerData = {} }) => {
                       <Typography variant="body2" sx={{ minWidth: '80px' }}>Gate {index + 1}:</Typography>
                       <div style={{ flex: 1 }}>
                         <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
-                          Width (ft)
+                          Height (ft)
                         </label>
-                        <input
-                          type="number"
-                          min="6"
-                          step="0.1"
-                          defaultValue="6"
+                        <select
+                          value={slidingGateSize.split('x')[0]?.trim() || "6'"}
+                          onChange={(e) => {
+                            const width = slidingGateSize.split('x')[1]?.trim() || '10';
+                            setSlidingGateSize(`${e.target.value}x${width}`);
+                          }}
                           style={{
                             border: '1px solid #d1d5db',
                             borderRadius: '0.375rem',
                             padding: '0.5rem',
                             width: '100%'
                           }}
-                        />
+                        >
+                          <option value="4'">4'</option>
+                          <option value="5'">5'</option>
+                          <option value="6'">6'</option>
+                          <option value="7'">7'</option>
+                          <option value="8'">8'</option>
+                        </select>
                       </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151' }}>
+                          Width (ft)
+                        </label>
+                        <select
+                          value={slidingGateSize.split('x')[1]?.trim() || '10'}
+                          onChange={(e) => {
+                            const height = slidingGateSize.split('x')[0]?.trim() || "6'";
+                            setSlidingGateSize(`${height}x${e.target.value}`);
+                          }}
+                          style={{
+                            border: '1px solid #d1d5db',
+                            borderRadius: '0.375rem',
+                            padding: '0.5rem',
+                            width: '100%'
+                          }}
+                        >
+                          <option value="10">10</option>
+                          <option value="12">12</option>
+                          <option value="14">14</option>
+                          <option value="16">16</option>
+                          <option value="18">18</option>
+                          <option value="20">20</option>
+                        </select>
+                      </div>
+                      <FormControl fullWidth={isMobile} sx={{ flex: 1 }}>
+                        <InputLabel>Frame Diameter</InputLabel>
+                        <Select
+                          value={gateFrameDiameter}
+                          onChange={(e) => setGateFrameDiameter(e.target.value)}
+                        >
+                          <MenuItem value="1 5/8">1 5/8</MenuItem>
+                          <MenuItem value="1 7/8">1 7/8</MenuItem>
+                        </Select>
+                      </FormControl>
                     </div>
                   ))}
                 </div>
@@ -2310,10 +2989,10 @@ const FenceCalculator = ({ customerData = {} }) => {
                       }}
                     >
                       <option value="">Select...</option>
-                      <option value="2 3/8">2 3/8"</option>
-                      <option value="2 7/8">2 7/8"</option>
-                      <option value="4">4"</option>
-                      <option value="6 5/8">6 5/8"</option>
+                      <option value="2 3/8">2 3/8</option>
+                      <option value="2 7/8">2 7/8</option>
+                      <option value="4">4</option>
+                      <option value="6 5/8">6 5/8</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2330,7 +3009,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
+                      <option value="0.065">0.065</option>
+                      <option value="SCH 20">SCH 20</option>
                       <option value="SCH 40">SCH 40</option>
+                      <option value="Industrial SCH 40">Industrial SCH 40</option>
+                      <option value="Commercial SCH 40">Commercial SCH 40</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2407,12 +3090,12 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
-                      <option value="2 3/8">2 3/8"</option>
-                      <option value="2 7/8">2 7/8"</option>
-                      <option value="3 1/2">3 1/2"</option>
-                      <option value="4">4"</option>
-                      <option value="6 5/8">6 5/8"</option>
-                      <option value="8 5/8">8 5/8"</option>
+                      <option value="2 3/8">2 3/8</option>
+                      <option value="2 7/8">2 7/8</option>
+                      <option value="3 1/2">3 1/2</option>
+                      <option value="4">4</option>
+                      <option value="6 5/8">6 5/8</option>
+                      <option value="8 5/8">8 5/8</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2429,7 +3112,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
+                      <option value="0.065">0.065</option>
+                      <option value="SCH 20">SCH 20</option>
                       <option value="SCH 40">SCH 40</option>
+                      <option value="Industrial SCH 40">Industrial SCH 40</option>
+                      <option value="Commercial SCH 40">Commercial SCH 40</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2507,12 +3194,12 @@ const FenceCalculator = ({ customerData = {} }) => {
                       }}
                     >
                       <option value="">Select</option>
-                      <option value="2 3/8">2 3/8"</option>
-                      <option value="2 7/8">2 7/8"</option>
-                      <option value="3 1/2">3 1/2"</option>
-                      <option value="4">4"</option>
-                      <option value="6 5/8">6 5/8"</option>
-                      <option value="8 5/8">8 5/8"</option>
+                      <option value="2 3/8">2 3/8</option>
+                      <option value="2 7/8">2 7/8</option>
+                      <option value="3 1/2">3 1/2</option>
+                      <option value="4">4</option>
+                      <option value="6 5/8">6 5/8</option>
+                      <option value="8 5/8">8 5/8</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2530,7 +3217,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                       }}
                     >
                       <option value="">Select</option>
+                      <option value="0.065">0.065</option>
+                      <option value="SCH 20">SCH 20</option>
                       <option value="SCH 40">SCH 40</option>
+                      <option value="Industrial SCH 40">Industrial SCH 40</option>
+                      <option value="Commercial SCH 40">Commercial SCH 40</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2608,12 +3299,12 @@ const FenceCalculator = ({ customerData = {} }) => {
                       }}
                     >
                       <option value="">Select</option>
-                      <option value="2 3/8">2 3/8"</option>
-                      <option value="2 7/8">2 7/8"</option>
-                      <option value="3 1/2">3 1/2"</option>
-                      <option value="4">4"</option>
-                      <option value="6 5/8">6 5/8"</option>
-                      <option value="8 5/8">8 5/8"</option>
+                      <option value="2 3/8">2 3/8</option>
+                      <option value="2 7/8">2 7/8</option>
+                      <option value="3 1/2">3 1/2</option>
+                      <option value="4">4</option>
+                      <option value="6 5/8">6 5/8</option>
+                      <option value="8 5/8">8 5/8</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2631,7 +3322,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                       }}
                     >
                       <option value="">Select</option>
+                      <option value="0.065">0.065</option>
+                      <option value="SCH 20">SCH 20</option>
                       <option value="SCH 40">SCH 40</option>
+                      <option value="Industrial SCH 40">Industrial SCH 40</option>
+                      <option value="Commercial SCH 40">Commercial SCH 40</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2691,10 +3386,10 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
-                      <option value="1 5/8">1 5/8"</option>
-                      <option value="1 7/8">1 7/8"</option>
-                      <option value="2 3/8">2 3/8"</option>
-                      <option value="2 7/8">2 7/8"</option>
+                      <option value="1 5/8">1 5/8</option>
+                      <option value="1 7/8">1 7/8</option>
+                      <option value="2 3/8">2 3/8</option>
+                      <option value="2 7/8">2 7/8</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2711,7 +3406,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
+                      <option value="0.065">0.065</option>
+                      <option value="SCH 20">SCH 20</option>
                       <option value="SCH 40">SCH 40</option>
+                      <option value="Industrial SCH 40">Industrial SCH 40</option>
+                      <option value="Commercial SCH 40">Commercial SCH 40</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2771,9 +3470,9 @@ const FenceCalculator = ({ customerData = {} }) => {
                         width: '100%'
                       }}
                     >
-                      <option value="1 3/8">1 3/8"</option>
-                      <option value="1 5/8">1 5/8"</option>
-                      <option value="1 7/8">1 7/8"</option>
+                      <option value="1 3/8">1 3/8</option>
+                      <option value="1 5/8">1 5/8</option>
+                      <option value="1 7/8">1 7/8</option>
                     </select>
                   </div>
                   <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2817,10 +3516,10 @@ const FenceCalculator = ({ customerData = {} }) => {
                           width: '100%'
                         }}
                       >
-                        <option value="2 3/8">2 3/8"</option>
-                        <option value="2 7/8">2 7/8"</option>
-                        <option value="4">4"</option>
-                        <option value="6 5/8">6 5/8"</option>
+                        <option value="2 3/8">2 3/8</option>
+                        <option value="2 7/8">2 7/8</option>
+                        <option value="4">4</option>
+                        <option value="6 5/8">6 5/8</option>
                       </select>
                     </div>
                     <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2838,7 +3537,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                           marginBottom: isMobile ? '1rem' : '0',
                         }}
                       >
+                        <option value="0.065">0.065</option>
+                        <option value="SCH 20">SCH 20</option>
                         <option value="SCH 40">SCH 40</option>
+                        <option value="Industrial SCH 40">Industrial SCH 40</option>
+                        <option value="Commercial SCH 40">Commercial SCH 40</option>
                       </select>
                     </div>
                     <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2878,8 +3581,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                   </div>
                 </div>
               )}
-
-              {/* Double Gate Posts - Only show if there are double gates */}
               {numberOfDoubleGates && numberOfDoubleGates > 0 && (
                 <div>
                   <Typography variant="subtitle1" gutterBottom>
@@ -2900,10 +3601,10 @@ const FenceCalculator = ({ customerData = {} }) => {
                           width: '100%'
                         }}
                       >
-                        <option value="2 3/8">2 3/8"</option>
-                        <option value="2 7/8">2 7/8"</option>
-                        <option value="4">4"</option>
-                        <option value="6 5/8">6 5/8"</option>
+                        <option value="2 3/8">2 3/8</option>
+                        <option value="2 7/8">2 7/8</option>
+                        <option value="4">4</option>
+                        <option value="6 5/8">6 5/8</option>
                       </select>
                     </div>
                     <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2921,7 +3622,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                           marginBottom: isMobile ? '1rem' : '0',
                         }}
                       >
+                        <option value="0.065">0.065</option>
+                        <option value="SCH 20">SCH 20</option>
                         <option value="SCH 40">SCH 40</option>
+                        <option value="Industrial SCH 40">Industrial SCH 40</option>
+                        <option value="Commercial SCH 40">Commercial SCH 40</option>
                       </select>
                     </div>
                     <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -2961,8 +3666,6 @@ const FenceCalculator = ({ customerData = {} }) => {
                   </div>
                 </div>
               )}
-
-              {/* Sliding Gate Posts - Only show if there are sliding gates */}
               {numberOfSlidingGates && numberOfSlidingGates > 0 && (
                 <div>
                   <Typography variant="subtitle1" gutterBottom>
@@ -2983,10 +3686,10 @@ const FenceCalculator = ({ customerData = {} }) => {
                           width: '100%'
                         }}
                       >
-                        <option value="2 3/8">2 3/8"</option>
-                        <option value="2 7/8">2 7/8"</option>
-                        <option value="4">4"</option>
-                        <option value="6 5/8">6 5/8"</option>
+                        <option value="2 3/8">2 3/8</option>
+                        <option value="2 7/8">2 7/8</option>
+                        <option value="4">4</option>
+                        <option value="6 5/8">6 5/8</option>
                       </select>
                     </div>
                     <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -3003,7 +3706,11 @@ const FenceCalculator = ({ customerData = {} }) => {
                           width: '100%'
                         }}
                       >
+                        <option value="0.065">0.065</option>
+                        <option value="SCH 20">SCH 20</option>
                         <option value="SCH 40">SCH 40</option>
+                        <option value="Industrial SCH 40">Industrial SCH 40</option>
+                        <option value="Commercial SCH 40">Commercial SCH 40</option>
                       </select>
                     </div>
                     <div style={{ flex: 1, marginBottom: isMobile ? '1rem' : 0 }}>
@@ -3107,9 +3814,9 @@ const FenceCalculator = ({ customerData = {} }) => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={hasHBrace}
-                      onChange={(e) => setHasHBrace(e.target.checked)}
-                    />
+                    checked={hasHBrace}
+                    onChange={(e) => setHasHBrace(e.target.checked)}
+                  />
                   }
                   label="With H braces?"
                 />
@@ -3384,7 +4091,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                       gate.size && (
                         <TableRow key={`double-gate-${index}`}>
                           <TableCell component="th" scope="row">
-                            Double Gate Hardware (Gate {index + 1}, {gate.size}")
+                            Double Gate Hardware (Gate {index + 1}, {gate.size})
                           </TableCell>
                           <TableCell align="right">1</TableCell>
                           <TableCell>
@@ -3408,7 +4115,7 @@ const FenceCalculator = ({ customerData = {} }) => {
                       gate.size && (
                         <TableRow key={`sliding-gate-${index}`}>
                           <TableCell component="th" scope="row">
-                            Sliding Gate Hardware (Gate {index + 1}, {gate.size}")
+                            Sliding Gate Hardware (Gate {index + 1}, {gate.size})
                           </TableCell>
                           <TableCell align="right">1</TableCell>
                           <TableCell>
@@ -3582,7 +4289,7 @@ const FenceCalculator = ({ customerData = {} }) => {
               slidingGatePostDiameter={slidingGatePostDiameter}
               linePostDiameter={linePostDiameter}
               topRailDiameter={topRailDiameter}
-              gateFrameDiameter={gatePipeDiameter}
+              gatePipeDiameter={gatePipeDiameter}
               terminalPostThickness={terminalPostThickness}
               doubleGatePostThickness={doubleGatePostThickness}
               slidingGatePostThickness={slidingGatePostThickness}

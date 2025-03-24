@@ -3,7 +3,9 @@ import './App.css';
 import { Container, CssBaseline, ThemeProvider, createTheme, Box, AppBar, Toolbar, Button } from '@mui/material';
 import CustomerInfo from './pages/CustomerInfo';
 import FenceCalculator from './FenceCalculator';
+import FeedbackCalculatorPage from './pages/FeedbackCalculatorPage';
 import ChainlinkPriceTest from './components/ChainlinkPriceTest';
+import ProductDetailExample from './components/ProductDetailExample';
 import logo from './assets/Logo (6).png';
 import { ResponsiveProvider } from './context/ResponsiveContext';
 
@@ -80,8 +82,12 @@ function App() {
         return <CustomerInfo onSubmit={handleCustomerInfoSubmit} initialData={customerData} />;
       case 'calculator':
         return <FenceCalculator customerData={customerData} />;
+      case 'feedback-calculator':
+        return <FeedbackCalculatorPage customerData={customerData} />;
       case 'pricing':
         return <ChainlinkPriceTest />;
+      case 'product-detail':
+        return <ProductDetailExample />;
       default:
         return <CustomerInfo onSubmit={handleCustomerInfoSubmit} initialData={customerData} />;
     }
@@ -134,6 +140,17 @@ function App() {
                   Calculator
                 </Button>
                 <Button
+                  onClick={() => setCurrentPage('feedback-calculator')}
+                  color="inherit"
+                  sx={{ 
+                    color: '#ffffff',
+                    backgroundColor: currentPage === 'feedback-calculator' ? '#4d211f' : 'transparent',
+                    '&:hover': { backgroundColor: '#4d211f' }
+                  }}
+                >
+                  Feedback Calculator
+                </Button>
+                <Button
                   onClick={() => setCurrentPage('pricing')}
                   color="inherit"
                   sx={{ 
@@ -143,6 +160,17 @@ function App() {
                   }}
                 >
                   Pricing
+                </Button>
+                <Button
+                  onClick={() => setCurrentPage('product-detail')}
+                  color="inherit"
+                  sx={{ 
+                    color: '#ffffff',
+                    backgroundColor: currentPage === 'product-detail' ? '#4d211f' : 'transparent',
+                    '&:hover': { backgroundColor: '#4d211f' }
+                  }}
+                >
+                  Product Details
                 </Button>
               </Box>
             </Toolbar>
