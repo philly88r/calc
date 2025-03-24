@@ -36,7 +36,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore.js';
 // Import the findPostSize function from our calculator directory
-import { findPostSize as findPostSizeExtracted } from './calculator/postCalculations';
+import { findPostSize as findPostSizeExtracted } from './calculator/postCalculations.js';
 
 const useIsMobile = () => {
   const { breakpoints } = useTheme();
