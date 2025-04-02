@@ -33,7 +33,9 @@ app.get('/', (req, res) => {
     message: 'Fence Calculator API Server',
     endpoints: [
       { path: '/api/products', description: 'Get products from the STFD price book' },
-      { path: '/api/chainlink-prices', description: 'Get chainlink prices from the STFD price book' }
+      { path: '/api/chainlink-prices', description: 'Get chainlink prices from the STFD price book' },
+      { path: '/api/test-calculator', description: 'Test the fence calculator' },
+      { path: '/api/questionnaire', description: 'Get questionnaire items' }
     ],
     status: 'running'
   });
@@ -234,6 +236,272 @@ app.get('/api/chainlink-prices', async (req, res) => {
   } catch (error) {
     console.error('Error fetching chainlink prices:', error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Route to test the fence calculator
+app.post('/api/test-calculator', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    
+    // PostgreSQL connection string
+    const connectionString = 'postgresql://postgres:Yitbos88@db.kdhwrlhzevzekoanusbs.supabase.co:5432/postgres';
+    
+    // Connect to PostgreSQL
+    const client = new Client({ connectionString });
+    await client.connect();
+    
+    // Get parameters from request body
+    const params = req.body;
+    
+    // Calculate derived values
+    const derived = { ...params };
+    
+    // Map parameter names to match formula expectations
+    derived.fenceLength = derived.totalLinearLength;
+    
+    // Calculate number of terminal posts
+    derived.numberOfTerminalPosts = derived.numberOfEndTerminals;
+    
+    // Calculate total number of posts
+    derived.totalPosts = derived.numberOfTerminalPosts + derived.numberOfCorners + 
+                        (derived.numberOfSingleGates * 2) + (derived.numberOfDoubleGates * 2) + 
+                        (derived.numberOfSlidingGates * 2) + derived.numberOfSolitaryPosts +
+                        derived.numberOfFlangedPosts + derived.numberOfFlangedPostsOffCentered;
+    
+    // Calculate line posts
+    derived.linePostsCount = Math.ceil(derived.totalLinearLength / derived.postSpacing) - 
+                            derived.numberOfTerminalPosts - derived.numberOfCorners - 
+                            (derived.numberOfSingleGates * 2) - (derived.numberOfDoubleGates * 2) - 
+                            (derived.numberOfSlidingGates * 2) - derived.numberOfSolitaryPosts -
+                            derived.numberOfFlangedPosts - derived.numberOfFlangedPostsOffCentered;
+    
+    // Add line posts to total posts
+    derived.totalPosts += derived.linePostsCount;
+    
+    // Calculate number of gates
+    derived.numberOfGates = derived.numberOfSingleGates + derived.numberOfDoubleGates + derived.numberOfSlidingGates;
+    
+    // Set standard lengths
+    derived.railLength = 21; // Standard rail length in feet
+    derived.rollLength = 50; // Standard mesh roll length in feet
+    
+    // Set hole depth in feet
+    derived.holeDepth = derived.depthOfHoles / 12;
+    derived.holeWidth = derived.widthOfHoles;
+    
+    // Set flags
+    derived.isCommercial = derived.commercialOrResidential === 'Commercial';
+    derived.hasBarbed = derived.hasThreeStrandBarbedWire;
+    
+    // Set fence height in feet
+    derived.fenceHeight = derived.heightOfFence;
+    
+    // Get all formulas from the database
+    const formulasResult = await client.query(`
+      SELECT id, name, calculation_details, questionnaire_trigger
+      FROM material_formulas
+      ORDER BY id;
+    `);
+    
+    const quantities = {};
+    const errors = [];
+    
+    for (const row of formulasResult.rows) {
+      const formulaId = row.id;
+      const details = row.calculation_details;
+      const trigger = row.questionnaire_trigger;
+      
+      // Check if formula is triggered by questionnaire responses
+      if (trigger) {
+        try {
+          // Create a function from the trigger expression
+          const triggerFunc = new Function(
+            'params',
+            `
+            const { 
+              totalLinearLength, heightOfFence, numberOfPulls, numberOfEndTerminals, 
+              numberOfCorners, numberOfSingleGates, numberOfDoubleGates, hasDuckbillGateStop,
+              numberOfSlidingGates, numberOfSolitaryPosts, numberOfFlangedPosts, 
+              numberOfFlangedPostsOffCentered, commercialOrResidential, material, 
+              meshGauge, meshFold, depthOfHoles, widthOfHoles, concreteType, 
+              postSpacing, extraRail, hasHBrace, hasTrussRods, hasThreeStrandBarbedWire,
+              hasFenceSlats, fenceSlatsColor, terminalPostDiameter, cornerPostDiameter,
+              doubleGatePostDiameter, slidingGatePostDiameter, linePostDiameter,
+              topRailDiameter, gatePipeDiameter, terminalPostThickness, cornerPostThickness,
+              doubleGatePostThickness, slidingGatePostThickness, linePostThickness,
+              topRailThickness, numberOfTerminalPosts, totalPosts, linePostsCount,
+              numberOfGates, railLength, rollLength, holeDepth, holeWidth, isCommercial, 
+              hasBarbed, fenceHeight, fenceLength, customItem1Quantity, customItem2Quantity,
+              customItem3Quantity, customItem4Quantity, customItem5Quantity,
+              singleGateSize, doubleGateSize, slidingGateSize
+            } = params;
+            
+            return ${trigger};
+            `
+          );
+          
+          const isTriggered = triggerFunc(derived);
+          
+          if (!isTriggered) {
+            quantities[formulaId] = {
+              name: row.name,
+              quantity: 0,
+              triggered: false
+            };
+            continue;
+          }
+        } catch (error) {
+          errors.push({
+            formulaId,
+            name: row.name,
+            error: `Trigger error: ${error.message}`
+          });
+          quantities[formulaId] = {
+            name: row.name,
+            quantity: 0,
+            triggered: false
+          };
+          continue;
+        }
+      }
+      
+      if (details && details.formula) {
+        try {
+          // Create a function from the formula string
+          const formula = new Function(
+            'params',
+            `
+            const { 
+              totalLinearLength, heightOfFence, numberOfPulls, numberOfEndTerminals, 
+              numberOfCorners, numberOfSingleGates, numberOfDoubleGates, hasDuckbillGateStop,
+              numberOfSlidingGates, numberOfSolitaryPosts, numberOfFlangedPosts, 
+              numberOfFlangedPostsOffCentered, commercialOrResidential, material, 
+              meshGauge, meshFold, depthOfHoles, widthOfHoles, concreteType, 
+              postSpacing, extraRail, hasHBrace, hasTrussRods, hasThreeStrandBarbedWire,
+              hasFenceSlats, fenceSlatsColor, terminalPostDiameter, cornerPostDiameter,
+              doubleGatePostDiameter, slidingGatePostDiameter, linePostDiameter,
+              topRailDiameter, gatePipeDiameter, terminalPostThickness, cornerPostThickness,
+              doubleGatePostThickness, slidingGatePostThickness, linePostThickness,
+              topRailThickness, numberOfTerminalPosts, totalPosts, linePostsCount,
+              numberOfGates, railLength, rollLength, holeDepth, holeWidth, isCommercial, 
+              hasBarbed, fenceHeight, fenceLength, customItem1Quantity, customItem2Quantity,
+              customItem3Quantity, customItem4Quantity, customItem5Quantity,
+              singleGateSize, doubleGateSize, slidingGateSize
+            } = params;
+            
+            return ${details.formula};
+            `
+          );
+          
+          // Calculate the quantity
+          const quantity = formula(derived);
+          quantities[formulaId] = {
+            name: row.name,
+            quantity: quantity,
+            triggered: true
+          };
+        } catch (error) {
+          errors.push({
+            formulaId,
+            name: row.name,
+            error: `Calculation error: ${error.message}`
+          });
+          quantities[formulaId] = {
+            name: row.name,
+            quantity: 0,
+            triggered: true
+          };
+        }
+      }
+    }
+    
+    // Group by category
+    const categories = {
+      'Posts': ['terminal_posts', 'corner_posts', 'line_posts', 'single_gate_posts', 'double_gate_posts', 'sliding_gate_posts', 'duckbill_posts', 'flanged_posts_centered', 'flanged_posts_off_centered'],
+      'Gates': ['single_gates', 'double_gates', 'sliding_gates'],
+      'Concrete': ['concrete'],
+      'Mesh': ['mesh'],
+      'Rails': ['top_rail', 'fence_sleeve'],
+      'Dome Caps': ['dome_cap_terminal', 'dome_cap_corner', 'dome_cap_single_gate', 'dome_cap_double_gate', 'dome_cap_sliding_gate', 'dome_cap_duckbill'],
+      'Bands': ['tension_bands_terminal', 'tension_bands_corner', 'tension_bands_single_gate', 'tension_bands_double_gate', 'tension_bands_sliding_gate', 'brace_bands_terminal', 'brace_bands_corner', 'brace_bands_single_gate', 'brace_bands_double_gate', 'brace_bands_sliding_gate', 'brace_bands_line'],
+      'Hardware': ['rail_ends', 'rail_clamps', 'fence_ties', 'tension_bars', 'hog_rings', 'eye_tops', 'nuts_and_bolts', 'wedge_anchors', 'truss_rods', 'slick_line'],
+      'Gate Hardware': ['bulldog_hinges_single', 'bulldog_hinges_double', 'industrial_hinges_single', 'industrial_hinges_double', 'female_residential_hinge_single', 'female_residential_hinge_double', 'male_residential_hinge_single', 'male_residential_hinge_double', 'fork_latch_single', 'fork_latch_double', 'industrial_drop_latch', 'industrial_drop_latch_guides', 'cantilever_latch', 'cantilever_rollers', 'cane_bolts', 'gate_nut_bolt', 'collars', 'duckbill_gate_stop'],
+      'Barbed Wire': ['barbed_wire', 'barb_arms'],
+      'Privacy': ['fence_slats'],
+      'Custom': ['custom_item_1', 'custom_item_2', 'custom_item_3', 'custom_item_4', 'custom_item_5']
+    };
+    
+    // Organize quantities by category
+    const organizedQuantities = {};
+    
+    for (const [category, formulaIds] of Object.entries(categories)) {
+      const categoryItems = {};
+      
+      for (const formulaId of formulaIds) {
+        const item = quantities[formulaId];
+        if (item && item.quantity > 0) {
+          categoryItems[formulaId] = {
+            name: item.name,
+            quantity: item.quantity
+          };
+        }
+      }
+      
+      if (Object.keys(categoryItems).length > 0) {
+        organizedQuantities[category] = categoryItems;
+      }
+    }
+    
+    // Close the PostgreSQL connection
+    await client.end();
+    
+    // Return the results
+    res.json({
+      parameters: derived,
+      quantities: organizedQuantities,
+      errors: errors.length > 0 ? errors : undefined
+    });
+    
+  } catch (error) {
+    console.error('Error testing fence calculator:', error);
+    res.status(500).json({
+      error: 'Error testing fence calculator',
+      message: error.message
+    });
+  }
+});
+
+// Route to get questionnaire items
+app.get('/api/questionnaire', async (req, res) => {
+  try {
+    const { Client } = require('pg');
+    
+    // PostgreSQL connection string
+    const connectionString = 'postgresql://postgres:Yitbos88@db.kdhwrlhzevzekoanusbs.supabase.co:5432/postgres';
+    
+    // Connect to PostgreSQL
+    const client = new Client({ connectionString });
+    await client.connect();
+    
+    // Get all questionnaire items
+    const result = await client.query(`
+      SELECT * FROM questionnaire_items
+      ORDER BY section, "order";
+    `);
+    
+    // Close the PostgreSQL connection
+    await client.end();
+    
+    // Return the results
+    res.json(result.rows);
+    
+  } catch (error) {
+    console.error('Error getting questionnaire items:', error);
+    res.status(500).json({
+      error: 'Error getting questionnaire items',
+      message: error.message
+    });
   }
 });
 
