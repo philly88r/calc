@@ -5,7 +5,13 @@ import {
   calculateSingleGateHardwareCost,
   calculateDoubleGateHardwareCost,
   calculateSlidingGateHardwareCost,
-  handleDescriptionChange
+  handleDescriptionChange,
+  calculateLinePostsNeeded,
+  findPostSize,
+  calculateHoleVolume,
+  calculateConcreteNeeded,
+  categorizeCosts,
+  formatDetailedCosts
 } from './utils';
 
 // Import the rest of your FenceCalculator implementation here
