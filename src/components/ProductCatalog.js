@@ -32,7 +32,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import DownloadIcon from '@mui/icons-material/Download';
 import { jsPDF } from "jspdf";
-import autoTable from 'jspdf-autotable';
+// Import jspdf-autotable as a plugin
+import 'jspdf-autotable';
 import { supabase } from '../supabaseClient';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, rectSortingStrategy, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -855,8 +856,8 @@ const ProductCatalog = () => {
           `$${parseFloat(product.price || 0).toFixed(2)}`
         ]);
         
-        // Add table using the imported autoTable function
-        autoTable(doc, {
+        // Add table using the autoTable plugin
+        doc.autoTable({
           startY: yPosition,
           head: [['SKU', 'Type', 'Material', 'Dimensions', 'Length/Height', 'Price']],
           body: tableData,
