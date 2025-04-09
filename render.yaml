@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: stfadcalc
+    env: node
+    buildCommand: chmod +x ./build.sh && ./build.sh
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 16
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /

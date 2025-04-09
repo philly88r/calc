@@ -32,8 +32,6 @@ import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import DownloadIcon from '@mui/icons-material/Download';
 import { jsPDF } from "jspdf";
-// Import jspdf-autotable as a plugin
-import 'jspdf-autotable';
 import { supabase } from '../supabaseClient';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, rectSortingStrategy, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -368,20 +366,26 @@ const ProductCatalog = () => {
     try {
       console.log('Fetching products from Lightspeed API via proxy server...', new Date().toISOString());
       
-      // Determine the API base URL based on the environment
-      const apiBaseUrl = process.env.REACT_APP_API_URL || 
-        (window.location.hostname === 'localhost' ? 'http://localhost:3001' : '');
+      // Always use localhost:3001 when in development mode
+      const apiBaseUrl = 'http://localhost:3001';
       
       // Fetch products from our proxy server
       const url = `${apiBaseUrl}/api/lightspeed/products`;
       console.log('Fetching from proxy URL:', url);
       
+      console.log('Sending request to:', url);
       const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache',
+        credentials: 'omit',
         headers: {
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         }
       });
+      
+      console.log('Received response:', response.status, response.statusText);
       
       if (!response.ok) {
         throw new Error(`API error: ${response.status} ${response.statusText}`);
@@ -423,7 +427,9 @@ const ProductCatalog = () => {
       
       return products;
     } catch (error) {
-      console.error('Error fetching products from Lightspeed API:', error);
+      console.error('Error fetching products from Lightspeed API:', error.message || 'Unknown error');
+      console.error('Error details:', error);
+      console.error('Error stack:', error.stack);
       return [];
     }
   };
