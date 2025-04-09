@@ -11,8 +11,9 @@ const port = process.env.PORT || 3001;
 // Configure CORS based on environment
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://philly88r.github.io',  // GitHub Pages domain
-  'https://calc.philly88r.com',   // Your custom domain if you have one
+  'https://philly88r.github.io',    // GitHub Pages domain
+  'https://calc.philly88r.com',     // Your custom domain if you have one
+  'https://stfadcalc.netlify.app',  // Netlify domain
 ];
 
 app.use(cors({
