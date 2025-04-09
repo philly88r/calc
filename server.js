@@ -16,20 +16,18 @@ const allowedOrigins = [
   'https://stfadcalc.netlify.app',  // Netlify domain
 ];
 
+// In development, allow all origins
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, etc)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      console.log(`CORS blocked for origin: ${origin}`);
-      return callback(null, false);
-    }
-    return callback(null, true);
-  },
+  origin: '*',  // Allow all origins in development
   methods: ['GET', 'POST', 'OPTIONS'],
   credentials: true
 }));
+
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
 
 // Create a connection pool for PostgreSQL
 const pool = new Pool({
@@ -47,6 +45,20 @@ const LIGHTSPEED_BASE_URL = 'https://southtexasfencesupply.retail.lightspeed.app
 if (!LIGHTSPEED_API_KEY) {
   console.warn('WARNING: LIGHTSPEED_API_KEY not found in environment variables. Please set it in your .env file.');
 }
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Fence Calculator API Server',
+    endpoints: [
+      { path: '/api/products', description: 'Get all products from the database' },
+      { path: '/api/products/category/:category', description: 'Get products by category' },
+      { path: '/api/products/search/:term', description: 'Search products' },
+      { path: '/api/lightspeed/products', description: 'Get products from Lightspeed API' }
+    ],
+    status: 'running'
+  });
+});
 
 // Route to get all products
 app.get('/api/products', async (req, res) => {
@@ -106,40 +118,108 @@ app.get('/api/lightspeed/products', async (req, res) => {
       'Content-Type': 'application/json'
     };
     
-    // Fetch products with a reasonable limit
-    // Lightspeed API might not support proper pagination
-    const response = await axios.get(`${LIGHTSPEED_BASE_URL}/products`, {
-      headers,
-      params: {
-        limit: 2500  // Set a high limit but not infinite
+    // Initialize variables for pagination
+    let allProducts = [];
+    let page = 1;
+    const limit = 1000; // Lightspeed typically limits to 1000 per page
+    let hasMorePages = true;
+    
+    // Fetch all pages of products
+    while (hasMorePages) {
+      console.log(`Fetching page ${page} of products (${allProducts.length} fetched so far)...`);
+      
+      const response = await axios.get(`${LIGHTSPEED_BASE_URL}/products`, {
+        headers,
+        params: {
+          limit: limit,
+          page: page
+        }
+      });
+      
+      // Extract products from the response
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        const pageProducts = response.data.data;
+        console.log(`Fetched ${pageProducts.length} products from page ${page}`);
+        
+        // Add products from this page to our collection
+        allProducts = [...allProducts, ...pageProducts];
+        
+        // Check if we've reached the last page
+        if (pageProducts.length < limit) {
+          hasMorePages = false;
+          console.log('Reached last page of products');
+        } else {
+          // Move to next page
+          page++;
+        }
+      } else {
+        console.log('Unexpected API response format');
+        hasMorePages = false;
       }
+      
+      // Safety check to prevent infinite loops
+      if (page > 10) {
+        console.log('Reached maximum page limit (10), stopping pagination');
+        hasMorePages = false;
+      }
+    }
+    
+    console.log(`Fetched a total of ${allProducts.length} products from Lightspeed API v2.0`);
+    
+    // Log product IDs to check for duplicates (just first 5)
+    if (allProducts.length > 0) {
+      const sampleIds = allProducts.slice(0, 5).map(p => p.id);
+      console.log('Sample product IDs:', sampleIds);
+      
+      // Log a sample product to see its structure
+      console.log('Sample product:', JSON.stringify(allProducts[0], null, 2).substring(0, 200) + '...');
+      
+      // Log the complete structure of the first product to find price field
+      console.log('COMPLETE PRODUCT STRUCTURE:');
+      console.log(JSON.stringify(allProducts[0], null, 2));
+      
+      // Check for price-related fields
+      const priceFields = [];
+      const checkForPriceFields = (obj, prefix = '') => {
+        if (!obj || typeof obj !== 'object') return;
+        
+        Object.keys(obj).forEach(key => {
+          const fullPath = prefix ? `${prefix}.${key}` : key;
+          if (key.toLowerCase().includes('price') || key.toLowerCase().includes('cost')) {
+            priceFields.push({ path: fullPath, value: obj[key] });
+          }
+          if (obj[key] && typeof obj[key] === 'object') {
+            checkForPriceFields(obj[key], fullPath);
+          }
+        });
+      };
+      
+      checkForPriceFields(allProducts[0]);
+      console.log('PRICE FIELDS FOUND:', priceFields);
+    }
+    
+    // Transform products to ensure price fields are correctly mapped
+    const transformedProducts = allProducts.map(product => {
+      // Create a copy of the product
+      const transformed = { ...product };
+      
+      // Extract price from the correct field in Lightspeed API response
+      if (product.prices && product.prices.retail) {
+        transformed.price = product.prices.retail;
+      } else if (product.price_excl_tax) {
+        transformed.price = product.price_excl_tax;
+      } else if (product.price_incl_tax) {
+        transformed.price = product.price_incl_tax;
+      } else if (product.default_price) {
+        transformed.price = product.default_price;
+      }
+      
+      return transformed;
     });
     
-    // Extract products from the response
-    let products = [];
-    
-    if (response.data && response.data.data && Array.isArray(response.data.data)) {
-      products = response.data.data;
-      console.log(`Fetched ${products.length} products from Lightspeed API v2.0`);
-      
-      // Log product IDs to check for duplicates (just first 5)
-      if (products.length > 0) {
-        const sampleIds = products.slice(0, 5).map(p => p.id);
-        console.log('Sample product IDs:', sampleIds);
-      }
-    } else {
-      console.log('Unexpected API response format');
-      products = [];
-    }
-    
-    // Log a sample product to see its structure
-    if (products.length > 0) {
-      console.log('Sample product:', JSON.stringify(products[0], null, 2).substring(0, 200) + '...');
-    }
-    
-    // Send the products to the client
-    console.log(`Sending ${products.length} products to client`);
-    res.json(products);
+    // Send the transformed products to the client
+    console.log(`Sending ${transformedProducts.length} transformed products to client`);
+    res.json(transformedProducts);
   } catch (error) {
     console.error('Error fetching products from Lightspeed:', error.response?.data || error.message);
     res.status(500).json({ error: error.message });
