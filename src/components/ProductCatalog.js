@@ -38,8 +38,17 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, rectSortingStrategy, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+// Placeholder images for products by category
+const placeholderImages = {
+  'Gates': 'https://images.unsplash.com/photo-1573997953524-c5fb9ea5b174?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z2F0ZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+  'Posts': 'https://images.unsplash.com/photo-1620331311520-246422fd82f9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZmVuY2UlMjBwb3N0fGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
+  'Mesh': 'https://images.unsplash.com/photo-1555680202-c86f0e12f086?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Y2hhaW4lMjBsaW5rfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
+  'Accessories': 'https://images.unsplash.com/photo-1586864387789-628af9feed72?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aGFyZHdhcmV8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60',
+  'default': 'https://images.unsplash.com/photo-1595514535415-dae8580c5bc4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmVuY2V8ZW58MHx8MHx8fDA%3D&auto=format&fit=crop&w=500&q=60'
+};
+
 // Sortable Item Component for Catalogue Builder
-const SortableItem = ({ id, product, removeItem, view }) => {
+const SortableItem = ({ id, product, removeItem, view, onResize, initialSize }) => {
   const {
     attributes,
     listeners,
@@ -48,10 +57,54 @@ const SortableItem = ({ id, product, removeItem, view }) => {
     transition,
   } = useSortable({ id });
   
+  const [size, setSize] = useState(initialSize || { width: 1, height: 1 });
+  const [isResizing, setIsResizing] = useState(false);
+  
+  // Handle resize start
+  const handleResizeStart = (e) => {
+    e.stopPropagation();
+    setIsResizing(true);
+  };
+  
+  // Handle resize move
+  const handleResizeMove = (e) => {
+    if (!isResizing) return;
+    
+    // Calculate new size based on mouse movement
+    const newWidth = Math.max(1, Math.min(4, size.width + e.movementX / 50));
+    const newHeight = Math.max(1, Math.min(4, size.height + e.movementY / 50));
+    
+    setSize({ width: newWidth, height: newHeight });
+    
+    if (onResize) {
+      onResize(id, { width: newWidth, height: newHeight });
+    }
+  };
+  
+  // Handle resize end
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+  };
+  
+  // Add event listeners for resize
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', handleResizeMove);
+      window.addEventListener('mouseup', handleResizeEnd);
+    }
+    
+    return () => {
+      window.removeEventListener('mousemove', handleResizeMove);
+      window.removeEventListener('mouseup', handleResizeEnd);
+    };
+  }, [isResizing, size]);
+  
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    cursor: 'grab',
+    transition: isResizing ? 'none' : transition,
+    cursor: isResizing ? 'nwse-resize' : 'grab',
+    width: view === 'print' ? `${size.width * 25}%` : undefined,
+    height: view === 'print' ? `${size.height * 100}px` : undefined,
   };
   
   // Render different views based on the catalogue view mode
@@ -75,7 +128,9 @@ const SortableItem = ({ id, product, removeItem, view }) => {
         {...listeners}
       >
         <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-          {product.sku} - {product.type} {product.material ? `(${product.material})` : ''}
+          {typeof product.sku === 'string' ? product.sku : String(product.sku || '')} - 
+          {typeof product.type === 'string' ? product.type : String(product.type || '')} 
+          {product.material ? `(${typeof product.material === 'string' ? product.material : String(product.material)})` : ''}
         </Typography>
         <Box>
           <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
@@ -124,10 +179,14 @@ const SortableItem = ({ id, product, removeItem, view }) => {
           />
           <Box>
             <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-              {product.type}
+              {typeof product.type === 'string' ? product.type : String(product.type || '')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              SKU: {product.sku} | {product.material || ''} {product.diameter || product.size || ''}
+              SKU: {typeof product.sku === 'string' ? product.sku : String(product.sku || '')} | 
+              {typeof product.material === 'string' ? product.material : String(product.material || '')} 
+              {typeof product.diameter === 'string' ? product.diameter : 
+                typeof product.size === 'string' ? product.size : 
+                String(product.diameter || product.size || '')}
             </Typography>
           </Box>
         </Box>
@@ -145,6 +204,74 @@ const SortableItem = ({ id, product, removeItem, view }) => {
           </Button>
         </Box>
       </Paper>
+    );
+  }
+  
+  // Print view with resize functionality
+  if (view === 'print' || view === 'page') {
+    return (
+      <Card
+        ref={setNodeRef}
+        style={style}
+        sx={{
+          position: 'relative',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          '&:hover': {
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          },
+        }}
+        {...attributes}
+        {...listeners}
+      >
+        {/* Resize handle */}
+        <Box 
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            width: '20px',
+            height: '20px',
+            cursor: 'nwse-resize',
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            borderTopLeftRadius: '4px',
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            }
+          }}
+          onMouseDown={handleResizeStart}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span style={{ fontSize: '10px', color: '#fff' }}>⤡</span>
+        </Box>
+        <CardMedia
+          component="img"
+          height="100"
+          image={product.imageUrl || (product.type ? (
+            product.type.toLowerCase().includes('post') ? placeholderImages.Posts :
+            product.type.toLowerCase().includes('gate') ? placeholderImages.Gates :
+            product.type.toLowerCase().includes('mesh') ? placeholderImages.Mesh :
+            placeholderImages.default
+          ) : placeholderImages.default)}
+          alt={product.name || product.type}
+        />
+        <CardContent sx={{ flexGrow: 1, p: 1 }}>
+          <Typography gutterBottom variant="subtitle2" component="div" sx={{ fontWeight: 'bold' }}>
+            {product.name || product.type}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            SKU: {product.sku}
+          </Typography>
+          <Typography variant="h6" sx={{ mt: 1, color: 'primary.main', fontWeight: 'bold' }}>
+            ${parseFloat(product.price || 0).toFixed(2)}
+          </Typography>
+        </CardContent>
+      </Card>
     );
   }
   
@@ -182,9 +309,9 @@ const SortableItem = ({ id, product, removeItem, view }) => {
         <Typography variant="body2" color="text.secondary">
           SKU: {product.sku}
         </Typography>
-        {product.material && (
+        {product.specifications && (
           <Typography variant="body2" color="text.secondary">
-            Material: {product.material}
+            Description: {product.specifications}
           </Typography>
         )}
         {(product.diameter || product.size) && (
@@ -217,8 +344,9 @@ const ProductCatalog = () => {
   
   // Catalogue builder state
   const [catalogueItems, setCatalogueItems] = useState([]);
-  const [catalogueView, setCatalogueView] = useState('grid'); // 'grid', 'list', 'compact'
+  const [catalogueView, setCatalogueView] = useState('grid'); // 'grid', 'list', 'compact', 'print', 'page'
   const [catalogueName, setCatalogueName] = useState('My Custom Catalogue');
+  const [itemSizes, setItemSizes] = useState({});
   const [savedCatalogues, setSavedCatalogues] = useState(() => {
     const saved = localStorage.getItem('savedCatalogues');
     return saved ? JSON.parse(saved) : [];
@@ -234,7 +362,98 @@ const ProductCatalog = () => {
     'default': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=400&auto=format&fit=crop'
   };
 
-  // Function to fetch products from Supabase
+  // Function to fetch products from Lightspeed API via our proxy server
+  const fetchLightspeedProducts = async () => {
+    try {
+      console.log('Fetching products from Lightspeed API via proxy server...', new Date().toISOString());
+      
+      // Fetch products from our local proxy server
+      const url = 'http://localhost:3001/api/lightspeed/products';
+      console.log('Fetching from proxy URL:', url);
+      
+      const response = await fetch(url, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      
+      // Get raw products directly from the API via our proxy server
+      const rawData = await response.json();
+      console.log('Raw API response:', typeof rawData, rawData ? Object.keys(rawData) : 'null');
+      
+      // Handle different response structures
+      let products = [];
+      if (rawData && Array.isArray(rawData)) {
+        // If the response is already an array of products
+        products = rawData;
+      } else if (rawData && rawData.data && Array.isArray(rawData.data)) {
+        // If the response has a data property containing an array of products
+        products = rawData.data;
+      } else {
+        console.error('Unexpected API response structure:', rawData);
+        return [];
+      }
+      
+      if (products.length === 0) {
+        console.error('No products found in Lightspeed API response');
+        return [];
+      }
+      
+      // Log some sample products to understand the structure
+      console.log('Sample products from API:', products.slice(0, 3));
+      
+      console.log('Products fetched successfully:', products.length);
+      
+      // Log sample product and available properties
+      if (products.length > 0) {
+        console.log('Sample product:', products[0]);
+        console.log('Available columns:', Object.keys(products[0]));
+        console.log('First few raw products:', products.slice(0, 3));
+      }
+      
+      return products;
+    } catch (error) {
+      console.error('Error fetching products from Lightspeed API:', error);
+      return [];
+    }
+  };
+  
+  // Helper function to extract material from description
+  const extractMaterialFromDescription = (description) => {
+    if (!description) return '';
+    
+    // Common materials to look for
+    const materials = ['Steel', 'Wood', 'Aluminum', 'Vinyl', 'PVC', 'Iron', 'Galvanized', 'Black'];
+    for (const material of materials) {
+      if (description.includes(material)) {
+        return material;
+      }
+    }
+    
+    return '';
+  };
+  
+  // Helper function to extract size from description
+  const extractSizeFromDescription = (description) => {
+    if (!description) return '';
+    
+    // Look for common size patterns like "2x4", "1.5 inch", etc.
+    const sizeMatch = description.match(/\d+(\.\d+)?\s*(x\s*\d+(\.\d+)?)?\s*(inch|in|ft|foot|feet|mm|cm|m)?/i);
+    if (sizeMatch) {
+      return sizeMatch[0].trim();
+    }
+    
+    return '';
+  };
+  
+
+  
+  // Function to fetch products from Lightspeed API only
   const fetchProducts = async () => {
     try {
       // Clear any existing products first
@@ -242,42 +461,173 @@ const ProductCatalog = () => {
       setFilteredProducts([]);
       setLoading(true);
       
-      console.log('Fetching products from Supabase...', new Date().toISOString());
+      console.log('Fetching products from Lightspeed API...', new Date().toISOString());
       
-      // Log the table we're querying
-      console.log('Querying table: fence_products');
-      
-      // Add a timestamp parameter to prevent caching
-      const timestamp = new Date().getTime();
-      console.log('Using timestamp to prevent caching:', timestamp);
-      
-      const { data, error } = await supabase
-        .from('fence_products')
-        .select('*')
-        .order('id', { ascending: true });
-      
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      // Get data directly from Lightspeed API
+      const data = await fetchLightspeedProducts();
       
       if (!data || data.length === 0) {
-        console.log('No products found in the database');
+        console.log('No products found from Lightspeed API');
         setLoading(false);
         return;
       }
       
+      console.log(`Successfully fetched ${data.length} products`);
+      console.log('Sample product:', data[0]);
+      
       console.log('Products fetched successfully:', data.length);
-      console.log('Sample product with all fields:', data[0]);
+      console.log('Sample product:', data[0]);
       
       // Get all column names from the first product to see what we're working with
       const columnNames = Object.keys(data[0]);
       console.log('Available columns:', columnNames);
       
-      // Process the data using the actual column names from the database
-      const validProducts = data.filter(product => 
-        product.type && product.type.trim() !== ''
-      );
+      // Log raw data to see what we're working with
+      console.log('First few raw products:', data.slice(0, 3));
+      
+      // Function to extract material from description
+      const extractMaterial = (description) => {
+        if (!description) return '';
+        
+        // Look for material in a table format
+        const materialMatch = description.match(/<td[^>]*>Material<\/td>\s*<td[^>]*>([^<]+)<\/td>/i);
+        if (materialMatch && materialMatch[1]) {
+          return materialMatch[1].trim();
+        }
+        
+        // Common materials to look for
+        const materials = ['Steel', 'Wood', 'Aluminum', 'Vinyl', 'PVC', 'Iron', 'Galvanized'];
+        for (const material of materials) {
+          if (description.includes(material)) {
+            return material;
+          }
+        }
+        
+        return '';
+      };
+      
+      // Map the data to a consistent format regardless of source
+      const mappedProducts = data.map((item, index) => {
+        // Log every 100th product to avoid console flooding
+        if (index % 100 === 0) {
+          console.log(`Mapping product ${index}:`, item);
+        }
+        
+        // Extract material from description
+        const material = extractMaterial(item.description || '');
+        
+        // Get price information - ensure we're getting the correct price field
+        let price = 0;
+        if (item.price_standard && item.price_standard.tax_exclusive) {
+          price = parseFloat(item.price_standard.tax_exclusive) || 0;
+        } else if (item.price) {
+          price = parseFloat(item.price) || 0;
+        } else if (item.default_display_price) {
+          price = parseFloat(item.default_display_price) || 0;
+        }
+        
+        // Get image URL
+        let imageUrl = '';
+        if (item.images && item.images.length > 0 && item.images[0].sizes && item.images[0].sizes.original) {
+          imageUrl = item.images[0].sizes.original;
+        } else if (item.image_url) {
+          imageUrl = item.image_url;
+        } else {
+          // Use placeholder images defined at the top of the file
+          imageUrl = placeholderImages.default; // Use default image if none available
+        }
+        
+        // Determine product type - try to extract from name or description
+        let productType = 'Other';
+        const nameLower = (item.name || '').toLowerCase();
+        
+        if (nameLower.includes('post') || nameLower.includes('pole')) {
+          productType = 'Posts';
+        } else if (nameLower.includes('gate')) {
+          productType = 'Gates';
+        } else if (nameLower.includes('mesh') || nameLower.includes('fence') || nameLower.includes('fabric')) {
+          productType = 'Fencing';
+        } else if (nameLower.includes('rail') || nameLower.includes('clamp') || nameLower.includes('cap') || 
+                  nameLower.includes('bolt') || nameLower.includes('nut') || nameLower.includes('screw')) {
+          productType = 'Accessories';
+        } else if (item.product_type_id) {
+          productType = 'Fence Product';
+        }
+        
+        // Log mapping for the first few products
+        if (index < 3) {
+          console.log(`Mapped product ${index}:`, { id: item.id, name: item.name });
+          console.log(`  - Material extracted: "${material}"`);
+          console.log(`  - Image URL: ${imageUrl}`);
+          console.log(`  - Price: ${price}`);
+        }
+        
+        // Use description as specifications
+        let specifications = '';
+        if (item.description) {
+          // Extract text content from HTML description
+          specifications = item.description.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').trim();
+          
+          // Limit the length for display purposes
+          if (specifications.length > 100) {
+            specifications = specifications.substring(0, 97) + '...';
+          }
+        }
+        
+        // Extract attributes from the product
+        let attributes = {};
+        if (item.attributes && typeof item.attributes === 'object') {
+          attributes = item.attributes;
+        }
+        
+        // Extract category information
+        let category = productType;
+        if (item.category_name) {
+          category = String(item.category_name);
+        } else if (item.product_category) {
+          category = String(item.product_category);
+        }
+        
+        // Create a standardized product object with fallbacks for all properties
+        const mappedProduct = {
+          // Essential properties with fallbacks - convert all to primitive types
+          id: item.id ? String(item.id) : `product-${index}`,
+          sku: item.sku_number ? String(item.sku_number) : (item.sku ? String(item.sku) : ''),
+          type: productType,
+          name: item.name ? String(item.name) : '',
+          description: item.description ? String(item.description) : '',
+          price: price,
+          material: material || '',
+          specifications: specifications || '',
+          supplyPrice: 0,
+          // Image URL
+          imageUrl: imageUrl,
+          // Category information
+          category: category,
+          // Tracks inventory
+          inventory: item.tracks_inventory ? 'Yes' : 'No',
+          // Add attributes from Lightspeed
+          attributes: attributes,
+          // Add other needed fields as primitive types
+          deleted_at: item.deleted_at ? String(item.deleted_at) : '',
+          version: item.version ? String(item.version) : '',
+          // Store a reference to the original item ID for lookup purposes
+          originalId: item.id ? String(item.id) : ''
+        };
+        
+        // Log the first few mapped products for debugging
+        if (data.indexOf(item) < 3) {
+          console.log(`Mapped product ${data.indexOf(item)}:`, mappedProduct);
+          console.log(`  - Material extracted: "${material}"`);
+        }
+        
+        return mappedProduct;
+      });
+      
+      console.log('Total mapped products:', mappedProducts.length);
+      
+      // Use all products - we know they exist in the database
+      const validProducts = mappedProducts;
       
       console.log('Valid products:', validProducts.length);
       setProducts(validProducts);
@@ -307,6 +657,8 @@ const ProductCatalog = () => {
   const handleRefresh = () => {
     fetchProducts();
   };
+  
+
 
   // Filter products based on search term and category
   useEffect(() => {
@@ -354,47 +706,92 @@ const ProductCatalog = () => {
     const grouped = {};
     
     products.forEach(product => {
-      // Create a key based on product attributes
-      if (product.type && product.material) {
-        // For posts
-        if (product.type.toLowerCase() === 'post') {
-          const diameter = product.diameter || '';
-          const material = product.material || '';
-          
-          const key = `${material} ${product.type} - ${diameter}`;
-          
-          if (!grouped[key]) {
-            grouped[key] = [];
-          }
-          
-          grouped[key].push(product);
-        } 
-        // For gates
-        else if (product.type.toLowerCase().includes('gate')) {
-          const material = product.material || '';
-          const height = product.height || '';
-          
-          const key = `${product.type} - ${material}`;
-          
-          if (!grouped[key]) {
-            grouped[key] = [];
-          }
-          
-          grouped[key].push(product);
+      // Extract product name and type
+      const productName = typeof product.name === 'string' ? product.name.toLowerCase() : '';
+      const productType = typeof product.type === 'string' ? product.type : String(product.type || '');
+      
+      // Extract color from product name
+      let color = '';
+      if (productName.includes('black')) color = 'Black';
+      else if (productName.includes('galv')) color = 'Galvanized';
+      else if (productName.includes('white')) color = 'White';
+      else if (productName.includes('green')) color = 'Green';
+      else if (productName.includes('brown')) color = 'Brown';
+      
+      // For posts - group by material, color, and diameter
+      if (productType.toLowerCase().includes('post') || productName.includes('post')) {
+        // Extract diameter from product name or specifications
+        let diameter = '';
+        if (product.diameter) {
+          diameter = product.diameter;
+        } else if (productName.includes('2-3/8')) {
+          diameter = '2-3/8"';
+        } else if (productName.includes('2-7/8')) {
+          diameter = '2-7/8"';
+        } else if (productName.includes('4"')) {
+          diameter = '4"';
+        } else if (productName.match(/\d+(\.\d+)?("|in|inch)/)) {
+          diameter = productName.match(/\d+(\.\d+)?("|in|inch)/)[0];
         }
-        // For other products
-        else {
-          const key = `${product.material} ${product.type}`;
-          
-          if (!grouped[key]) {
-            grouped[key] = [];
-          }
-          
-          grouped[key].push(product);
+        
+        const key = `${color} ${productType} - ${diameter}`.trim();
+        const groupKey = key !== ' - ' ? key : 'Other Posts';
+        
+        if (!grouped[groupKey]) {
+          grouped[groupKey] = [];
         }
-      } else {
-        // Fallback for products without type or material
-        const key = product.type || 'Other';
+        
+        grouped[groupKey].push(product);
+      } 
+      // For gates - group by type (residential/commercial), color, and style
+      else if (productType.toLowerCase().includes('gate') || productName.includes('gate')) {
+        let gateType = 'Standard';
+        if (productName.includes('residential')) gateType = 'Residential';
+        else if (productName.includes('commercial')) gateType = 'Commercial';
+        
+        let style = '';
+        if (productName.includes('single')) style = 'Single';
+        else if (productName.includes('double')) style = 'Double';
+        
+        const key = `${color} ${gateType} ${style} Gates`.trim().replace(/\s+/g, ' ');
+        const groupKey = key !== 'Gates' ? key : 'Other Gates';
+        
+        if (!grouped[groupKey]) {
+          grouped[groupKey] = [];
+        }
+        
+        grouped[groupKey].push(product);
+      }
+      // For fence fabric/mesh - group by gauge, height, and color
+      else if (productType.toLowerCase().includes('mesh') || 
+               productType.toLowerCase().includes('fabric') || 
+               productName.includes('mesh') || 
+               productName.includes('fabric') || 
+               productName.includes('chain link')) {
+        let gauge = '';
+        if (productName.match(/\d+\s*ga/)) {
+          gauge = productName.match(/\d+\s*ga/)[0];
+        }
+        
+        let height = '';
+        if (product.height) {
+          height = product.height;
+        } else if (productName.match(/\d+('|ft|foot)/)) {
+          height = productName.match(/\d+('|ft|foot)/)[0];
+        }
+        
+        const key = `${color} Chain Link Fabric - ${gauge} ${height}`.trim().replace(/\s+/g, ' ');
+        const groupKey = key !== 'Chain Link Fabric -' ? key : 'Other Chain Link';
+        
+        if (!grouped[groupKey]) {
+          grouped[groupKey] = [];
+        }
+        
+        grouped[groupKey].push(product);
+      }
+      // For other products
+      else {
+        const key = `${productType}`;
         
         if (!grouped[key]) {
           grouped[key] = [];
@@ -515,6 +912,36 @@ const ProductCatalog = () => {
     setCatalogueView(view);
   };
   
+  // Handle item resize in catalogue
+  const handleItemResize = (id, newSize) => {
+    setItemSizes(prev => ({
+      ...prev,
+      [id]: newSize
+    }));
+  };
+  
+  // Helper function to get product image
+  const getProductImage = (product) => {
+    // Check for direct image URL first
+    if (product.imageUrl) {
+      return product.imageUrl;
+    }
+    
+    if (!product.type) return placeholderImages.default;
+    
+    // Ensure type is a string before using toLowerCase
+    const typeStr = typeof product.type === 'string' ? product.type : String(product.type || '');
+    const lowerType = typeStr.toLowerCase();
+    
+    if (lowerType.includes('post')) return placeholderImages.Posts;
+    if (lowerType.includes('gate')) return placeholderImages.Gates;
+    if (lowerType.includes('fence') || lowerType.includes('mesh')) return placeholderImages.Mesh;
+    if (lowerType.includes('fabric')) return placeholderImages.default;
+    if (lowerType.includes('accessory') || lowerType.includes('accessories')) return placeholderImages.default;
+    
+    return placeholderImages.default;
+  };
+  
   // Setup DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -562,7 +989,8 @@ const ProductCatalog = () => {
       name: catalogueName,
       items: catalogueItems,
       createdAt: new Date().toISOString(),
-      view: catalogueView
+      view: catalogueView,
+      itemSizes: itemSizes // Save the item sizes for layout preservation
     };
     
     const updatedCatalogues = [...savedCatalogues, newCatalogue];
@@ -579,6 +1007,11 @@ const ProductCatalog = () => {
       setCatalogueName(catalogue.name);
       setCatalogueView(catalogue.view || 'grid');
       setViewMode('catalogue');
+      
+      // Restore item sizes if available
+      if (catalogue.itemSizes) {
+        setItemSizes(catalogue.itemSizes);
+      }
     }
   };
   
@@ -593,7 +1026,9 @@ const ProductCatalog = () => {
   const getCategoryImage = (category) => {
     if (!category) return placeholderImages.default;
     
-    const lowerCategory = category.toLowerCase();
+    // Ensure category is a string before using toLowerCase
+    const categoryStr = typeof category === 'string' ? category : String(category || '');
+    const lowerCategory = categoryStr.toLowerCase();
     
     if (lowerCategory.includes('post')) return placeholderImages.post;
     if (lowerCategory.includes('gate')) return placeholderImages.gate;
@@ -604,24 +1039,58 @@ const ProductCatalog = () => {
     return placeholderImages.default;
   };
 
-  const getProductImage = (product) => {
-    if (!product.type) return placeholderImages.default;
-    
-    const lowerType = product.type.toLowerCase();
-    
-    if (lowerType.includes('post')) return placeholderImages.post;
-    if (lowerType.includes('gate')) return placeholderImages.gate;
-    if (lowerType.includes('mesh')) return placeholderImages.mesh;
-    if (lowerType.includes('fabric')) return placeholderImages.fabric;
-    if (lowerType.includes('accessory')) return placeholderImages.accessory;
-    
-    return placeholderImages.default;
-  };
-
   const getCategoryFromProduct = (product) => {
-    if (!product.type) return 'Uncategorized';
+    // Accept any product structure and extract a category
     
-    return product.type;
+    // Try different fields that might contain category information
+    const possibleFields = [
+      'product_category',
+      'type',
+      'product_type',
+      'category',
+      'categoryName',
+      'name',
+      'description'
+    ];
+    
+    // Check each field
+    for (const field of possibleFields) {
+      if (product[field] && typeof product[field] === 'string' && product[field].trim() !== '') {
+        // Standardize common categories
+        const lowerValue = product[field].toLowerCase();
+        
+        // Map to standard categories
+        if (lowerValue.includes('post')) return 'Posts';
+        if (lowerValue.includes('gate')) return 'Gates';
+        if (lowerValue.includes('mesh') || lowerValue.includes('fence')) return 'Fencing';
+        if (lowerValue.includes('accessory') || lowerValue.includes('accessories')) return 'Accessories';
+        
+        // If it's a type field, use it directly but ensure it's a string
+        if (field === 'type' || field === 'product_type' || field === 'product_category') {
+          return typeof product[field] === 'string' ? product[field] : String(product[field]);
+        }
+      } else if (product[field] && product[field] !== null) {
+        // If the field exists but isn't a string, convert it to a string and check
+        const fieldStr = String(product[field]);
+        if (fieldStr.trim() !== '') {
+          const lowerValue = fieldStr.toLowerCase();
+          
+          // Map to standard categories
+          if (lowerValue.includes('post')) return 'Posts';
+          if (lowerValue.includes('gate')) return 'Gates';
+          if (lowerValue.includes('mesh') || lowerValue.includes('fence')) return 'Fencing';
+          if (lowerValue.includes('accessory') || lowerValue.includes('accessories')) return 'Accessories';
+          
+          // If it's a type field, use the string version
+          if (field === 'type' || field === 'product_type' || field === 'product_category') {
+            return fieldStr;
+          }
+        }
+      }
+    }
+    
+    // Default fallback
+    return 'Other';
   };
 
   // Render loading state
@@ -639,33 +1108,83 @@ const ProductCatalog = () => {
   // Render empty state when no products are found
   if (products.length === 0) {
     return (
-      <Box sx={{ mt: 4, textAlign: 'center', p: 4, backgroundColor: 'white', borderRadius: 2, boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)' }}>
-        <Typography variant="h5" color="error" gutterBottom>
+      <Box sx={{ mt: 4, textAlign: 'center', p: 4, backgroundColor: 'white', borderRadius: 2, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
+        <Typography variant="h4" color="error" gutterBottom>
           No Products Found
         </Typography>
         <Typography variant="body1" paragraph>
-          The fence_products table appears to be empty or doesn't exist in the connected Supabase database.
+          The fence_products table appears to be empty in the connected Supabase database.
         </Typography>
-        <Typography variant="body1" paragraph>
-          Please ensure that:
-        </Typography>
-        <Box sx={{ maxWidth: 600, mx: 'auto', textAlign: 'left', mb: 3 }}>
-          <Typography component="div">
-            <ul>
-              <li>The fence_products table exists in your Supabase database</li>
-              <li>The table has product data imported into it</li>
-              <li>Your Supabase API keys have permission to access this table</li>
-            </ul>
-          </Typography>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            size="large"
+            onClick={handleRefresh}
+            sx={{ 
+              px: 4, 
+              py: 1.5, 
+              fontSize: '1.1rem',
+              boxShadow: 3,
+              '&:hover': {
+                boxShadow: 5
+              }
+            }}
+          >
+            Retry Loading Products
+          </Button>
         </Box>
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={handleRefresh}
-          sx={{ mr: 2 }}
-        >
-          Retry Loading Products
-        </Button>
+        
+        <Accordion sx={{ mb: 2, boxShadow: 2 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" color="primary">
+              Troubleshooting Steps
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ textAlign: 'left' }}>
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+              1. Verify Supabase Connection
+            </Typography>
+            <Typography variant="body2" paragraph>
+              • Check that your Supabase URL and API key are correct in the environment variables
+            </Typography>
+            <Typography variant="body2" paragraph>
+              • URL: {supabase.supabaseUrl ? supabase.supabaseUrl.substring(0, 20) + '...' : 'Not available'}
+            </Typography>
+            
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+              2. Check Table Structure
+            </Typography>
+            <Typography variant="body2" paragraph>
+              • Verify that the fence_products table has the correct structure
+            </Typography>
+            <Typography variant="body2" paragraph>
+              • The component expects fields like: id, sku, product_category, retail_price, etc.
+            </Typography>
+            
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+              3. Check Console Logs
+            </Typography>
+            <Typography variant="body2" paragraph>
+              • Open your browser's developer console (F12) to view detailed error messages
+            </Typography>
+            <Typography variant="body2" paragraph>
+              • Look for specific errors related to data fetching or field mapping
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+        
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Button 
+            variant="outlined" 
+            color="info" 
+            onClick={() => window.location.reload()}
+            sx={{ mr: 2 }}
+          >
+            Reload Page
+          </Button>
+        </Box>
       </Box>
     );
   }
@@ -945,53 +1464,69 @@ const ProductCatalog = () => {
                         <Table size="small">
                           <TableHead>
                             <TableRow>
+                              <TableCell sx={{ fontWeight: 'bold' }}>Image</TableCell>
                               <TableCell sx={{ fontWeight: 'bold' }}>SKU</TableCell>
+                              <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
                               <TableCell sx={{ fontWeight: 'bold' }}>Type</TableCell>
                               <TableCell sx={{ fontWeight: 'bold' }}>Specifications</TableCell>
+                              <TableCell sx={{ fontWeight: 'bold' }}>Attributes</TableCell>
                               <TableCell align="right" sx={{ fontWeight: 'bold' }}>Price</TableCell>
                             </TableRow>
                           </TableHead>
                           <TableBody>
                             {groupProducts.map((product) => (
                               <TableRow 
-                                key={product.id}
+                                key={typeof product.id === 'string' ? product.id : String(product.id || '')}
                                 sx={{ 
                                   '&:hover': { 
                                     backgroundColor: '#f1f5f9',
                                   },
                                 }}
                               >
-                                <TableCell sx={{ fontWeight: 'medium' }}>{product.sku}</TableCell>
-                                <TableCell>{product.type}</TableCell>
                                 <TableCell>
-                                  {product.material && (
+                                  <img 
+                                    src={product.imageUrl || placeholderImages.default} 
+                                    alt={product.name} 
+                                    style={{ 
+                                      width: 60, 
+                                      height: 60, 
+                                      objectFit: 'cover', 
+                                      borderRadius: '4px' 
+                                    }} 
+                                  />
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 'medium' }}>{typeof product.sku === 'string' ? product.sku : String(product.sku || '')}</TableCell>
+                                <TableCell sx={{ fontWeight: 'medium' }}>{typeof product.name === 'string' ? product.name : String(product.name || '')}</TableCell>
+                                <TableCell>{typeof product.type === 'string' ? product.type : String(product.type || '')}</TableCell>
+                                <TableCell>
+                                  {product.specifications && (
                                     <Typography variant="body2" sx={{ mb: 0.5 }}>
-                                      <strong>Material:</strong> {product.material}
+                                      <strong>Description:</strong> {typeof product.specifications === 'string' ? product.specifications : String(product.specifications || '')}
                                     </Typography>
                                   )}
                                   {product.diameter && (
                                     <Typography variant="body2" sx={{ mb: 0.5 }}>
-                                      <strong>Diameter:</strong> {product.diameter}
+                                      <strong>Diameter:</strong> {typeof product.diameter === 'string' ? product.diameter : String(product.diameter)}
                                     </Typography>
                                   )}
                                   {product.thickness && (
                                     <Typography variant="body2" sx={{ mb: 0.5 }}>
-                                      <strong>Thickness:</strong> {product.thickness}
+                                      <strong>Thickness:</strong> {typeof product.thickness === 'string' ? product.thickness : String(product.thickness)}
                                     </Typography>
                                   )}
                                   {product.size && (
                                     <Typography variant="body2" sx={{ mb: 0.5 }}>
-                                      <strong>Size:</strong> {product.size}
+                                      <strong>Size:</strong> {typeof product.size === 'string' ? product.size : String(product.size)}
                                     </Typography>
                                   )}
                                   {product.length && (
                                     <Typography variant="body2" sx={{ mb: 0.5 }}>
-                                      <strong>Length:</strong> {product.length}
+                                      <strong>Length:</strong> {typeof product.length === 'string' ? product.length : String(product.length)}
                                     </Typography>
                                   )}
                                   {product.height && (
                                     <Typography variant="body2" sx={{ mb: 0.5 }}>
-                                      <strong>Height:</strong> {product.height}
+                                      <strong>Height:</strong> {typeof product.height === 'string' ? product.height : String(product.height)}
                                     </Typography>
                                   )}
                                 </TableCell>
@@ -1033,33 +1568,35 @@ const ProductCatalog = () => {
             <TableHead>
               <TableRow sx={{ backgroundColor: 'primary.light' }}>
                 <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>SKU</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Name</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Type</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Category</TableCell>
                 <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Material</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Specifications</TableCell>
+                <TableCell sx={{ fontWeight: 'bold', color: 'white' }}>Description</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold', color: 'white' }}>Price</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {filteredProducts.map((product) => (
                 <TableRow 
-                  key={product.id}
+                  key={typeof product.id === 'string' ? product.id : String(product.id || '')}
                   sx={{ 
                     '&:nth-of-type(odd)': { backgroundColor: '#f8fafc' },
                     '&:hover': { backgroundColor: '#e0f2fe' },
                     transition: 'background-color 0.2s',
                   }}
                 >
-                  <TableCell sx={{ fontWeight: 'medium' }}>{product.sku}</TableCell>
-                  <TableCell>{product.type}</TableCell>
-                  <TableCell>{getCategoryFromProduct(product)}</TableCell>
-                  <TableCell>{product.material || '-'}</TableCell>
+                  <TableCell sx={{ fontWeight: 'medium' }}>{typeof product.sku === 'string' ? product.sku : String(product.sku || '')}</TableCell>
+                  <TableCell>{typeof product.name === 'string' ? product.name : String(product.name || '')}</TableCell>
+                  <TableCell>{typeof product.type === 'string' ? product.type : String(product.type || '')}</TableCell>
+                  <TableCell>{product.category || getCategoryFromProduct(product)}</TableCell>
+                  <TableCell>{typeof product.material === 'string' ? product.material : String(product.material || '-')}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                       {product.diameter && (
                         <Chip 
                           size="small" 
-                          label={`Diameter: ${product.diameter}`} 
+                          label={`Diameter: ${typeof product.diameter === 'string' ? product.diameter : String(product.diameter || '')}`} 
                           sx={{ 
                             backgroundColor: 'rgba(37, 99, 235, 0.1)', 
                             borderRadius: '4px',
@@ -1070,7 +1607,7 @@ const ProductCatalog = () => {
                       {product.thickness && (
                         <Chip 
                           size="small" 
-                          label={`Thickness: ${product.thickness}`} 
+                          label={`Thickness: ${typeof product.thickness === 'string' ? product.thickness : String(product.thickness || '')}`} 
                           sx={{ 
                             backgroundColor: 'rgba(37, 99, 235, 0.1)', 
                             borderRadius: '4px',
@@ -1081,7 +1618,7 @@ const ProductCatalog = () => {
                       {product.size && (
                         <Chip 
                           size="small" 
-                          label={`Size: ${product.size}`} 
+                          label={`Size: ${typeof product.size === 'string' ? product.size : String(product.size || '')}`} 
                           sx={{ 
                             backgroundColor: 'rgba(37, 99, 235, 0.1)', 
                             borderRadius: '4px',
@@ -1092,7 +1629,7 @@ const ProductCatalog = () => {
                       {product.length && (
                         <Chip 
                           size="small" 
-                          label={`Length: ${product.length}`} 
+                          label={`Length: ${typeof product.length === 'string' ? product.length : String(product.length || '')}`} 
                           sx={{ 
                             backgroundColor: 'rgba(37, 99, 235, 0.1)', 
                             borderRadius: '4px',
@@ -1103,7 +1640,7 @@ const ProductCatalog = () => {
                       {product.height && (
                         <Chip 
                           size="small" 
-                          label={`Height: ${product.height}`} 
+                          label={`Height: ${typeof product.height === 'string' ? product.height : String(product.height || '')}`} 
                           sx={{ 
                             backgroundColor: 'rgba(37, 99, 235, 0.1)', 
                             borderRadius: '4px',
@@ -1176,10 +1713,10 @@ const ProductCatalog = () => {
                         mb: 0,
                       }}
                     >
-                      {product.type}
+                      {typeof product.name === 'string' ? product.name : String(product.name || '')}
                     </Typography>
                     <Chip 
-                      label={getCategoryFromProduct(product)} 
+                      label={product.category || getCategoryFromProduct(product)} 
                       size="small" 
                       sx={{ 
                         backgroundColor: 'primary.light',
@@ -1194,51 +1731,85 @@ const ProductCatalog = () => {
                     variant="body2" 
                     color="text.secondary" 
                     sx={{ 
+                      mb: 1,
+                      fontSize: '0.8rem',
+                      opacity: 0.8,
+                    }}
+                  >
+                    <strong>SKU:</strong> {typeof product.sku === 'string' ? product.sku : String(product.sku || '')}
+                  </Typography>
+                  
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary" 
+                    sx={{ 
                       mb: 2,
                       fontSize: '0.8rem',
                       opacity: 0.8,
                     }}
                   >
-                    SKU: {product.sku}
+                    <strong>Type:</strong> {typeof product.type === 'string' ? product.type : String(product.type || '')}
                   </Typography>
                   
                   <Divider sx={{ my: 1.5 }} />
                   
                   <Box sx={{ mt: 2 }}>
-                    {product.material && (
+                    {product.specifications && (
                       <Typography variant="body2" sx={{ mb: 0.5, display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontWeight: 'bold', color: '#475569' }}>Material:</span>
-                        <span>{product.material}</span>
+                        <span style={{ fontWeight: 'bold', color: '#475569' }}>Description:</span>
+                        <span>
+                          {typeof product.specifications === 'string' 
+                            ? (product.specifications.length > 50 
+                                ? `${product.specifications.substring(0, 50)}...` 
+                                : product.specifications) 
+                            : String(product.specifications || '')}
+                        </span>
                       </Typography>
                     )}
+                    
+                    {/* Display variant options */}
+                    {product.variant1Name && product.variant1Value && (
+                      <Typography variant="body2" sx={{ mb: 0.5, display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 'bold', color: '#475569' }}>{typeof product.variant1Name === 'string' ? product.variant1Name : String(product.variant1Name || '')}:</span>
+                        <span>{typeof product.variant1Value === 'string' ? product.variant1Value : String(product.variant1Value || '')}</span>
+                      </Typography>
+                    )}
+                    {product.variant2Name && product.variant2Value && (
+                      <Typography variant="body2" sx={{ mb: 0.5, display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 'bold', color: '#475569' }}>{typeof product.variant2Name === 'string' ? product.variant2Name : String(product.variant2Name || '')}:</span>
+                        <span>{typeof product.variant2Value === 'string' ? product.variant2Value : String(product.variant2Value || '')}</span>
+                      </Typography>
+                    )}
+                    
+                    {/* Standard dimensions */}
                     {product.diameter && (
                       <Typography variant="body2" sx={{ mb: 0.5, display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 'bold', color: '#475569' }}>Diameter:</span>
-                        <span>{product.diameter}</span>
+                        <span>{typeof product.diameter === 'string' ? product.diameter : String(product.diameter || '')}</span>
                       </Typography>
                     )}
                     {product.thickness && (
                       <Typography variant="body2" sx={{ mb: 0.5, display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 'bold', color: '#475569' }}>Thickness:</span>
-                        <span>{product.thickness}</span>
+                        <span>{typeof product.thickness === 'string' ? product.thickness : String(product.thickness || '')}</span>
                       </Typography>
                     )}
                     {product.size && (
                       <Typography variant="body2" sx={{ mb: 0.5, display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 'bold', color: '#475569' }}>Size:</span>
-                        <span>{product.size}</span>
+                        <span>{typeof product.size === 'string' ? product.size : String(product.size || '')}</span>
                       </Typography>
                     )}
                     {product.length && (
                       <Typography variant="body2" sx={{ mb: 0.5, display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 'bold', color: '#475569' }}>Length:</span>
-                        <span>{product.length}</span>
+                        <span>{typeof product.length === 'string' ? product.length : String(product.length || '')}</span>
                       </Typography>
                     )}
                     {product.height && (
                       <Typography variant="body2" sx={{ mb: 0.5, display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 'bold', color: '#475569' }}>Height:</span>
-                        <span>{product.height}</span>
+                        <span>{typeof product.height === 'string' ? product.height : String(product.height || '')}</span>
                       </Typography>
                     )}
                   </Box>
@@ -1280,7 +1851,7 @@ const ProductCatalog = () => {
             boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
           }}>
             <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
-              Catalogue Builder
+              Catalogue Builder <span style={{ fontSize: '0.8rem', fontWeight: 'normal', color: '#64748b' }}>(Drag, drop and resize items)</span>
             </Typography>
             
             <Grid container spacing={3}>
@@ -1340,6 +1911,24 @@ const ProductCatalog = () => {
                     size="small"
                   >
                     Compact
+                  </Button>
+                  <Button 
+                    variant={catalogueView === 'print' ? 'contained' : 'outlined'} 
+                    color="primary"
+                    onClick={() => handleCatalogueViewChange('print')}
+                    size="small"
+                    sx={{ fontWeight: catalogueView === 'print' ? 'bold' : 'normal' }}
+                  >
+                    Print Catalog
+                  </Button>
+                  <Button 
+                    variant={catalogueView === 'page' ? 'contained' : 'outlined'} 
+                    color="primary"
+                    onClick={() => handleCatalogueViewChange('page')}
+                    size="small"
+                    sx={{ fontWeight: catalogueView === 'page' ? 'bold' : 'normal' }}
+                  >
+                    Page Layout
                   </Button>
                 </Box>
               </Grid>
@@ -1549,6 +2138,162 @@ const ProductCatalog = () => {
                           </Grid>
                         ))}
                       </Grid>
+                    ) : catalogueView === 'print' ? (
+                      // Print Catalog View - Group by type and material
+                      <Box sx={{ width: '100%' }}>
+                        {/* Group products by type and material */}
+                        {(() => {
+                          // Create groups by type and material
+                          const groups = {};
+                          
+                          catalogueItems.forEach(item => {
+                            const product = item.product;
+                            const type = product.type || 'Other';
+                            const material = product.material || 'Other';
+                            const key = `${type}-${material}`.toLowerCase();
+                            
+                            if (!groups[key]) {
+                              groups[key] = {
+                                type,
+                                material,
+                                displayName: `${type} ${material ? `- ${material}` : ''}`,
+                                products: [],
+                                image: getProductImage(product)
+                              };
+                            }
+                            
+                            groups[key].products.push(product);
+                          });
+                          
+                          // Sort products within each group by size
+                          Object.keys(groups).forEach(key => {
+                            groups[key].products.sort((a, b) => {
+                              // Try to sort by size if available
+                              if (a.size && b.size) {
+                                const sizeA = parseFloat(a.size.replace(/[^0-9.]/g, '')) || 0;
+                                const sizeB = parseFloat(b.size.replace(/[^0-9.]/g, '')) || 0;
+                                return sizeA - sizeB;
+                              }
+                              // Fall back to sorting by name
+                              return (a.name || '').localeCompare(b.name || '');
+                            });
+                          });
+                          
+                          return Object.entries(groups).map(([key, group]) => (
+                            <Paper 
+                              key={key}
+                              sx={{ 
+                                mb: 3, 
+                                p: 2, 
+                                borderRadius: 2,
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                              }}
+                            >
+                              <Grid container spacing={2}>
+                                {/* Group header */}
+                                <Grid item xs={12}>
+                                  <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                    {group.displayName}
+                                  </Typography>
+                                  <Divider />
+                                </Grid>
+                                
+                                {/* Group image */}
+                                <Grid item xs={12} sm={3}>
+                                  <Box 
+                                    component="img"
+                                    src={group.image}
+                                    alt={group.displayName}
+                                    sx={{ 
+                                      width: '100%', 
+                                      height: 'auto',
+                                      maxHeight: '200px',
+                                      objectFit: 'contain',
+                                      border: '1px solid #e0e0e0',
+                                      borderRadius: 1
+                                    }}
+                                  />
+                                </Grid>
+                                
+                                {/* Product sizes table */}
+                                <Grid item xs={12} sm={9}>
+                                  <TableContainer>
+                                    <Table size="small">
+                                      <TableHead>
+                                        <TableRow>
+                                          <TableCell sx={{ fontWeight: 'bold' }}>SKU</TableCell>
+                                          <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                                          <TableCell sx={{ fontWeight: 'bold' }}>Size</TableCell>
+                                          <TableCell sx={{ fontWeight: 'bold' }}>Description</TableCell>
+                                          <TableCell sx={{ fontWeight: 'bold' }}>Category</TableCell>
+                                          <TableCell align="right" sx={{ fontWeight: 'bold' }}>Price</TableCell>
+                                        </TableRow>
+                                      </TableHead>
+                                      <TableBody>
+                                        {group.products.map(product => (
+                                          <TableRow key={typeof product.id === 'string' ? product.id : String(product.id || product.sku || '')}>
+                                            <TableCell>{typeof product.sku === 'string' ? product.sku : String(product.sku || '')}</TableCell>
+                                            <TableCell>{typeof product.name === 'string' ? product.name : String(product.name || '')}</TableCell>
+                                            <TableCell>{typeof product.size === 'string' ? product.size : String(product.size || '-')}</TableCell>
+                                            <TableCell>
+                                              {product.specifications ? (
+                                                <Typography variant="body2">
+                                                  {product.specifications.length > 50 ? `${product.specifications.substring(0, 50)}...` : product.specifications}
+                                                </Typography>
+                                              ) : '-'}
+                                              {product.variant1Name && product.variant1Value && (
+                                                <Typography variant="caption" display="block">
+                                                  {typeof product.variant1Name === 'string' ? product.variant1Name : String(product.variant1Name || '')}: 
+                                                  {typeof product.variant1Value === 'string' ? product.variant1Value : String(product.variant1Value || '')}
+                                                </Typography>
+                                              )}
+                                            </TableCell>
+                                            <TableCell>{product.category || '-'}</TableCell>
+                                            <TableCell align="right">${parseFloat(product.price || 0).toFixed(2)}</TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </TableContainer>
+                                </Grid>
+                              </Grid>
+                            </Paper>
+                          ));
+                        })()}
+                      </Box>
+                    ) : catalogueView === 'page' ? (
+                      <Box sx={{ 
+                        position: 'relative',
+                        height: '800px',
+                        border: '1px solid #e0e0e0',
+                        backgroundColor: '#f9f9f9',
+                        p: 2,
+                        overflow: 'hidden'
+                      }}>
+                        {catalogueItems.map((item) => {
+                          const itemSize = itemSizes[item.id] || { width: 1, height: 1 };
+                          return (
+                            <Box 
+                              key={item.id}
+                              sx={{
+                                position: 'absolute',
+                                width: `${itemSize.width * 25}%`,
+                                height: `${itemSize.height * 100}px`,
+                                transition: 'all 0.2s ease',
+                              }}
+                            >
+                              <SortableItem 
+                                id={item.id} 
+                                product={item.product} 
+                                removeItem={removeFromCatalogue}
+                                view={catalogueView}
+                                onResize={(id, size) => handleItemResize(id, size)}
+                                initialSize={itemSize}
+                              />
+                            </Box>
+                          );
+                        })}
+                      </Box>
                     ) : (
                       <Box>
                         {catalogueItems.map((item) => (
@@ -1558,6 +2303,8 @@ const ProductCatalog = () => {
                             product={item.product} 
                             removeItem={removeFromCatalogue}
                             view={catalogueView}
+                            onResize={(id, size) => handleItemResize(id, size)}
+                            initialSize={itemSizes[item.id] || { width: 1, height: 1 }}
                           />
                         ))}
                       </Box>

@@ -18,6 +18,12 @@ yarn-error.log*
 lightspeed-supabase-integration/*.json
 lightspeed-supabase-integration/node_modules/
 
+# Lightspeed API test files
+lightspeed-supabase-integration/test-*.js
+lightspeed-supabase-integration/config*.js
+lightspeed_*.json
+*lightspeed*sample*.json
+
 # Build directory
 /build
 

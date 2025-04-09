@@ -1,80 +1,131 @@
+// Express server to fetch products from PostgreSQL and Lightspeed API
 const express = require('express');
-const bodyParser = require('body-parser');
+const { Pool } = require('pg');
 const cors = require('cors');
-require('dotenv').config();
-const { initializeDatabase, saveFeedback, getAllFeedback, getFeedbackById } = require('./src/services/dbService');
+const axios = require('axios');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const port = 3001;
 
-// Middleware
+// Enable CORS for all routes
 app.use(cors());
-app.use(bodyParser.json());
 
-// Initialize database on server start
-initializeDatabase()
-  .then(success => {
-    if (success) {
-      console.log('Database initialized successfully');
-    } else {
-      console.error('Failed to initialize database');
-    }
-  });
+// Create a connection pool for PostgreSQL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres@localhost:5432/postgres'
+});
 
-// API Routes
-app.post('/api/feedback', async (req, res) => {
+// Load environment variables
+require('dotenv').config();
+
+// Lightspeed API configuration
+const LIGHTSPEED_API_KEY = process.env.LIGHTSPEED_API_KEY;
+const LIGHTSPEED_BASE_URL = 'https://southtexasfencesupply.retail.lightspeed.app/api/2.0';
+
+// Check if API key is available
+if (!LIGHTSPEED_API_KEY) {
+  console.warn('WARNING: LIGHTSPEED_API_KEY not found in environment variables. Please set it in your .env file.');
+}
+
+// Route to get all products
+app.get('/api/products', async (req, res) => {
   try {
-    const { customerName, feedbackData, calculatorState } = req.body;
-    
-    if (!feedbackData) {
-      return res.status(400).json({ success: false, error: 'Feedback data is required' });
-    }
-    
-    const result = await saveFeedback(customerName, feedbackData, calculatorState || {});
-    
-    if (result.success) {
-      return res.status(201).json({ success: true, id: result.id });
-    } else {
-      return res.status(500).json({ success: false, error: result.error });
-    }
+    console.log('Fetching all products from database...');
+    const result = await pool.query('SELECT * FROM fence_products ORDER BY id ASC LIMIT 2000');
+    console.log(`Fetched ${result.rows.length} products`);
+    res.json(result.rows);
   } catch (error) {
-    console.error('Error saving feedback:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('Error fetching products:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/api/feedback', async (req, res) => {
+// Route to get products by category
+app.get('/api/products/category/:category', async (req, res) => {
   try {
-    const result = await getAllFeedback();
-    
-    if (result.success) {
-      return res.json({ success: true, data: result.data });
-    } else {
-      return res.status(500).json({ success: false, error: result.error });
-    }
+    const { category } = req.params;
+    const result = await pool.query(
+      'SELECT * FROM fence_products WHERE product_category = $1 ORDER BY id ASC',
+      [category]
+    );
+    res.json(result.rows);
   } catch (error) {
-    console.error('Error retrieving feedback:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('Error fetching products by category:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/api/feedback/:id', async (req, res) => {
+// Route to search products
+app.get('/api/products/search/:term', async (req, res) => {
   try {
-    const id = req.params.id;
-    const result = await getFeedbackById(id);
-    
-    if (result.success) {
-      return res.json({ success: true, data: result.data });
-    } else {
-      return res.status(404).json({ success: false, error: result.error });
-    }
+    const { term } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM fence_products 
+       WHERE name ILIKE $1 
+       OR product_category ILIKE $1 
+       OR description ILIKE $1 
+       ORDER BY id ASC`,
+      [`%${term}%`]
+    );
+    res.json(result.rows);
   } catch (error) {
-    console.error('Error retrieving feedback:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('Error searching products:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Route to get products from Lightspeed API
+app.get('/api/lightspeed/products', async (req, res) => {
+  try {
+    console.log('Fetching products from Lightspeed API...');
+    
+    // Set up authentication headers
+    const headers = {
+      'Authorization': `Bearer ${LIGHTSPEED_API_KEY}`,
+      'Content-Type': 'application/json'
+    };
+    
+    // Fetch products with a reasonable limit
+    // Lightspeed API might not support proper pagination
+    const response = await axios.get(`${LIGHTSPEED_BASE_URL}/products`, {
+      headers,
+      params: {
+        limit: 2500  // Set a high limit but not infinite
+      }
+    });
+    
+    // Extract products from the response
+    let products = [];
+    
+    if (response.data && response.data.data && Array.isArray(response.data.data)) {
+      products = response.data.data;
+      console.log(`Fetched ${products.length} products from Lightspeed API v2.0`);
+      
+      // Log product IDs to check for duplicates (just first 5)
+      if (products.length > 0) {
+        const sampleIds = products.slice(0, 5).map(p => p.id);
+        console.log('Sample product IDs:', sampleIds);
+      }
+    } else {
+      console.log('Unexpected API response format');
+      products = [];
+    }
+    
+    // Log a sample product to see its structure
+    if (products.length > 0) {
+      console.log('Sample product:', JSON.stringify(products[0], null, 2).substring(0, 200) + '...');
+    }
+    
+    // Send the products to the client
+    console.log(`Sending ${products.length} products to client`);
+    res.json(products);
+  } catch (error) {
+    console.error('Error fetching products from Lightspeed:', error.response?.data || error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
 });

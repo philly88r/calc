@@ -1,6 +1,49 @@
-# Getting Started with Create React App
+# Fence Calculator and Product Catalog
+
+This project includes a fence calculator and a product catalog that integrates with the Lightspeed Retail API.
+
+## Product Catalog Features
+
+The product catalog provides comprehensive display of product information including:
+- Name
+- Description
+- SKU
+- Images
+- Price
+- Category
+
+All products are fetched from the Lightspeed API without limits, allowing for a complete catalog view.
+
+## API Integration
+
+The application uses a proxy server to communicate with the Lightspeed API, avoiding CORS issues and protecting API credentials.
+
+### Environment Setup
+
+Before running the application, you need to set up your environment variables:
+
+1. Copy `.env.example` to `.env`
+2. Add your Lightspeed API key and database connection string to the `.env` file
+
+## Getting Started
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+## Running the Application
+
+To run the complete application, you need to start both the React frontend and the Node.js server:
+
+1. Start the Node.js server:
+   ```
+   node server.js
+   ```
+   This will start the server on http://localhost:3001
+
+2. In a separate terminal, start the React application:
+   ```
+   npm start
+   ```
+   This will start the React app on http://localhost:3000
 
 ## Available Scripts
 
