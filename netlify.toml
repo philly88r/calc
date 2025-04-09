@@ -1,7 +1,9 @@
 [build]
-  command = "npm install jspdf jspdf-autotable @supabase/supabase-js @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities && npm run build"
+  command = "npm install jspdf jspdf-autotable @supabase/supabase-js @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities && node netlify-build-debug.js && npm run build"
   publish = "build"
 
 [build.environment]
   CI = "false"
   ESLINT_NO_DEV_ERRORS = "true"
+  REACT_APP_SUPABASE_URL = "https://kdhwrlhzevzekoanusbs.supabase.co"
+  REACT_APP_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtkaHdybGh6ZXZ6ZWtvYW51c2JzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc1NTczNDUsImV4cCI6MjA1MzEzMzM0NX0.qAA2en6uQPoTDq9oivjfSHajQjY6VKFQ2ymtwgJAyx8"
