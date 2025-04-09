@@ -228,7 +228,7 @@ const ProductCatalog = () => {
   const placeholderImages = {
     'post': 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?q=80&w=400&auto=format&fit=crop',
     'gate': 'https://images.unsplash.com/photo-1573648952759-5861fb3a5969?q=80&w=400&auto=format&fit=crop',
-    'mesh': 'https://images.unsplash.com/photo-1519750465415-ea30db9a5ca71?q=80&w=400&auto=format&fit=crop',
+    'mesh': 'https://images.unsplash.com/photo-1587471384749-52d38605b699?q=80&w=400&auto=format&fit=crop',
     'fabric': 'https://images.unsplash.com/photo-1533247772055-d3c1d7a5ca71?q=80&w=400&auto=format&fit=crop',
     'accessory': 'https://images.unsplash.com/photo-1586864387789-628af9feed72?q=80&w=400&auto=format&fit=crop',
     'default': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=400&auto=format&fit=crop'
