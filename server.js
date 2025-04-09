@@ -5,10 +5,30 @@ const cors = require('cors');
 const axios = require('axios');
 
 const app = express();
-const port = 3001;
+// Use environment port or default to 3001
+const port = process.env.PORT || 3001;
 
-// Enable CORS for all routes
-app.use(cors());
+// Configure CORS based on environment
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://philly88r.github.io',  // GitHub Pages domain
+  'https://calc.philly88r.com',   // Your custom domain if you have one
+];
+
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      console.log(`CORS blocked for origin: ${origin}`);
+      return callback(null, false);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true
+}));
 
 // Create a connection pool for PostgreSQL
 const pool = new Pool({

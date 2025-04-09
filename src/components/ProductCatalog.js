@@ -367,8 +367,12 @@ const ProductCatalog = () => {
     try {
       console.log('Fetching products from Lightspeed API via proxy server...', new Date().toISOString());
       
-      // Fetch products from our local proxy server
-      const url = 'http://localhost:3001/api/lightspeed/products';
+      // Determine the API base URL based on the environment
+      const apiBaseUrl = process.env.REACT_APP_API_URL || 
+        (window.location.hostname === 'localhost' ? 'http://localhost:3001' : '');
+      
+      // Fetch products from our proxy server
+      const url = `${apiBaseUrl}/api/lightspeed/products`;
       console.log('Fetching from proxy URL:', url);
       
       const response = await fetch(url, {

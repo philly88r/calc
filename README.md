@@ -31,7 +31,9 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Running the Application
 
-To run the complete application, you need to start both the React frontend and the Node.js server:
+### Local Development
+
+To run the complete application locally, you need to start both the React frontend and the Node.js server:
 
 1. Start the Node.js server:
    ```
@@ -44,6 +46,22 @@ To run the complete application, you need to start both the React frontend and t
    npm start
    ```
    This will start the React app on http://localhost:3000
+
+### Production Deployment
+
+For production deployment, you need to:
+
+1. **Deploy the API Server**:
+   - Deploy the server.js file to a hosting service like Heroku, Render, or Railway
+   - Set the required environment variables (LIGHTSPEED_API_KEY, DATABASE_URL) in your hosting provider
+   - The server includes a Procfile for Heroku deployment
+
+2. **Configure the React Application**:
+   - Set the REACT_APP_API_URL environment variable to your deployed API server URL
+   - Build and deploy the React application to your preferred hosting service (GitHub Pages, Netlify, Vercel, etc.)
+
+3. **Update CORS Settings** (if needed):
+   - If you're using a custom domain, add it to the allowedOrigins array in server.js
 
 ## Available Scripts
 
