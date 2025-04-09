@@ -31,8 +31,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import DownloadIcon from '@mui/icons-material/Download';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from "jspdf";
+import autoTable from 'jspdf-autotable';
 import { supabase } from '../supabaseClient';
 
 const ProductCatalog = () => {
@@ -212,66 +212,79 @@ const ProductCatalog = () => {
     return grouped;
   };
 
-  // Generate PDF catalog
+  // Generate PDF of the product catalog
   const generatePDF = () => {
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(18);
-    doc.text('Chain Link Fence Product Catalog', 14, 22);
-    doc.setFontSize(12);
-    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 30);
-    
-    let yPosition = 40;
-    const grouped = groupedProducts();
-    
-    // Add each category
-    Object.keys(grouped).forEach(category => {
-      // Add category header
-      doc.setFontSize(14);
-      doc.setTextColor(109, 47, 44); // Primary color
-      doc.text(category, 14, yPosition);
-      yPosition += 10;
+    try {
+      // Create a new jsPDF instance
+      const doc = new jsPDF();
       
-      // Add products table
-      const tableData = grouped[category].map(product => [
-        product.sku || '',
-        product.type || '',
-        product.material || '',
-        product.diameter ? `Diameter: ${product.diameter}` : '',
-        product.length ? `Length: ${product.length}` : '',
-        `$${parseFloat(product.price || 0).toFixed(2)}`
-      ]);
+      // Add title
+      doc.setFontSize(18);
+      doc.text('Chain Link Fence Product Catalog', 14, 20);
       
-      doc.autoTable({
-        startY: yPosition,
-        head: [['SKU', 'Type', 'Material', 'Diameter', 'Length', 'Price']],
-        body: tableData,
-        theme: 'grid',
-        headStyles: { fillColor: [109, 47, 44], textColor: [255, 255, 255] },
-        margin: { top: 10 },
-        styles: { overflow: 'linebreak', cellWidth: 'wrap' },
-        columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 40 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 30 },
-          4: { cellWidth: 30 },
-          5: { cellWidth: 25 }
+      // Add date
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+      
+      // Filter products based on current filter
+      const productsToInclude = filteredProducts;
+      
+      // Group products by category
+      const groupedData = {};
+      productsToInclude.forEach(product => {
+        const category = getCategoryFromProduct(product);
+        if (!groupedData[category]) {
+          groupedData[category] = [];
+        }
+        groupedData[category].push(product);
+      });
+      
+      let yPosition = 40;
+      
+      // Loop through each category
+      Object.entries(groupedData).forEach(([category, products]) => {
+        // Add category header
+        doc.setFontSize(14);
+        doc.setTextColor(33, 58, 138); // Primary blue color
+        doc.text(category, 14, yPosition);
+        yPosition += 10;
+        
+        // Create table data
+        const tableData = products.map(product => [
+          product.sku,
+          product.type,
+          product.material || '-',
+          product.diameter || product.thickness || product.size || '-',
+          product.length || product.height || '-',
+          `$${parseFloat(product.price || 0).toFixed(2)}`
+        ]);
+        
+        // Add table using the imported autoTable function
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['SKU', 'Type', 'Material', 'Dimensions', 'Length/Height', 'Price']],
+          body: tableData,
+          theme: 'grid',
+          headStyles: { fillColor: [33, 58, 138], textColor: [255, 255, 255] },
+          margin: { top: 10 },
+        });
+        
+        // Update Y position for next category
+        yPosition = doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : yPosition + 20;
+        
+        // Add page if needed
+        if (yPosition > 250) {
+          doc.addPage();
+          yPosition = 20;
         }
       });
       
-      yPosition = doc.lastAutoTable.finalY + 15;
-      
-      // Add new page if needed
-      if (yPosition > 250) {
-        doc.addPage();
-        yPosition = 20;
-      }
-    });
-    
-    // Save the PDF
-    doc.save('chain-link-product-catalog.pdf');
+      // Save the PDF
+      doc.save('chainlink-product-catalog.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('There was an error generating the PDF. Please try again later.');
+    }
   };
 
   // Handle category change
@@ -529,7 +542,16 @@ const ProductCatalog = () => {
                     alt={category}
                   />
                   <Box sx={{ p: 3, width: '100%' }}>
-                    <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main' }}>
+                    <Typography 
+                      variant="h5" 
+                      component="h3" 
+                      gutterBottom
+                      sx={{ 
+                        fontWeight: 'bold',
+                        color: 'primary.main',
+                        mb: 0,
+                      }}
+                    >
                       {category} Products
                     </Typography>
                     <Typography variant="body1" paragraph sx={{ color: 'text.secondary' }}>
