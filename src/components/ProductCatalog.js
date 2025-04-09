@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -34,6 +34,176 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { jsPDF } from "jspdf";
 import autoTable from 'jspdf-autotable';
 import { supabase } from '../supabaseClient';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, rectSortingStrategy, horizontalListSortingStrategy, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Sortable Item Component for Catalogue Builder
+const SortableItem = ({ id, product, removeItem, view }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    cursor: 'grab',
+  };
+  
+  // Render different views based on the catalogue view mode
+  if (view === 'compact') {
+    return (
+      <Box
+        ref={setNodeRef}
+        style={style}
+        sx={{
+          p: 1,
+          mb: 1,
+          border: '1px solid #e2e8f0',
+          borderRadius: 1,
+          backgroundColor: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          '&:hover': { backgroundColor: '#f8fafc' },
+        }}
+        {...attributes}
+        {...listeners}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+          {product.sku} - {product.type} {product.material ? `(${product.material})` : ''}
+        </Typography>
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+            ${parseFloat(product.price || 0).toFixed(2)}
+          </Typography>
+          <Button 
+            size="small" 
+            color="error" 
+            onClick={() => removeItem(id)}
+            sx={{ minWidth: 'auto', p: 0.5 }}
+          >
+            ×
+          </Button>
+        </Box>
+      </Box>
+    );
+  }
+  
+  if (view === 'list') {
+    return (
+      <Paper
+        ref={setNodeRef}
+        style={style}
+        sx={{
+          p: 2,
+          mb: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          '&:hover': { backgroundColor: '#f8fafc' },
+        }}
+        {...attributes}
+        {...listeners}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+          <Box
+            component="img"
+            src={product.type ? (
+              product.type.toLowerCase().includes('post') ? placeholderImages.post :
+              product.type.toLowerCase().includes('gate') ? placeholderImages.gate :
+              product.type.toLowerCase().includes('mesh') ? placeholderImages.mesh :
+              placeholderImages.default
+            ) : placeholderImages.default}
+            alt={product.type}
+            sx={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 1 }}
+          />
+          <Box>
+            <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+              {product.type}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              SKU: {product.sku} | {product.material || ''} {product.diameter || product.size || ''}
+            </Typography>
+          </Box>
+        </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+            ${parseFloat(product.price || 0).toFixed(2)}
+          </Typography>
+          <Button 
+            size="small" 
+            variant="outlined" 
+            color="error" 
+            onClick={() => removeItem(id)}
+          >
+            Remove
+          </Button>
+        </Box>
+      </Paper>
+    );
+  }
+  
+  // Default: Grid view
+  return (
+    <Card
+      ref={setNodeRef}
+      style={style}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        '&:hover': {
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        },
+      }}
+      {...attributes}
+      {...listeners}
+    >
+      <CardMedia
+        component="img"
+        height="140"
+        image={product.type ? (
+          product.type.toLowerCase().includes('post') ? placeholderImages.post :
+          product.type.toLowerCase().includes('gate') ? placeholderImages.gate :
+          product.type.toLowerCase().includes('mesh') ? placeholderImages.mesh :
+          placeholderImages.default
+        ) : placeholderImages.default}
+        alt={product.type}
+      />
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Typography gutterBottom variant="h6" component="div">
+          {product.type}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          SKU: {product.sku}
+        </Typography>
+        {product.material && (
+          <Typography variant="body2" color="text.secondary">
+            Material: {product.material}
+          </Typography>
+        )}
+        {(product.diameter || product.size) && (
+          <Typography variant="body2" color="text.secondary">
+            Size: {product.diameter || product.size || ''}
+          </Typography>
+        )}
+      </CardContent>
+      <CardActions sx={{ justifyContent: 'space-between', p: 2 }}>
+        <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+          ${parseFloat(product.price || 0).toFixed(2)}
+        </Typography>
+        <Button size="small" color="error" onClick={() => removeItem(id)}>
+          Remove
+        </Button>
+      </CardActions>
+    </Card>
+  );
+};
 
 const ProductCatalog = () => {
   const [products, setProducts] = useState([]);
@@ -42,8 +212,17 @@ const ProductCatalog = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('category'); // 'category', 'list', 'grid'
+  const [viewMode, setViewMode] = useState('category'); // 'category', 'list', 'grid', 'catalogue'
   const [expandedCategory, setExpandedCategory] = useState(null);
+  
+  // Catalogue builder state
+  const [catalogueItems, setCatalogueItems] = useState([]);
+  const [catalogueView, setCatalogueView] = useState('grid'); // 'grid', 'list', 'compact'
+  const [catalogueName, setCatalogueName] = useState('My Custom Catalogue');
+  const [savedCatalogues, setSavedCatalogues] = useState(() => {
+    const saved = localStorage.getItem('savedCatalogues');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Placeholder image URLs for different product types with better images
   const placeholderImages = {
@@ -55,63 +234,79 @@ const ProductCatalog = () => {
     'default': 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?q=80&w=400&auto=format&fit=crop'
   };
 
-  // Load product data from Supabase
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        console.log('Fetching products from Supabase...');
-        
-        // Log the table we're querying
-        console.log('Querying table: chainlink_products');
-        
-        const { data, error } = await supabase
-          .from('chainlink_products')
-          .select('*');
-        
-        if (error) {
-          console.error('Supabase error:', error);
-          throw error;
-        }
-        
-        if (!data || data.length === 0) {
-          console.log('No products found in the database');
-          setLoading(false);
-          return;
-        }
-        
-        console.log('Products fetched successfully:', data.length);
-        console.log('Sample product with all fields:', data[0]);
-        
-        // Get all column names from the first product to see what we're working with
-        const columnNames = Object.keys(data[0]);
-        console.log('Available columns:', columnNames);
-        
-        // Process the data using the actual column names from the database
-        const validProducts = data.filter(product => 
-          product.type && product.type.trim() !== ''
-        );
-        
-        console.log('Valid products:', validProducts.length);
-        setProducts(validProducts);
-        setFilteredProducts(validProducts);
-        
-        // Extract unique categories using the type field
-        const uniqueCategories = [...new Set(validProducts
-          .map(product => product.type)
-          .filter(category => category && category.trim() !== '')
-        )];
-        
-        console.log('Found categories:', uniqueCategories);
-        setCategories(uniqueCategories);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setLoading(false);
+  // Function to fetch products from Supabase
+  const fetchProducts = async () => {
+    try {
+      // Clear any existing products first
+      setProducts([]);
+      setFilteredProducts([]);
+      setLoading(true);
+      
+      console.log('Fetching products from Supabase...', new Date().toISOString());
+      
+      // Log the table we're querying
+      console.log('Querying table: fence_products');
+      
+      // Add a timestamp parameter to prevent caching
+      const timestamp = new Date().getTime();
+      console.log('Using timestamp to prevent caching:', timestamp);
+      
+      const { data, error } = await supabase
+        .from('fence_products')
+        .select('*')
+        .order('id', { ascending: true });
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
       }
-    };
+      
+      if (!data || data.length === 0) {
+        console.log('No products found in the database');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('Products fetched successfully:', data.length);
+      console.log('Sample product with all fields:', data[0]);
+      
+      // Get all column names from the first product to see what we're working with
+      const columnNames = Object.keys(data[0]);
+      console.log('Available columns:', columnNames);
+      
+      // Process the data using the actual column names from the database
+      const validProducts = data.filter(product => 
+        product.type && product.type.trim() !== ''
+      );
+      
+      console.log('Valid products:', validProducts.length);
+      setProducts(validProducts);
+      setFilteredProducts(validProducts);
+      
+      // Extract unique categories using the type field
+      const uniqueCategories = [...new Set(validProducts
+        .map(product => product.type)
+        .filter(category => category && category.trim() !== '')
+      )];
+      
+      console.log('Found categories:', uniqueCategories);
+      setCategories(uniqueCategories);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setLoading(false);
+    }
+  };
 
+  // Load product data on component mount
+  useEffect(() => {
     fetchProducts();
   }, []);
+  
+  // Handle refresh button click
+  const handleRefresh = () => {
+    fetchProducts();
+  };
 
   // Filter products based on search term and category
   useEffect(() => {
@@ -300,11 +495,98 @@ const ProductCatalog = () => {
   // Handle view mode change
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
+    // If switching to catalogue mode and no items, add some sample items
+    if (mode === 'catalogue' && catalogueItems.length === 0) {
+      // Add first 5 products as sample items if available
+      setCatalogueItems(filteredProducts.slice(0, 5).map(product => ({
+        id: `item-${product.id}`,
+        product
+      })));
+    }
   };
   
   // Handle accordion expansion
   const handleAccordionChange = (category) => (event, isExpanded) => {
     setExpandedCategory(isExpanded ? category : null);
+  };
+  
+  // Handle catalogue view change
+  const handleCatalogueViewChange = (view) => {
+    setCatalogueView(view);
+  };
+  
+  // Setup DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  
+  // Handle DnD end event
+  const handleDragEnd = useCallback((event) => {
+    const { active, over } = event;
+    
+    if (active.id !== over?.id) {
+      setCatalogueItems((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+        
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }, []);
+  
+  // Add product to catalogue
+  const addToCatalogue = (product) => {
+    const newItem = {
+      id: `item-${product.id}-${Date.now()}`,
+      product
+    };
+    setCatalogueItems(prev => [...prev, newItem]);
+  };
+  
+  // Remove product from catalogue
+  const removeFromCatalogue = (itemId) => {
+    setCatalogueItems(prev => prev.filter(item => item.id !== itemId));
+  };
+  
+  // Save current catalogue
+  const saveCatalogue = () => {
+    const newCatalogue = {
+      id: Date.now().toString(),
+      name: catalogueName,
+      items: catalogueItems,
+      createdAt: new Date().toISOString(),
+      view: catalogueView
+    };
+    
+    const updatedCatalogues = [...savedCatalogues, newCatalogue];
+    setSavedCatalogues(updatedCatalogues);
+    localStorage.setItem('savedCatalogues', JSON.stringify(updatedCatalogues));
+    alert(`Catalogue "${catalogueName}" saved successfully!`);
+  };
+  
+  // Load a saved catalogue
+  const loadCatalogue = (catalogueId) => {
+    const catalogue = savedCatalogues.find(cat => cat.id === catalogueId);
+    if (catalogue) {
+      setCatalogueItems(catalogue.items);
+      setCatalogueName(catalogue.name);
+      setCatalogueView(catalogue.view || 'grid');
+      setViewMode('catalogue');
+    }
+  };
+  
+  // Delete a saved catalogue
+  const deleteCatalogue = (catalogueId) => {
+    const updatedCatalogues = savedCatalogues.filter(cat => cat.id !== catalogueId);
+    setSavedCatalogues(updatedCatalogues);
+    localStorage.setItem('savedCatalogues', JSON.stringify(updatedCatalogues));
   };
   
   // Get image URL for a category
@@ -411,28 +693,47 @@ const ProductCatalog = () => {
           </Select>
         </FormControl>
         
-        <Button 
-          variant="contained" 
-          color="primary" 
-          startIcon={<DownloadIcon />}
-          onClick={generatePDF}
-          sx={{ 
-            minWidth: 180,
-            fontWeight: 'bold',
-            boxShadow: 2,
-            '&:hover': {
-              boxShadow: 4,
-            },
-          }}
-        >
-          Download PDF
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            onClick={handleRefresh}
+            sx={{ 
+              minWidth: 120,
+              fontWeight: 'bold',
+              boxShadow: 1,
+              '&:hover': {
+                boxShadow: 2,
+              },
+            }}
+          >
+            Refresh Data
+          </Button>
+          
+          <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<DownloadIcon />}
+            onClick={generatePDF}
+            sx={{ 
+              minWidth: 180,
+              fontWeight: 'bold',
+              boxShadow: 2,
+              '&:hover': {
+                boxShadow: 4,
+              },
+            }}
+          >
+            Download PDF
+          </Button>
+        </Box>
       </Box>
       
       {/* View mode selection */}
       <Box sx={{ 
         mb: 4, 
         display: 'flex', 
+        flexWrap: { xs: 'wrap', md: 'nowrap' },
         gap: 2,
         backgroundColor: 'white',
         p: 2,
@@ -444,7 +745,7 @@ const ProductCatalog = () => {
           color="primary"
           onClick={() => handleViewModeChange('category')}
           sx={{ 
-            flex: 1,
+            flex: { xs: '1 0 45%', md: 1 },
             borderRadius: 1.5,
             fontWeight: viewMode === 'category' ? 'bold' : 'normal',
           }}
@@ -456,7 +757,7 @@ const ProductCatalog = () => {
           color="primary"
           onClick={() => handleViewModeChange('list')}
           sx={{ 
-            flex: 1,
+            flex: { xs: '1 0 45%', md: 1 },
             borderRadius: 1.5,
             fontWeight: viewMode === 'list' ? 'bold' : 'normal',
           }}
@@ -468,12 +769,24 @@ const ProductCatalog = () => {
           color="primary"
           onClick={() => handleViewModeChange('grid')}
           sx={{ 
-            flex: 1,
+            flex: { xs: '1 0 45%', md: 1 },
             borderRadius: 1.5,
             fontWeight: viewMode === 'grid' ? 'bold' : 'normal',
           }}
         >
           Grid View
+        </Button>
+        <Button 
+          variant={viewMode === 'catalogue' ? 'contained' : 'outlined'} 
+          color="primary"
+          onClick={() => handleViewModeChange('catalogue')}
+          sx={{ 
+            flex: { xs: '1 0 45%', md: 1 },
+            borderRadius: 1.5,
+            fontWeight: viewMode === 'catalogue' ? 'bold' : 'normal',
+          }}
+        >
+          Catalogue Builder
         </Button>
       </Box>
       
@@ -919,6 +1232,308 @@ const ProductCatalog = () => {
             </Grid>
           ))}
         </Grid>
+      )}
+      
+      {/* Catalogue Builder View */}
+      {viewMode === 'catalogue' && (
+        <Box>
+          {/* Catalogue Builder Controls */}
+          <Box sx={{ 
+            mb: 4, 
+            p: 3,
+            backgroundColor: 'white',
+            borderRadius: 2,
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+          }}>
+            <Typography variant="h5" sx={{ mb: 2, fontWeight: 'bold', color: 'primary.main' }}>
+              Catalogue Builder
+            </Typography>
+            
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  label="Catalogue Name"
+                  variant="outlined"
+                  fullWidth
+                  value={catalogueName}
+                  onChange={(e) => setCatalogueName(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+                
+                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                  <Button 
+                    variant="contained" 
+                    color="primary"
+                    onClick={saveCatalogue}
+                    disabled={catalogueItems.length === 0}
+                  >
+                    Save Catalogue
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    color="primary"
+                    onClick={() => setCatalogueItems([])}
+                    disabled={catalogueItems.length === 0}
+                  >
+                    Clear Items
+                  </Button>
+                </Box>
+                
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  View Mode:
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                  <Button 
+                    variant={catalogueView === 'grid' ? 'contained' : 'outlined'} 
+                    color="primary"
+                    onClick={() => handleCatalogueViewChange('grid')}
+                    size="small"
+                  >
+                    Grid
+                  </Button>
+                  <Button 
+                    variant={catalogueView === 'list' ? 'contained' : 'outlined'} 
+                    color="primary"
+                    onClick={() => handleCatalogueViewChange('list')}
+                    size="small"
+                  >
+                    List
+                  </Button>
+                  <Button 
+                    variant={catalogueView === 'compact' ? 'contained' : 'outlined'} 
+                    color="primary"
+                    onClick={() => handleCatalogueViewChange('compact')}
+                    size="small"
+                  >
+                    Compact
+                  </Button>
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+                  Saved Catalogues:
+                </Typography>
+                
+                {savedCatalogues.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No saved catalogues yet. Create and save your first catalogue!
+                  </Typography>
+                ) : (
+                  <Box sx={{ maxHeight: '200px', overflowY: 'auto', pr: 1 }}>
+                    {savedCatalogues.map((catalogue) => (
+                      <Box 
+                        key={catalogue.id}
+                        sx={{ 
+                          p: 2, 
+                          mb: 1, 
+                          border: '1px solid #e2e8f0',
+                          borderRadius: 1,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          '&:hover': { backgroundColor: '#f8fafc' },
+                        }}
+                      >
+                        <Box>
+                          <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                            {catalogue.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(catalogue.createdAt).toLocaleDateString()} • {catalogue.items.length} items
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Button 
+                            size="small" 
+                            variant="outlined" 
+                            color="primary"
+                            onClick={() => loadCatalogue(catalogue.id)}
+                          >
+                            Load
+                          </Button>
+                          <Button 
+                            size="small" 
+                            variant="outlined" 
+                            color="error"
+                            onClick={() => deleteCatalogue(catalogue.id)}
+                          >
+                            Delete
+                          </Button>
+                        </Box>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Grid>
+            </Grid>
+          </Box>
+          
+          {/* Drag and Drop Area */}
+          <Box sx={{ 
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 3,
+          }}>
+            {/* Product Selection */}
+            <Box sx={{ 
+              width: { xs: '100%', md: '40%' },
+              backgroundColor: 'white',
+              p: 3,
+              borderRadius: 2,
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+              maxHeight: '600px',
+              overflowY: 'auto',
+            }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                Available Products
+              </Typography>
+              
+              <TextField
+                label="Search Products"
+                variant="outlined"
+                fullWidth
+                value={searchTerm}
+                onChange={handleSearchChange}
+                sx={{ mb: 2 }}
+                size="small"
+              />
+              
+              <FormControl variant="outlined" fullWidth sx={{ mb: 3 }} size="small">
+                <InputLabel id="catalogue-category-select-label">Category</InputLabel>
+                <Select
+                  labelId="catalogue-category-select-label"
+                  value={selectedCategory}
+                  onChange={handleCategoryChange}
+                  label="Category"
+                >
+                  <MenuItem value="all">All Categories</MenuItem>
+                  {categories.map((category) => (
+                    <MenuItem key={category} value={category}>
+                      {category}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+                Click on a product to add it to your catalogue
+              </Typography>
+              
+              <Divider sx={{ mb: 2 }} />
+              
+              {filteredProducts.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                  No products found matching your criteria.
+                </Typography>
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  {filteredProducts.map((product) => (
+                    <Paper 
+                      key={product.id}
+                      sx={{ 
+                        p: 1.5,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        '&:hover': { backgroundColor: '#f8fafc' },
+                        transition: 'background-color 0.2s',
+                      }}
+                      onClick={() => addToCatalogue(product)}
+                    >
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                          {product.type} {product.material ? `(${product.material})` : ''}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          SKU: {product.sku} {product.diameter ? `• ${product.diameter}` : ''}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                        ${parseFloat(product.price || 0).toFixed(2)}
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Box>
+              )}
+            </Box>
+            
+            {/* Catalogue Preview */}
+            <Box sx={{ 
+              width: { xs: '100%', md: '60%' },
+              backgroundColor: 'white',
+              p: 3,
+              borderRadius: 2,
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+              maxHeight: '600px',
+              overflowY: 'auto',
+            }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                  {catalogueName} Preview
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {catalogueItems.length} {catalogueItems.length === 1 ? 'item' : 'items'}
+                </Typography>
+              </Box>
+              
+              {catalogueItems.length === 0 ? (
+                <Box sx={{ 
+                  p: 4, 
+                  textAlign: 'center', 
+                  border: '2px dashed #e2e8f0',
+                  borderRadius: 2,
+                }}>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                    Your catalogue is empty.
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Add products from the left panel to build your catalogue.
+                  </Typography>
+                </Box>
+              ) : (
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext 
+                    items={catalogueItems.map(item => item.id)}
+                    strategy={catalogueView === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}
+                  >
+                    {catalogueView === 'grid' ? (
+                      <Grid container spacing={2}>
+                        {catalogueItems.map((item) => (
+                          <Grid item xs={12} sm={6} md={4} key={item.id}>
+                            <SortableItem 
+                              id={item.id} 
+                              product={item.product} 
+                              removeItem={removeFromCatalogue}
+                              view={catalogueView}
+                            />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    ) : (
+                      <Box>
+                        {catalogueItems.map((item) => (
+                          <SortableItem 
+                            key={item.id}
+                            id={item.id} 
+                            product={item.product} 
+                            removeItem={removeFromCatalogue}
+                            view={catalogueView}
+                          />
+                        ))}
+                      </Box>
+                    )}
+                  </SortableContext>
+                </DndContext>
+              )}
+            </Box>
+          </Box>
+        </Box>
       )}
     </Box>
   );
