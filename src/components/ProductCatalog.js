@@ -635,6 +635,40 @@ const ProductCatalog = () => {
       </Box>
     );
   }
+  
+  // Render empty state when no products are found
+  if (products.length === 0) {
+    return (
+      <Box sx={{ mt: 4, textAlign: 'center', p: 4, backgroundColor: 'white', borderRadius: 2, boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)' }}>
+        <Typography variant="h5" color="error" gutterBottom>
+          No Products Found
+        </Typography>
+        <Typography variant="body1" paragraph>
+          The fence_products table appears to be empty or doesn't exist in the connected Supabase database.
+        </Typography>
+        <Typography variant="body1" paragraph>
+          Please ensure that:
+        </Typography>
+        <Box sx={{ maxWidth: 600, mx: 'auto', textAlign: 'left', mb: 3 }}>
+          <Typography component="div">
+            <ul>
+              <li>The fence_products table exists in your Supabase database</li>
+              <li>The table has product data imported into it</li>
+              <li>Your Supabase API keys have permission to access this table</li>
+            </ul>
+          </Typography>
+        </Box>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={handleRefresh}
+          sx={{ mr: 2 }}
+        >
+          Retry Loading Products
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ mt: 4 }}>
